@@ -90,25 +90,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Register mutation
   const registerMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
-      setIsLoading(true);
-      const res = await apiRequest("POST", "/api/register", userData);
-      const newUser = await res.json();
-      setUser(newUser);
-      queryClient.setQueryData(["/api/user"], newUser);
-      return newUser;
+      try {
+        console.log("Registering with data:", userData);
+        setIsLoading(true);
+        const res = await apiRequest("POST", "/api/register", userData);
+        console.log("Registration response:", res);
+        const newUser = await res.json();
+        console.log("New user data:", newUser);
+        setUser(newUser);
+        queryClient.setQueryData(["/api/user"], newUser);
+        return newUser;
+      } catch (error) {
+        console.error("Registration error:", error);
+        throw error;
+      }
     },
     onSuccess: (userData: SelectUser) => {
+      console.log("Registration success:", userData);
       toast({
         title: "Registration successful",
         description: "Your account has been created successfully.",
       });
       setIsLoading(false);
     },
-    onError: (err: Error) => {
+    onError: (err: any) => {
+      console.error("Registration onError handler:", err);
       setError(err);
       toast({
         title: "Registration failed",
-        description: err.message,
+        description: err.message || "Failed to create account",
         variant: "destructive",
       });
       setIsLoading(false);

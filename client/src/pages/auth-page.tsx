@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { InsertUser } from "@shared/schema";
 
 // Login schema
 const loginSchema = z.object({
@@ -69,7 +70,25 @@ export default function AuthPage() {
 
   // Handle registration
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    registerMutation.mutate(data);
+    console.log("Register form data:", data);
+    try {
+      // Transform data to ensure name and email are null if not provided
+      const userData = {
+        username: data.username,
+        password: data.password,
+        name: data.name || null,
+        email: data.email || null
+      };
+      console.log("Processed user data:", userData);
+      registerMutation.mutate(userData);
+    } catch (error) {
+      console.error("Error during registration mutation:", error);
+      toast({
+        title: "Registration failed",
+        description: "There was an error creating your account. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   // Redirect on successful login/registration
