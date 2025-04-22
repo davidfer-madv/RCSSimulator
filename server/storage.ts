@@ -43,7 +43,7 @@ export interface IStorage {
   countRcsFormatsByUserId(userId: number): Promise<number>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -59,7 +59,7 @@ export class MemStorage implements IStorage {
   private rcsFormatIdCounter: number;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
   
   constructor() {
     this.users = new Map();
@@ -237,4 +237,8 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from "./database-storage";
+
+// Choose either MemStorage or DatabaseStorage based on environment
+// For this project, we're using DatabaseStorage
+export const storage = new DatabaseStorage();
