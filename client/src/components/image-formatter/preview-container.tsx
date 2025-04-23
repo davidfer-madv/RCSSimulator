@@ -97,10 +97,11 @@ export function PreviewContainer({
                 {brandLogoUrl ? (
                   <div className="h-8 w-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200">
                     <img 
-                      src={brandLogoUrl} 
+                      src={brandLogoUrl.startsWith('/') ? `http://localhost:5000${brandLogoUrl}` : brandLogoUrl} 
                       alt="Brand logo" 
                       className="h-full w-full object-contain"
                       onError={(e) => {
+                        console.log("Error loading brand logo:", brandLogoUrl);
                         e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
                       }}
                     />
@@ -152,7 +153,7 @@ export function PreviewContainer({
                     {cardOrientation === "horizontal" ? (
                       <div className="flex">
                         <img 
-                          src={previewImage} 
+                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `http://localhost:5000${previewImage}` : previewImage} 
                           alt="Product" 
                           className={`w-1/2 ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                         />
@@ -164,7 +165,7 @@ export function PreviewContainer({
                     ) : (
                       <>
                         <img 
-                          src={previewImage} 
+                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `http://localhost:5000${previewImage}` : previewImage} 
                           alt="Product" 
                           className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                         />
@@ -197,7 +198,7 @@ export function PreviewContainer({
                       <div className="flex flex-col">
                         <div className="flex bg-gray-200 rounded-t-2xl p-3">
                           <img 
-                            src={previewImage} 
+                            src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `http://localhost:5000${previewImage}` : previewImage} 
                             alt="Product" 
                             className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                           />
@@ -269,7 +270,7 @@ export function PreviewContainer({
                     ) : (
                       <>
                         <img 
-                          src={previewImage} 
+                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `http://localhost:5000${previewImage}` : previewImage} 
                           alt="Product" 
                           className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} rounded-lg mb-1`} 
                         />
