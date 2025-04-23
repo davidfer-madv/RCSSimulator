@@ -102,20 +102,20 @@ export default function Customers() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               {/* Page Title */}
               <div className="pb-5 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Brands</h1>
                 <div className="mt-3 sm:mt-0 sm:ml-4">
                   <Dialog open={isNewCustomerDialogOpen} onOpenChange={setIsNewCustomerDialogOpen}>
                     <DialogTrigger asChild>
                       <Button>
                         <UserPlus className="mr-2 h-4 w-4" />
-                        New Customer
+                        New Brand
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Add New Customer</DialogTitle>
+                        <DialogTitle>Add New Brand</DialogTitle>
                         <DialogDescription>
-                          Create a new customer to associate with your campaigns
+                          Create a new brand to associate with your campaigns
                         </DialogDescription>
                       </DialogHeader>
                       
@@ -126,9 +126,9 @@ export default function Customers() {
                             name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Customer Name</FormLabel>
+                                <FormLabel>Brand Name</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Enter customer name" {...field} />
+                                  <Input placeholder="Enter brand name" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
