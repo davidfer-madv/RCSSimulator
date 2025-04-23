@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -8,6 +8,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import path from "path";
 import fs from "fs";
+import { saveFile } from "./file-storage";
 
 // Setup multer for in-memory storage
 const upload = multer({ 
@@ -16,6 +17,9 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB file size limit
   }
 });
+
+// Whitelist of allowed image file types
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // Check if user is authenticated
 function isAuthenticated(req: any, res: any, next: any) {
@@ -39,14 +43,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/customers", isAuthenticated, async (req, res) => {
+  app.post("/api/customers", isAuthenticated, upload.fields([
+    { name: 'brandLogo', maxCount: 1 },
+    { name: 'brandBanner', maxCount: 1 }
+  ]), async (req, res) => {
     try {
       console.log("Creating customer with data:", req.body);
       
-      const validatedData = insertCustomerSchema.parse({
-        ...req.body,
-        userId: req.user!.id
-      });
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const customerData = { ...req.body, userId: req.user!.id };
+      
+      // Process brand logo if provided
+      if (files && files.brandLogo && files.brandLogo.length > 0) {
+        const logoFile = files.brandLogo[0];
+        
+        // Validate file type
+        if (!ALLOWED_IMAGE_TYPES.includes(logoFile.mimetype)) {
+          return res.status(400).json({ 
+            message: `Logo must be a valid image file (${ALLOWED_IMAGE_TYPES.join(', ')})` 
+          });
+        }
+        
+        // Save the file and get the URL
+        const logoUrl = saveFile(logoFile.buffer, logoFile.originalname);
+        customerData.brandLogoUrl = logoUrl;
+      }
+      
+      // Process brand banner if provided
+      if (files && files.brandBanner && files.brandBanner.length > 0) {
+        const bannerFile = files.brandBanner[0];
+        
+        // Validate file type
+        if (!ALLOWED_IMAGE_TYPES.includes(bannerFile.mimetype)) {
+          return res.status(400).json({ 
+            message: `Banner must be a valid image file (${ALLOWED_IMAGE_TYPES.join(', ')})` 
+          });
+        }
+        
+        // Save the file and get the URL
+        const bannerUrl = saveFile(bannerFile.buffer, bannerFile.originalname);
+        customerData.brandBannerUrl = bannerUrl;
+      }
+      
+      const validatedData = insertCustomerSchema.parse(customerData);
       
       console.log("Validated data:", validatedData);
       
@@ -79,7 +118,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/customers/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/customers/:id", isAuthenticated, upload.fields([
+    { name: 'brandLogo', maxCount: 1 },
+    { name: 'brandBanner', maxCount: 1 }
+  ]), async (req, res) => {
     try {
       const customerId = parseInt(req.params.id);
       
@@ -89,8 +131,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Brand not found" });
       }
       
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const customerData = { ...req.body };
+      
+      // Process brand logo if provided
+      if (files && files.brandLogo && files.brandLogo.length > 0) {
+        const logoFile = files.brandLogo[0];
+        
+        // Validate file type
+        if (!ALLOWED_IMAGE_TYPES.includes(logoFile.mimetype)) {
+          return res.status(400).json({ 
+            message: `Logo must be a valid image file (${ALLOWED_IMAGE_TYPES.join(', ')})` 
+          });
+        }
+        
+        // Save the file and get the URL
+        const logoUrl = saveFile(logoFile.buffer, logoFile.originalname);
+        customerData.brandLogoUrl = logoUrl;
+      }
+      
+      // Process brand banner if provided
+      if (files && files.brandBanner && files.brandBanner.length > 0) {
+        const bannerFile = files.brandBanner[0];
+        
+        // Validate file type
+        if (!ALLOWED_IMAGE_TYPES.includes(bannerFile.mimetype)) {
+          return res.status(400).json({ 
+            message: `Banner must be a valid image file (${ALLOWED_IMAGE_TYPES.join(', ')})` 
+          });
+        }
+        
+        // Save the file and get the URL
+        const bannerUrl = saveFile(bannerFile.buffer, bannerFile.originalname);
+        customerData.brandBannerUrl = bannerUrl;
+      }
+      
       // Validate the update data
-      const validatedData = insertCustomerSchema.partial().parse(req.body);
+      const validatedData = insertCustomerSchema.partial().parse(customerData);
       
       // Update the customer
       const updatedCustomer = await storage.updateCustomer(customerId, validatedData);
@@ -209,21 +286,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const imageUrls: string[] = [];
         
         for (const file of req.files as Express.Multer.File[]) {
-          // In a production environment, we would upload to cloud storage
-          // For development, we'll use placeholders with timestamped filenames
-          const imageUrl = `/uploads/${Date.now()}-${file.originalname}`;
+          // Validate file type
+          if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+            return res.status(400).json({ 
+              message: `Images must be valid formats (${ALLOWED_IMAGE_TYPES.join(', ')})` 
+            });
+          }
+          
+          // Save the file and get the URL
+          const imageUrl = saveFile(file.buffer, file.originalname);
           imageUrls.push(imageUrl);
         }
         
-        formatData.imageUrls = imageUrls;
-      } else {
-        // For development, ensure there's at least something in imageUrls
-        formatData.imageUrls = formatData.imageUrls || [];
-        
-        // If we have processed images but Multer didn't capture them, use placeholders
-        if (formatData.imageUrls.length === 0 && Array.isArray(formatData.processedImageUrls)) {
-          formatData.imageUrls = formatData.processedImageUrls;
+        if (imageUrls.length > 0) {
+          formatData.imageUrls = imageUrls;
         }
+      }
+      
+      // Ensure we have at least an empty array if no images provided
+      formatData.imageUrls = formatData.imageUrls || [];
+      
+      // If we have processed images but Multer didn't capture them, use them
+      if (formatData.imageUrls.length === 0 && Array.isArray(formatData.processedImageUrls)) {
+        formatData.imageUrls = formatData.processedImageUrls;
       }
       
       // Make sure we have valid data for required fields
@@ -231,10 +316,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!formatData.cardOrientation) formatData.cardOrientation = "vertical";
       if (!formatData.mediaHeight) formatData.mediaHeight = "medium";
       
-      // Add campaign-related fields
+      // Add campaign and brand related fields
       if (!formatData.campaignName) {
         formatData.campaignName = formatData.title || "Untitled Campaign";
       }
+      
+      console.log("Saving RCS format with data:", formatData);
       
       const validatedData = rcsFormatValidationSchema.parse(formatData);
       const rcsFormat = await storage.createRcsFormat(validatedData);
