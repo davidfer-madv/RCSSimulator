@@ -55,6 +55,32 @@ export default function RcsFormatter() {
   const [exporting, setExporting] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   
+  // Fetch campaign data if we're in edit mode
+  const { data: campaign, isLoading: isLoadingCampaign } = useQuery<Campaign>({
+    queryKey: ["/api/campaigns", campaignId],
+    queryFn: async () => {
+      const res = await fetch(`/api/campaigns/${campaignId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch campaign");
+      return res.json();
+    },
+    enabled: !!campaignId,
+  });
+  
+  // Fetch campaign formats if we're in edit mode
+  const { data: campaignFormats = [], isLoading: isLoadingFormats } = useQuery<RcsFormat[]>({
+    queryKey: ["/api/campaign", campaignId, "formats"],
+    queryFn: async () => {
+      const res = await fetch(`/api/campaign/${campaignId}/formats`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch campaign formats");
+      return res.json();
+    },
+    enabled: !!campaignId,
+  });
+  
   // Fetch customers data
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
@@ -98,6 +124,57 @@ export default function RcsFormatter() {
     }
   }, [selectedCustomerId, customers]);
   
+  // Load campaign data when in edit mode
+  useEffect(() => {
+    if (campaign && campaignFormats?.length > 0) {
+      // We have campaign data and at least one format, use the first format to populate the form
+      const format = campaignFormats[0];
+      
+      // Set campaign name
+      setCampaignName(campaign.name);
+      
+      // Set form fields from format
+      if (format.title) setTitle(format.title);
+      if (format.description) setDescription(format.description);
+      if (format.formatType) setFormatType(format.formatType as "richCard" | "carousel");
+      if (format.cardOrientation) setCardOrientation(format.cardOrientation as "vertical" | "horizontal");
+      if (format.mediaHeight) setMediaHeight(format.mediaHeight as "short" | "medium" | "tall");
+      if (format.lockAspectRatio !== null) setLockAspectRatio(!!format.lockAspectRatio);
+      if (format.verificationSymbol !== null) setVerificationSymbol(!!format.verificationSymbol);
+      
+      // Set selected customer ID if available
+      if (campaign.customerId) {
+        setSelectedCustomerId(campaign.customerId.toString());
+      }
+      
+      // Set actions if available
+      if (format.actions) {
+        try {
+          const parsedActions = Array.isArray(format.actions) 
+            ? format.actions 
+            : (typeof format.actions === 'string' ? JSON.parse(format.actions) : []);
+          setActions(parsedActions);
+        } catch (e) {
+          console.error("Error parsing actions:", e);
+        }
+      }
+      
+      // Handle brand logo URL
+      if (format.brandLogoUrl) {
+        const logoUrl = format.brandLogoUrl.startsWith('/') 
+          ? `http://localhost:5000${format.brandLogoUrl}` 
+          : format.brandLogoUrl;
+        setBrandLogoUrl(logoUrl);
+      }
+      
+      // Fetch images from imageUrls if available - this is a bit tricky since we need to load files
+      // Could add image preview from saved URLs as a future enhancement
+      
+      // Set page title to indicate edit mode
+      document.title = `Edit Campaign: ${campaign.name}`;
+    }
+  }, [campaign, campaignFormats]);
+
   // Process images temporarily for preview
   const processedImageUrls = selectedImages.map(file => URL.createObjectURL(file));
 
@@ -152,7 +229,7 @@ export default function RcsFormatter() {
         description,
         actions,
         customerId: selectedCustomerId || null,
-        campaignId: null, // Can be set if coming from a campaign
+        campaignId: campaignId ? parseInt(campaignId) : null, // Use the campaign ID from the URL if available
         brandName: selectedBrand?.name || "Business Name", // Store brand name
         campaignName: campaignName || title || "Untitled Campaign", // Use campaign name from dialog
         processedImageUrls, // Include the already processed image URLs as backup
@@ -181,13 +258,21 @@ export default function RcsFormatter() {
     },
     onSuccess: () => {
       toast({
-        title: "Format saved successfully",
-        description: "Your RCS format has been saved.",
+        title: campaignId ? "Format updated successfully" : "Format saved successfully",
+        description: campaignId 
+          ? "Your RCS format has been updated."
+          : "Your RCS format has been saved.",
       });
       
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["/api/rcs-formats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
+      
+      // If we're editing a campaign, also invalidate the campaign formats query
+      if (campaignId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/campaign", campaignId, "formats"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -293,9 +378,15 @@ export default function RcsFormatter() {
       return;
     }
     
-    // Open dialog to ask for campaign name
-    setCampaignName(title || ""); // Pre-fill with title
-    setIsCampaignDialogOpen(true);
+    // If we're in edit mode and already have a campaign name, use it
+    if (campaignId && campaign?.name) {
+      // Skip dialog and save directly using existing campaign name
+      saveFormatMutation.mutate();
+    } else {
+      // Open dialog to ask for campaign name
+      setCampaignName(title || ""); // Pre-fill with title
+      setIsCampaignDialogOpen(true);
+    }
   };
   
   // Handle campaign name confirmation
@@ -316,7 +407,12 @@ export default function RcsFormatter() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               {/* Page Title */}
               <div className="pb-5 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">RCS Message Format</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {campaignId 
+                    ? `Edit Campaign: ${campaign?.name || "Loading..."}`
+                    : "RCS Message Format"
+                  }
+                </h1>
                 <div className="mt-3 sm:mt-0 sm:ml-4">
                   <Button 
                     variant="outline" 
@@ -526,9 +622,11 @@ export default function RcsFormatter() {
       <Dialog open={isCampaignDialogOpen} onOpenChange={setIsCampaignDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Enter Campaign Name</DialogTitle>
+            <DialogTitle>{campaignId ? "Update Campaign" : "Enter Campaign Name"}</DialogTitle>
             <DialogDescription>
-              Provide a name for your campaign. This will help you organize your RCS formats.
+              {campaignId 
+                ? "Update the campaign information for this RCS format."
+                : "Provide a name for your campaign. This will help you organize your RCS formats."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -551,7 +649,7 @@ export default function RcsFormatter() {
               onClick={handleCampaignNameConfirm}
               disabled={!campaignName.trim()}
             >
-              Save
+              {campaignId ? "Update" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
