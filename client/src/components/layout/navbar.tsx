@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import companyLogo from "../../assets/company-logo.png";
 
 interface NavbarProps {
   toggleSidebar: () => void;
