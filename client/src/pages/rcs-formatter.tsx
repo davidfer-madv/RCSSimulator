@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
-import { PreviewContainer } from "@/components/image-formatter/preview-container";
+import { EnhancedPreviewContainer } from "@/components/image-formatter/enhanced-preview-container";
 import { Action, Customer, Campaign, RcsFormat } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -564,7 +564,7 @@ export default function RcsFormatter() {
                     </TabsList>
                     
                     <TabsContent value="android">
-                      <PreviewContainer
+                      <EnhancedPreviewContainer
                         platform="android"
                         title={title}
                         description={description}
@@ -581,7 +581,7 @@ export default function RcsFormatter() {
                     </TabsContent>
                     
                     <TabsContent value="ios">
-                      <PreviewContainer
+                      <EnhancedPreviewContainer
                         platform="ios"
                         title={title}
                         description={description}
