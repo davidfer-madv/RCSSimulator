@@ -63,6 +63,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create customer" });
     }
   });
+  
+  app.get("/api/customers/:id", isAuthenticated, async (req, res) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      const customer = await storage.getCustomer(customerId);
+      
+      if (!customer || customer.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      
+      res.json(customer);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch brand" });
+    }
+  });
+
+  app.patch("/api/customers/:id", isAuthenticated, async (req, res) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      
+      // First check if the customer exists and belongs to this user
+      const existingCustomer = await storage.getCustomer(customerId);
+      if (!existingCustomer || existingCustomer.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      
+      // Validate the update data
+      const validatedData = insertCustomerSchema.partial().parse(req.body);
+      
+      // Update the customer
+      const updatedCustomer = await storage.updateCustomer(customerId, validatedData);
+      
+      res.json(updatedCustomer);
+    } catch (error) {
+      console.error("Error updating customer:", error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to update brand" });
+    }
+  });
+  
+  app.delete("/api/customers/:id", isAuthenticated, async (req, res) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      
+      // First check if the customer exists and belongs to this user
+      const existingCustomer = await storage.getCustomer(customerId);
+      if (!existingCustomer || existingCustomer.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      
+      // Delete the customer
+      const success = await storage.deleteCustomer(customerId);
+      
+      if (success) {
+        res.status(200).json({ message: "Brand deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to delete brand" });
+      }
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      res.status(500).json({ message: "Failed to delete brand" });
+    }
+  });
 
   // Campaigns API
   app.get("/api/campaigns", isAuthenticated, async (req, res) => {
