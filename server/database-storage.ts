@@ -95,7 +95,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCampaign(insertCampaign: InsertCampaign): Promise<Campaign> {
-    const result = await db.insert(campaigns).values(insertCampaign).returning();
+    // Ensure customerId is properly handled (null if undefined)
+    const campaign = {
+      ...insertCampaign,
+      customerId: insertCampaign.customerId ?? null,
+      description: insertCampaign.description ?? null,
+      status: insertCampaign.status || 'active',
+      provider: insertCampaign.provider ?? null,
+      scheduledDate: insertCampaign.scheduledDate ?? null
+    };
+    
+    const result = await db.insert(campaigns).values(campaign).returning();
     return result[0];
   }
 

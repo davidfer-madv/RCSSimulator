@@ -327,12 +327,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let campaignId = formatData.campaignId;
       if (!campaignId && formatData.campaignName) {
         try {
+          // Get customer ID if provided
+          let customerId = null;
+          if (formatData.customerId) {
+            // Parse customerId from string to number
+            try {
+              customerId = parseInt(formatData.customerId);
+              console.log("Using customer ID:", customerId);
+              
+              // Verify the customer exists and belongs to this user
+              const customer = await storage.getCustomer(customerId);
+              if (!customer || customer.userId !== req.user!.id) {
+                console.log("Invalid customer ID or not owned by user");
+                customerId = null;
+              }
+            } catch (error) {
+              console.error("Error parsing customerId:", error);
+              customerId = null;
+            }
+          }
+          
           // Create a new campaign
           const campaign = await storage.createCampaign({
             name: formatData.campaignName,
             userId: req.user!.id,
             formatType: formatData.formatType,
-            customerId: formatData.customerId ? parseInt(formatData.customerId) : null,
+            customerId: customerId,
             status: 'active',
             description: formatData.description || null,
           });
