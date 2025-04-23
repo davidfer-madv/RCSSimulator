@@ -47,7 +47,7 @@ export default function RcsFormatter() {
   const [formatType, setFormatType] = useState<"richCard" | "carousel">("richCard");
   const [cardOrientation, setCardOrientation] = useState<"vertical" | "horizontal">("vertical");
   const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">("medium");
-  const [lockAspectRatio, setLockAspectRatio] = useState<boolean>(true);
+  const [lockAspectRatio, setLockAspectRatio] = useState<boolean>(false);
   const [brandLogoUrl, setBrandLogoUrl] = useState<string>("");
   const [verificationSymbol, setVerificationSymbol] = useState<boolean>(true); // Always enabled
   const [actions, setActions] = useState<Action[]>([]);
@@ -351,7 +351,7 @@ export default function RcsFormatter() {
     setFormatType("richCard");
     setCardOrientation("vertical");
     setMediaHeight("medium");
-    setLockAspectRatio(true);
+    setLockAspectRatio(false);
     setBrandLogoUrl("");
     setVerificationSymbol(true);
     setActions([]);
