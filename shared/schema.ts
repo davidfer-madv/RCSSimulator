@@ -17,7 +17,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 });
 
-// Customer schema
+// Customer schema (Brand)
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -27,7 +27,9 @@ export const customers = pgTable("customers", {
   phone: text("phone"),
   company: text("company"),
   address: text("address"),
-  brandLogoUrl: text("brand_logo_url"), // Brand logo URL is associated with the customer (brand)
+  brandLogoUrl: text("brand_logo_url"), // Brand logo URL (224x224px)
+  brandColor: text("brand_color"), // Brand color in hex format (e.g., #FF5733)
+  brandBannerUrl: text("brand_banner_url"), // Brand banner image URL (1440x448px)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -91,6 +93,27 @@ export type Campaign = typeof campaigns.$inferSelect;
 export type InsertRcsFormat = z.infer<typeof insertRcsFormatSchema>;
 export type RcsFormat = typeof rcsFormats.$inferSelect;
 
+// Action type schemas
+const actionTextSchema = z.object({
+  text: z.string().min(1, "Action text is required"),
+  type: z.literal("text"),
+  value: z.string().optional(),
+});
+
+const actionUrlSchema = z.object({
+  text: z.string().min(1, "Action text is required"),
+  type: z.enum(["url", "phone", "calendar"]),
+  value: z.string().min(1, "Action value is required"),
+});
+
+// Schema for action items
+export const actionSchema = z.discriminatedUnion("type", [
+  actionTextSchema,
+  actionUrlSchema
+]);
+
+export type Action = z.infer<typeof actionSchema>;
+
 // Extended schema for RCS format with validations
 export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
   title: z.string().min(1, "Title is required").max(200, "Title cannot exceed 200 characters"),
@@ -107,23 +130,8 @@ export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
   lockAspectRatio: z.boolean().optional().default(true),
   brandLogoUrl: z.string().url("Brand logo must be a valid URL").optional(),
   verificationSymbol: z.boolean().optional().default(false),
-  actions: z.array(z.object({
-    text: z.string().min(1, "Action text is required"),
-    type: z.enum(["url", "phone", "calendar"], {
-      errorMap: () => ({ message: "Action type must be URL, Phone, or Calendar" }),
-    }),
-    value: z.string().min(1, "Action value is required"),
-  })).max(4, "Maximum of 4 actions allowed").optional(),
+  actions: z.array(actionSchema).max(4, "Maximum of 4 actions allowed").optional(),
   imageUrls: z.array(z.string().url("Must be a valid URL"))
     .min(1, "At least one image is required")
     .max(10, "Maximum of 10 images for carousel"),
 });
-
-// Schema for action items
-export const actionSchema = z.object({
-  text: z.string().min(1, "Action text is required"),
-  type: z.enum(["url", "phone", "calendar"]),
-  value: z.string().min(1, "Action value is required"),
-});
-
-export type Action = z.infer<typeof actionSchema>;

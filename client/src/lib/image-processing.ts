@@ -22,7 +22,7 @@ interface RcsCardJson {
   actions: {
     text: string;
     type: string;
-    value: string;
+    value?: string;
   }[];
 }
 
