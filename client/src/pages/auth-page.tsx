@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import companyLogo from "../assets/company-logo.png";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -115,6 +116,9 @@ export default function AuthPage() {
         {/* Auth Form */}
         <div className="flex flex-col justify-center">
           <div className="text-center mb-6">
+            <div className="flex justify-center mb-4">
+              <img src={companyLogo} alt="Messaging Advisory Logo" className="h-12 object-contain" />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">RCS Format</h1>
             <p className="text-gray-600">Format your business images for RCS messaging</p>
           </div>

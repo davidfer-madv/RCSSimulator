@@ -16,16 +16,17 @@ interface NavbarProps {
 }
 
 export function Navbar({ toggleSidebar }: NavbarProps) {
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSuccess: () => {
-        setLocation("/auth");
-      },
-    });
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setLocation("/auth");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -45,6 +46,13 @@ export function Navbar({ toggleSidebar }: NavbarProps) {
       </button>
       
       <div className="flex-1 px-4 flex justify-between">
+        <div className="flex items-center mr-4">
+          <img 
+            src={companyLogo} 
+            alt="Messaging Advisory Logo" 
+            className="h-10 object-contain" 
+          />
+        </div>
         <div className="flex-1 flex">
           <form className="w-full flex md:ml-0" onSubmit={handleSearch}>
             <label htmlFor="search" className="sr-only">

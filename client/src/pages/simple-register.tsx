@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import companyLogo from "../assets/company-logo.png";
 
 export default function SimpleRegister() {
   const [username, setUsername] = useState("");
@@ -80,8 +81,11 @@ export default function SimpleRegister() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
+        <CardHeader className="pb-0">
+          <div className="flex justify-center mb-4">
+            <img src={companyLogo} alt="Messaging Advisory Logo" className="h-12 object-contain" />
+          </div>
+          <CardTitle className="text-2xl text-center">Create Account</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
