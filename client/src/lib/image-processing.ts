@@ -6,6 +6,9 @@ interface FormatOptions {
   formatType: "richCard" | "carousel";
   cardOrientation?: "vertical" | "horizontal";
   mediaHeight?: "short" | "medium" | "tall";
+  lockAspectRatio?: boolean;
+  brandLogoUrl?: string;
+  verificationSymbol?: boolean;
   actions: Action[];
 }
 

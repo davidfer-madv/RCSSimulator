@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 interface FormatOptionsProps {
   title: string;
@@ -167,6 +168,97 @@ export function FormatOptions({
             <SelectItem value="tall">Tall (264 DP)</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="lock-aspect-ratio"
+            checked={lockAspectRatio}
+            onCheckedChange={setLockAspectRatio}
+          />
+          <Label htmlFor="lock-aspect-ratio">Lock Aspect Ratio</Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center">
+                  <Info className="ml-1 h-4 w-4 text-gray-400" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="w-80">
+                <p>When enabled, images will maintain their original proportions within RCS format constraints.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="verification-symbol"
+            checked={verificationSymbol}
+            onCheckedChange={setVerificationSymbol}
+          />
+          <Label htmlFor="verification-symbol">Verification Symbol</Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center">
+                  <Info className="ml-1 h-4 w-4 text-gray-400" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="w-80">
+                <p>Shows a verification checkmark next to business name (applies to verified businesses in RCS services).</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+      
+      <div>
+        <div className="flex items-center">
+          <Label htmlFor="brand-logo" className="mb-1">Brand Logo</Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center">
+                  <Info className="ml-1 h-4 w-4 text-gray-400" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="w-80">
+                <p>Brand logo displays in the header section of RCS cards. Recommended size: Square, 32x32 pixels.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Input
+            id="brand-logo"
+            type="url"
+            value={brandLogoUrl}
+            onChange={(e) => setBrandLogoUrl(e.target.value)}
+            placeholder="https://example.com/logo.png"
+            className="flex-1"
+          />
+          <div className="flex-shrink-0">
+            {brandLogoUrl ? (
+              <div className="w-10 h-10 border rounded-md overflow-hidden">
+                <img 
+                  src={brandLogoUrl} 
+                  alt="Brand logo" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 border rounded-md flex items-center justify-center bg-gray-50">
+                <Upload className="w-5 h-5 text-gray-400" />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div>

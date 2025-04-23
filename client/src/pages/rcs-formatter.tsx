@@ -27,6 +27,9 @@ export default function RcsFormatter() {
   const [formatType, setFormatType] = useState<"richCard" | "carousel">("richCard");
   const [cardOrientation, setCardOrientation] = useState<"vertical" | "horizontal">("vertical");
   const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">("medium");
+  const [lockAspectRatio, setLockAspectRatio] = useState<boolean>(true);
+  const [brandLogoUrl, setBrandLogoUrl] = useState<string>("");
+  const [verificationSymbol, setVerificationSymbol] = useState<boolean>(false);
   const [actions, setActions] = useState<Action[]>([]);
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   const [exporting, setExporting] = useState(false);
@@ -55,6 +58,9 @@ export default function RcsFormatter() {
         formatType,
         cardOrientation,
         mediaHeight,
+        lockAspectRatio,
+        brandLogoUrl,
+        verificationSymbol,
         title,
         description,
         actions,
@@ -123,6 +129,9 @@ export default function RcsFormatter() {
           formatType,
           cardOrientation,
           mediaHeight,
+          lockAspectRatio,
+          brandLogoUrl,
+          verificationSymbol,
         },
         exportType,
         activePlatform
@@ -156,6 +165,9 @@ export default function RcsFormatter() {
     setFormatType("richCard");
     setCardOrientation("vertical");
     setMediaHeight("medium");
+    setLockAspectRatio(true);
+    setBrandLogoUrl("");
+    setVerificationSymbol(false);
     setActions([]);
     
     toast({
