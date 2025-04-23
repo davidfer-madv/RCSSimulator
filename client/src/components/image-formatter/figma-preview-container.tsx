@@ -1,6 +1,7 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Action } from "@shared/schema";
 import verificationBadge from "@/assets/verification_badge.svg";
+import verificationIcon from "@/assets/verification_icon.svg";
 import { useEffect } from "react";
 import { 
   iOSStatusBar, 
@@ -82,7 +83,7 @@ export function FigmaPreviewContainer({
             <AndroidHeader 
               brandName={brandName} 
               brandLogoUrl={brandLogoUrl} 
-              verificationBadgeUrl={verificationBadge} 
+              verificationBadgeUrl={verificationIcon} 
               verificationSymbol={verificationSymbol} 
             />
           ) : (

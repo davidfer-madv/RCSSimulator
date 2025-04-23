@@ -64,18 +64,15 @@ export const iOSHeader: React.FC<{ brandName: string; brandLogoUrl?: string; ver
       <div className="ml-2 flex-grow">
         <div className="text-sm font-medium text-gray-900 flex items-center">
           <span>{brandName}</span>
-          {verificationSymbol && verificationBadgeUrl && (
+          {verificationSymbol && (
             <span className="ml-1 inline-flex items-center">
               <img 
-                src={verificationBadgeUrl} 
+                src={verificationBadgeUrl || '/assets/verification_icon.svg'} 
                 alt="Verified" 
                 className="h-4 w-4"
               />
             </span>
           )}
-        </div>
-        <div className="text-xs text-gray-500">
-          Text Message - RCS
         </div>
       </div>
       <div className="ml-auto">
@@ -93,6 +90,7 @@ export const iOSMessageBubble: React.FC<{ message: string }> = ({ message }) => 
   <div className="mb-3 flex justify-start">
     <div className="bg-gray-200 rounded-2xl py-2 px-3 max-w-[85%]">
       <p className="text-sm text-gray-800">{message}</p>
+      <p className="text-xs text-gray-500 mt-1">Text Message - RCS</p>
     </div>
   </div>
 );
@@ -190,19 +188,16 @@ export const AndroidHeader: React.FC<{ brandName: string; brandLogoUrl?: string;
       <div className="ml-2 flex-grow">
         <div className="text-sm font-medium text-white flex items-center">
           <span>{brandName}</span>
-          {verificationSymbol && verificationBadgeUrl && (
+          {verificationSymbol && (
             <span className="ml-1 inline-flex items-center">
               <img 
-                src={verificationBadgeUrl} 
+                src={verificationBadgeUrl || '/assets/verification_icon.svg'} 
                 alt="Verified" 
                 className="h-4 w-4"
                 style={{ filter: "brightness(2) invert(1)" }}
               />
             </span>
           )}
-        </div>
-        <div className="text-xs text-gray-100">
-          RCS Message
         </div>
       </div>
     </div>
@@ -213,6 +208,7 @@ export const AndroidMessageBubble: React.FC<{ message: string }> = ({ message })
   <div className="mb-3 flex justify-start">
     <div className="bg-white rounded-lg py-2 px-3 max-w-[85%] shadow-sm">
       <p className="text-sm text-gray-800">{message}</p>
+      <p className="text-xs text-blue-600 mt-1">RCS Message</p>
     </div>
   </div>
 );
