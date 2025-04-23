@@ -108,6 +108,12 @@ export default function AuthPage() {
             <p className="text-gray-600">Format your business images for RCS messaging</p>
           </div>
 
+          <div className="text-center mb-4">
+            <Button variant="outline" onClick={() => setLocation("/register")}>
+              Need a simpler registration? Click here
+            </Button>
+          </div>
+          
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-2 w-full mb-6">
               <TabsTrigger value="login">Login</TabsTrigger>

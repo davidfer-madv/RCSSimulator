@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import SimpleRegister from "@/pages/simple-register";
 import RcsFormatter from "@/pages/rcs-formatter";
 import Campaigns from "@/pages/campaigns";
 import Customers from "@/pages/customers";
@@ -18,6 +19,7 @@ function Router() {
       <ProtectedRoute path="/campaigns" component={Campaigns} />
       <ProtectedRoute path="/customers" component={Customers} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/register" component={SimpleRegister} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
