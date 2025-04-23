@@ -267,6 +267,12 @@ export default function RcsFormatter() {
                         setCardOrientation={setCardOrientation}
                         mediaHeight={mediaHeight}
                         setMediaHeight={setMediaHeight}
+                        lockAspectRatio={lockAspectRatio}
+                        setLockAspectRatio={setLockAspectRatio}
+                        brandLogoUrl={brandLogoUrl}
+                        setBrandLogoUrl={setBrandLogoUrl}
+                        verificationSymbol={verificationSymbol}
+                        setVerificationSymbol={setVerificationSymbol}
                         actions={actions}
                         setActions={setActions}
                       />
@@ -292,6 +298,9 @@ export default function RcsFormatter() {
                         formatType={formatType}
                         cardOrientation={cardOrientation}
                         mediaHeight={mediaHeight}
+                        lockAspectRatio={lockAspectRatio}
+                        brandLogoUrl={brandLogoUrl}
+                        verificationSymbol={verificationSymbol}
                       />
                     </TabsContent>
                     
@@ -305,6 +314,9 @@ export default function RcsFormatter() {
                         formatType={formatType}
                         cardOrientation={cardOrientation}
                         mediaHeight={mediaHeight}
+                        lockAspectRatio={lockAspectRatio}
+                        brandLogoUrl={brandLogoUrl}
+                        verificationSymbol={verificationSymbol}
                       />
                     </TabsContent>
                   </Tabs>
