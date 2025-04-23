@@ -68,8 +68,8 @@ export default function Customers() {
     },
     onSuccess: () => {
       toast({
-        title: "Customer created",
-        description: "Your customer has been created successfully.",
+        title: "Brand created",
+        description: "Your brand has been created successfully.",
       });
       setIsNewCustomerDialogOpen(false);
       form.reset();
@@ -78,7 +78,7 @@ export default function Customers() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to create customer",
+        title: "Failed to create brand",
         description: error.message,
         variant: "destructive",
       });
@@ -269,7 +269,7 @@ export default function Customers() {
                                   Creating...
                                 </>
                               ) : (
-                                "Add Customer"
+                                "Add Brand"
                               )}
                             </Button>
                           </DialogFooter>
@@ -336,11 +336,11 @@ export default function Customers() {
                 </div>
               ) : (
                 <div className="text-center py-10">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No customers yet</h3>
-                  <p className="text-gray-500 mb-6">Add your first customer to associate with campaigns.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No brands yet</h3>
+                  <p className="text-gray-500 mb-6">Add your first brand to associate with campaigns.</p>
                   <Button onClick={() => setIsNewCustomerDialogOpen(true)}>
                     <UserPlus className="mr-2 h-4 w-4" />
-                    Add First Customer
+                    Add First Brand
                   </Button>
                 </div>
               )}

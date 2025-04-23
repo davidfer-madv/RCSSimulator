@@ -26,7 +26,7 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     { href: "/home", label: "Dashboard", icon: <Home className="mr-3 h-5 w-5" /> },
     { href: "/rcs-formatter", label: "RCS Formatter", icon: <FileImage className="mr-3 h-5 w-5" /> },
     { href: "/campaigns", label: "Campaigns", icon: <FolderOpen className="mr-3 h-5 w-5" /> },
-    { href: "/customers", label: "Customers", icon: <Users className="mr-3 h-5 w-5" /> },
+    { href: "/customers", label: "Brands", icon: <Users className="mr-3 h-5 w-5" /> },
     { href: "/messages", label: "RCS Messages", icon: <MessageSquare className="mr-3 h-5 w-5" /> },
     { href: "/stats", label: "Analytics", icon: <BarChart3 className="mr-3 h-5 w-5" /> },
     { href: "/settings", label: "Settings", icon: <Settings className="mr-3 h-5 w-5" /> },
