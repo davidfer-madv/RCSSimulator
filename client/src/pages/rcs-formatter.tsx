@@ -29,6 +29,7 @@ export default function RcsFormatter() {
   const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">("medium");
   const [actions, setActions] = useState<Action[]>([]);
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
+  const [exporting, setExporting] = useState(false);
   
   // Process images temporarily for preview
   const processedImageUrls = selectedImages.map(file => URL.createObjectURL(file));
@@ -96,7 +97,7 @@ export default function RcsFormatter() {
   });
 
   // Export format
-  const handleExport = async () => {
+  const handleExport = async (exportType: 'json' | 'image' | 'both' = 'json') => {
     if (selectedImages.length === 0) {
       toast({
         title: "No images selected",
@@ -107,19 +108,34 @@ export default function RcsFormatter() {
     }
     
     try {
+      setExporting(true);
+      
+      // Get the active platform from the current tab
+      const activePlatform = activePreviewTab as 'android' | 'ios';
+      
       // Process and export the images
-      await processImages(selectedImages, {
-        title,
-        description,
-        actions,
-        formatType,
-        cardOrientation,
-        mediaHeight,
-      });
+      await processImages(
+        selectedImages, 
+        {
+          title,
+          description,
+          actions,
+          formatType,
+          cardOrientation,
+          mediaHeight,
+        },
+        exportType,
+        activePlatform
+      );
+      
+      const exportTypeText = 
+        exportType === 'json' ? 'JSON configuration' : 
+        exportType === 'image' ? 'preview image' : 
+        'JSON configuration and preview image';
       
       toast({
         title: "Export successful",
-        description: "Your formatted images have been downloaded.",
+        description: `Your RCS format has been exported as ${exportTypeText}.`,
       });
     } catch (error) {
       toast({
@@ -127,6 +143,8 @@ export default function RcsFormatter() {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -192,13 +210,24 @@ export default function RcsFormatter() {
                     <Save className="mr-2 h-4 w-4" />
                     Save Format
                   </Button>
-                  <Button 
-                    onClick={handleExport}
-                    disabled={saveFormatMutation.isPending}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
+                  <div className="relative inline-block">
+                    <Button 
+                      onClick={() => handleExport('json')}
+                      disabled={saveFormatMutation.isPending || exporting}
+                      className="mr-2"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Export JSON
+                    </Button>
+                    <Button 
+                      onClick={() => handleExport('image')}
+                      disabled={saveFormatMutation.isPending || exporting}
+                      variant="outline"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Export Image
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
