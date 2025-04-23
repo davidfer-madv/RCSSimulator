@@ -2,6 +2,7 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Action } from "@shared/schema";
 import { Badge, BadgeCheck, Battery, ChevronLeft, Info, Mic, Paperclip, Plus, Signal, SmilePlus, Wifi } from "lucide-react";
 import verificationBadge from "@/assets/verification_badge.svg";
+import { useEffect } from "react";
 
 interface PreviewContainerProps {
   platform: "android" | "ios";
@@ -33,6 +34,27 @@ export function PreviewContainer({
   brandName = "Business Name"
 }: PreviewContainerProps) {
   const previewImage = imageUrls.length > 0 ? imageUrls[0] : null;
+  
+  // Add event listener to close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const dropdowns = document.querySelectorAll('.options-dropdown:not(.hidden)');
+      
+      dropdowns.forEach(dropdown => {
+        // Check if click is outside of this dropdown
+        if (!dropdown.contains(event.target as Node) && 
+            !(event.target as Element).classList.contains('options-btn')) {
+          dropdown.classList.add('hidden');
+        }
+      });
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
   
   // Calculate image height based on mediaHeight
   const getImageHeight = () => {
@@ -213,16 +235,26 @@ export function PreviewContainer({
                             {/* Multiple URL/Phone/Calendar actions - Options button on new line */}
                             {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length > 1 && (
                               <div className="mt-2">
-                                <div className="relative group">
-                                  <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium">
+                                <div className="relative dropdown-container">
+                                  <button 
+                                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium options-btn"
+                                    onClick={(e) => {
+                                      // Toggle dropdown visibility when clicked
+                                      const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (dropdown) {
+                                        dropdown.classList.toggle('hidden');
+                                      }
+                                      e.stopPropagation();
+                                    }}
+                                  >
                                     Options
                                   </button>
-                                  {/* Dropdown that shows on hover */}
-                                  <div className="absolute left-0 mt-1 w-40 bg-white shadow-lg rounded-md overflow-hidden z-10 hidden group-hover:block">
+                                  {/* Dropdown that shows on click */}
+                                  <div className="absolute left-0 mt-1 w-48 bg-gray-200 shadow-md rounded-lg overflow-hidden z-10 hidden options-dropdown">
                                     {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, idx) => (
                                       <button 
                                         key={idx}
-                                        className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        className="block w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-300 border-b border-gray-300 last:border-b-0"
                                       >
                                         {action.text}
                                       </button>
@@ -274,16 +306,26 @@ export function PreviewContainer({
                               {/* Multiple URL/Phone/Calendar actions - Options button on new line */}
                               {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length > 1 && (
                                 <div className="mt-2">
-                                  <div className="relative group">
-                                    <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium">
+                                  <div className="relative dropdown-container">
+                                    <button 
+                                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium options-btn"
+                                      onClick={(e) => {
+                                        // Toggle dropdown visibility when clicked
+                                        const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
+                                        if (dropdown) {
+                                          dropdown.classList.toggle('hidden');
+                                        }
+                                        e.stopPropagation();
+                                      }}
+                                    >
                                       Options
                                     </button>
-                                    {/* Dropdown that shows on hover */}
-                                    <div className="absolute left-0 mt-1 w-40 bg-white shadow-lg rounded-md overflow-hidden z-10 hidden group-hover:block">
+                                    {/* Dropdown that shows on click */}
+                                    <div className="absolute left-0 mt-1 w-48 bg-gray-200 shadow-md rounded-lg overflow-hidden z-10 hidden options-dropdown">
                                       {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, idx) => (
                                         <button 
                                           key={idx}
-                                          className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                          className="block w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-300 border-b border-gray-300 last:border-b-0"
                                         >
                                           {action.text}
                                         </button>
