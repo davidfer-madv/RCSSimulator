@@ -307,7 +307,7 @@ export function PreviewContainer({
           {platform === "android" ? (
             <div className="bg-white p-2 flex items-center border-t border-gray-200">
               <SmilePlus className="text-gray-400 mx-2 h-5 w-5" />
-              <input type="text" placeholder="Message" className="flex-1 border-none text-sm focus:ring-0" />
+              <input type="text" placeholder="RCS Message" className="flex-1 border-none text-sm focus:ring-0" />
               <Paperclip className="text-gray-400 mx-2 h-5 w-5" />
               <Mic className="text-gray-400 mx-2 h-5 w-5" />
             </div>
@@ -316,7 +316,7 @@ export function PreviewContainer({
               <button className="bg-gray-200 rounded-full p-2 mr-2">
                 <Plus className="text-gray-600 h-5 w-5" />
               </button>
-              <input type="text" placeholder="Message" className="flex-1 bg-white border border-gray-300 rounded-full px-4 py-2 text-sm" />
+              <input type="text" placeholder="Text Message - RCS" className="flex-1 bg-white border border-gray-300 rounded-full px-4 py-2 text-sm" />
               <button className="ml-2 text-blue-500">
                 <Mic className="h-5 w-5" />
               </button>
