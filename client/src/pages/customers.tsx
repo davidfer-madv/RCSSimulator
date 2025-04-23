@@ -16,7 +16,8 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, UserPlus, Mail, Phone, Building, MapPin, Trash2, Edit } from "lucide-react";
+import { Loader2, Plus, UserPlus, Mail, Phone, Building, MapPin, Trash2, Edit, Info, Upload } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Customer form schema
 const customerSchema = z.object({

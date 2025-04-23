@@ -86,10 +86,19 @@ export function PreviewContainer({
                   </div>
                 )}
               </div>
-              <div className="ml-2">
-                <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} flex items-center`}>
+              <div className="ml-2 flex-grow">
+                <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} relative`}>
                   Business Name
-                  <BadgeCheck className={`ml-1 h-4 w-4 ${platform === "android" ? "text-blue-200" : "text-blue-500"}`} />
+                  <div className="absolute" style={{ left: "75%" }}>
+                    <img 
+                      src="/src/assets/verification_badge.svg" 
+                      alt="Verified" 
+                      className="h-4 w-4"
+                      style={{ 
+                        filter: platform === "android" ? "brightness(2) invert(1)" : "brightness(0.7)"
+                      }}
+                    />
+                  </div>
                 </div>
                 {platform === "android" && <div className="text-xs text-blue-200">Online</div>}
               </div>

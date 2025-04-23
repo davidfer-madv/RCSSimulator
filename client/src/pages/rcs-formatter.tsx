@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -6,14 +6,21 @@ import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
 import { PreviewContainer } from "@/components/image-formatter/preview-container";
-import { Action } from "@shared/schema";
-import { useMutation } from "@tanstack/react-query";
+import { Action, Customer } from "@shared/schema";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Download, RotateCcw, Save } from "lucide-react";
 import { processImages } from "@/lib/image-processing";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 export default function RcsFormatter() {
   const { user } = useAuth();
@@ -29,10 +36,26 @@ export default function RcsFormatter() {
   const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">("medium");
   const [lockAspectRatio, setLockAspectRatio] = useState<boolean>(true);
   const [brandLogoUrl, setBrandLogoUrl] = useState<string>("");
-  const [verificationSymbol, setVerificationSymbol] = useState<boolean>(false);
+  const [verificationSymbol, setVerificationSymbol] = useState<boolean>(true); // Always enabled
   const [actions, setActions] = useState<Action[]>([]);
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   const [exporting, setExporting] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  
+  // Fetch customers data
+  const { data: customers, isLoading: isLoadingCustomers } = useQuery<Customer[]>({
+    queryKey: ["/api/customers"],
+  });
+  
+  // Set brand logo URL from selected customer
+  useEffect(() => {
+    if (selectedCustomerId && customers) {
+      const customer = customers.find(c => c.id.toString() === selectedCustomerId);
+      if (customer?.brandLogoUrl) {
+        setBrandLogoUrl(customer.brandLogoUrl);
+      }
+    }
+  }, [selectedCustomerId, customers]);
   
   // Process images temporarily for preview
   const processedImageUrls = selectedImages.map(file => URL.createObjectURL(file));
@@ -249,11 +272,58 @@ export default function RcsFormatter() {
                 {/* Upload and Format Selection */}
                 <Card className="lg:col-span-1">
                   <CardContent className="p-6">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Upload Images</h3>
-                    <ImageUploader 
-                      onImagesSelected={setSelectedImages} 
-                      maxImages={formatType === "carousel" ? 10 : 1}
-                    />
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Select Brand & Images</h3>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Select Brand
+                      </label>
+                      <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a brand" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingCustomers ? (
+                            <div className="p-2 text-center text-sm text-gray-500">Loading brands...</div>
+                          ) : customers?.length ? (
+                            customers.map(customer => (
+                              <SelectItem key={customer.id} value={customer.id.toString()}>
+                                <div className="flex items-center">
+                                  {customer.brandLogoUrl && (
+                                    <div className="w-5 h-5 mr-2">
+                                      <img 
+                                        src={customer.brandLogoUrl} 
+                                        alt="" 
+                                        className="w-full h-full object-contain"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+                                  {customer.name}
+                                </div>
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="p-2 text-center text-sm text-gray-500">No brands available</div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Brand logo will be displayed in the RCS message header
+                      </p>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Upload Images
+                      </label>
+                      <ImageUploader 
+                        onImagesSelected={setSelectedImages} 
+                        maxImages={formatType === "carousel" ? 10 : 1}
+                      />
+                    </div>
                     
                     <div className="mt-6">
                       <FormatOptions 
