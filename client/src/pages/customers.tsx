@@ -21,13 +21,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 // Customer form schema
 const customerSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
+  name: z.string().min(3, "Brand name must be at least 3 characters").max(50, "Brand name must be no more than 50 characters"),
+  company: z.string().min(2, "Company name is required").max(100, "Company name must be no more than 100 characters"),
+  brandLogoUrl: z.string().url("Please enter a valid URL").min(1, "Brand logo is required"),
+  brandColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Please enter a valid hex color code (e.g., #FF5733)").min(1, "Brand color is required"),
   email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
   phone: z.string().optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
-  company: z.string().optional().or(z.literal("")),
-  brandLogoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-  brandColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Please enter a valid hex color code (e.g., #FF5733)").optional().or(z.literal("")),
   brandBannerUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
 });
 
@@ -208,7 +208,7 @@ export default function Customers() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  Brand Logo URL
+                                  Brand Logo
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -217,23 +217,16 @@ export default function Customers() {
                                         </div>
                                       </TooltipTrigger>
                                       <TooltipContent className="w-80">
-                                        <p>Brand logo displays in RCS message headers. Recommended size: 224x224 pixels.</p>
+                                        <p>Brand logo displays in RCS message headers. Recommended size: Square, 224x224 pixels.</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
                                 </FormLabel>
                                 <FormControl>
-                                  <div className="flex items-center gap-3">
-                                    <Input
-                                      type="url"
-                                      placeholder="https://example.com/logo.png"
-                                      {...field}
-                                      value={field.value || ''}
-                                      className="flex-1"
-                                    />
-                                    <div className="flex-shrink-0">
-                                      {field.value ? (
-                                        <div className="w-10 h-10 border rounded-md overflow-hidden">
+                                  <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex-shrink-0 w-12 h-12 border rounded-md overflow-hidden">
+                                        {field.value ? (
                                           <img 
                                             src={field.value} 
                                             alt="Brand logo" 
@@ -242,12 +235,46 @@ export default function Customers() {
                                               e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
                                             }}
                                           />
-                                        </div>
-                                      ) : (
-                                        <div className="w-10 h-10 border rounded-md flex items-center justify-center bg-gray-50">
-                                          <Upload className="w-5 h-5 text-gray-400" />
-                                        </div>
-                                      )}
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                            <Upload className="w-5 h-5 text-gray-400" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="flex-1">
+                                        <div className="text-sm font-medium">Upload or enter URL</div>
+                                        <div className="text-xs text-gray-500">Square image recommended (224x224px)</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        type="url"
+                                        placeholder="https://example.com/logo.png"
+                                        {...field}
+                                        value={field.value || ''}
+                                        className="flex-1"
+                                      />
+                                      <div className="relative">
+                                        <input
+                                          type="file"
+                                          id="logo-upload"
+                                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                          accept="image/*"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                              const objectUrl = URL.createObjectURL(file);
+                                              field.onChange(objectUrl);
+                                            }
+                                          }}
+                                        />
+                                        <Button type="button" size="sm" variant="outline">
+                                          <Upload className="w-4 h-4 mr-1" />
+                                          Browse
+                                        </Button>
+                                      </div>
                                     </div>
                                   </div>
                                 </FormControl>
@@ -259,43 +286,109 @@ export default function Customers() {
                           <FormField
                             control={form.control}
                             name="brandColor"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  Brand Color
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="inline-flex items-center">
-                                          <Info className="ml-1 h-4 w-4 text-gray-400" />
+                            render={({ field }) => {
+                              // Define color palette options
+                              const colorPalette = [
+                                // Brand colors
+                                "#1E88E5", // Blue
+                                "#D81B60", // Pink
+                                "#43A047", // Green
+                                "#E53935", // Red
+                                "#5E35B1", // Deep Purple
+                                "#FB8C00", // Orange
+                                "#00ACC1", // Cyan
+                                "#3949AB", // Indigo
+                                "#8E24AA", // Purple
+                                "#F4511E", // Deep Orange
+                                "#039BE5", // Light Blue
+                                "#7CB342", // Light Green
+                                "#C0CA33", // Lime
+                                "#00897B", // Teal
+                                "#FDD835", // Yellow
+                                "#6D4C41", // Brown
+                                "#546E7A", // Blue Grey
+                                "#757575", // Grey
+                                "#000000", // Black
+                                "#E91E63", // Pink
+                              ];
+                              
+                              return (
+                                <FormItem>
+                                  <FormLabel>
+                                    Brand Color
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="inline-flex items-center">
+                                            <Info className="ml-1 h-4 w-4 text-gray-400" />
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="w-80">
+                                          <p>Brand color used for accents and text color on rich card actions/replies.</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </FormLabel>
+                                  <FormControl>
+                                    <div className="flex flex-col gap-3">
+                                      <div className="flex items-center gap-2">
+                                        <div 
+                                          className="w-10 h-10 border rounded-md flex-shrink-0" 
+                                          style={{backgroundColor: field.value || '#ffffff'}}
+                                        ></div>
+                                        <div className="flex-1">
+                                          <div className="text-sm font-medium">Selected color</div>
+                                          <div className="text-xs text-gray-500">{field.value || 'No color selected'}</div>
                                         </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Brand color used for accents and card borders.</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </FormLabel>
-                                <FormControl>
-                                  <div className="flex items-center gap-3">
-                                    <Input
-                                      type="text"
-                                      placeholder="#FF5733"
-                                      {...field}
-                                      value={field.value || ''}
-                                      className="flex-1"
-                                    />
-                                    <div className="flex-shrink-0">
-                                      <div 
-                                        className="w-10 h-10 border rounded-md" 
-                                        style={{backgroundColor: field.value || '#ffffff'}}
-                                      ></div>
+                                      </div>
+                                      
+                                      <div className="grid grid-cols-10 gap-1">
+                                        {colorPalette.map((color) => (
+                                          <button
+                                            key={color}
+                                            type="button"
+                                            className={`w-6 h-6 rounded-full border-2 transition-all ${field.value === color ? 'border-primary scale-110' : 'border-transparent hover:scale-110'}`}
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => field.onChange(color)}
+                                          />
+                                        ))}
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <Input
+                                          type="text"
+                                          placeholder="#FF5733"
+                                          {...field}
+                                          value={field.value || ''}
+                                          className="flex-1"
+                                          onChange={(e) => {
+                                            // Update color field when text is changed
+                                            field.onChange(e.target.value);
+                                          }}
+                                        />
+                                        <div className="relative">
+                                          <input
+                                            type="color"
+                                            id="color-picker"
+                                            value={field.value || '#ffffff'}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            onChange={(e) => {
+                                              // Update text field when color is picked
+                                              field.onChange(e.target.value);
+                                            }}
+                                          />
+                                          <Button type="button" size="sm" variant="outline">
+                                            <Palette className="w-4 h-4 mr-1" />
+                                            Custom
+                                          </Button>
+                                        </div>
+                                      </div>
                                     </div>
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )
+                            }}
                           />
                           
                           <FormField
@@ -304,7 +397,7 @@ export default function Customers() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  Brand Banner URL
+                                  Brand Banner
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -319,28 +412,59 @@ export default function Customers() {
                                   </TooltipProvider>
                                 </FormLabel>
                                 <FormControl>
-                                  <div className="flex items-center gap-3">
-                                    <Input
-                                      type="url"
-                                      placeholder="https://example.com/banner.png"
-                                      {...field}
-                                      value={field.value || ''}
-                                      className="flex-1"
-                                    />
-                                    {field.value && (
-                                      <div className="flex-shrink-0">
-                                        <div className="w-10 h-4 border rounded-md overflow-hidden">
+                                  <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex-shrink-0 w-20 h-8 border rounded-md overflow-hidden">
+                                        {field.value ? (
                                           <img 
                                             src={field.value} 
                                             alt="Brand banner" 
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
-                                              e.currentTarget.style.display = 'none';
+                                              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
                                             }}
                                           />
-                                        </div>
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                            <Upload className="w-5 h-5 text-gray-400" />
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
+                                      
+                                      <div className="flex-1">
+                                        <div className="text-sm font-medium">Upload or enter URL</div>
+                                        <div className="text-xs text-gray-500">Banner image (1440x448px)</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        type="url"
+                                        placeholder="https://example.com/banner.png"
+                                        {...field}
+                                        value={field.value || ''}
+                                        className="flex-1"
+                                      />
+                                      <div className="relative">
+                                        <input
+                                          type="file"
+                                          id="banner-upload"
+                                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                          accept="image/*"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                              const objectUrl = URL.createObjectURL(file);
+                                              field.onChange(objectUrl);
+                                            }
+                                          }}
+                                        />
+                                        <Button type="button" size="sm" variant="outline">
+                                          <Upload className="w-4 h-4 mr-1" />
+                                          Browse
+                                        </Button>
+                                      </div>
+                                    </div>
                                   </div>
                                 </FormControl>
                                 <FormMessage />
