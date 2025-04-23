@@ -1,6 +1,6 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Action } from "@shared/schema";
-import { Battery, ChevronLeft, Info, Mic, Paperclip, Plus, Signal, SmilePlus, Wifi } from "lucide-react";
+import { Badge, BadgeCheck, Battery, ChevronLeft, Info, Mic, Paperclip, Plus, Signal, SmilePlus, Wifi } from "lucide-react";
 
 interface PreviewContainerProps {
   platform: "android" | "ios";
@@ -11,6 +11,9 @@ interface PreviewContainerProps {
   cardOrientation?: "vertical" | "horizontal";
   mediaHeight?: "short" | "medium" | "tall";
   formatType?: "richCard" | "carousel";
+  lockAspectRatio?: boolean;
+  brandLogoUrl?: string;
+  verificationSymbol?: boolean;
 }
 
 export function PreviewContainer({
@@ -21,7 +24,10 @@ export function PreviewContainer({
   actions,
   cardOrientation = "vertical",
   mediaHeight = "medium",
-  formatType = "richCard"
+  formatType = "richCard",
+  lockAspectRatio = true,
+  brandLogoUrl = "",
+  verificationSymbol = false
 }: PreviewContainerProps) {
   const previewImage = imageUrls.length > 0 ? imageUrls[0] : null;
   
@@ -63,12 +69,30 @@ export function PreviewContainer({
             <div className="flex items-center">
               <ChevronLeft className={`${platform === "android" ? "text-white" : "text-blue-500"} mr-2 h-4 w-4`} />
               <div className="flex-shrink-0 h-8 w-8">
-                <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                  <span className="text-xs font-medium text-gray-700">B</span>
-                </div>
+                {brandLogoUrl ? (
+                  <div className="h-8 w-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200">
+                    <img 
+                      src={brandLogoUrl} 
+                      alt="Brand logo" 
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-xs font-medium text-gray-700">B</span>
+                  </div>
+                )}
               </div>
               <div className="ml-2">
-                <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"}`}>Business Name</div>
+                <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} flex items-center`}>
+                  Business Name
+                  {verificationSymbol && (
+                    <BadgeCheck className={`ml-1 h-4 w-4 ${platform === "android" ? "text-blue-200" : "text-blue-500"}`} />
+                  )}
+                </div>
                 {platform === "android" && <div className="text-xs text-blue-200">Online</div>}
               </div>
               {platform === "ios" && (
@@ -97,7 +121,7 @@ export function PreviewContainer({
                         <img 
                           src={previewImage} 
                           alt="Product" 
-                          className={`w-1/2 ${getImageHeight()} object-cover`} 
+                          className={`w-1/2 ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                         />
                         <div className="p-3 flex-1">
                           <h4 className="font-semibold text-base">{title || "Check-in for your flight"}</h4>
@@ -109,7 +133,7 @@ export function PreviewContainer({
                         <img 
                           src={previewImage} 
                           alt="Product" 
-                          className={`w-full ${getImageHeight()} object-cover`} 
+                          className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                         />
                         <div className="p-4">
                           <h4 className="font-semibold text-base">{title || "Check-in for your flight"}</h4>
@@ -141,7 +165,7 @@ export function PreviewContainer({
                           <img 
                             src={previewImage} 
                             alt="Product" 
-                            className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} object-cover`} 
+                            className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                           />
                           <div className="ml-2 flex-1">
                             <h4 className="font-medium text-base">{title || "Check-in for your flight"}</h4>
@@ -187,7 +211,7 @@ export function PreviewContainer({
                         <img 
                           src={previewImage} 
                           alt="Product" 
-                          className={`w-full ${getImageHeight()} object-cover rounded-lg mb-1`} 
+                          className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} rounded-lg mb-1`} 
                         />
                         <div className="bg-gray-200 rounded-2xl p-3">
                           <h4 className="font-medium text-base">{title || "Check-in for your flight"}</h4>
