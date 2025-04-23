@@ -8,6 +8,7 @@ import SimpleRegister from "@/pages/simple-register";
 import RcsFormatter from "@/pages/rcs-formatter";
 import Campaigns from "@/pages/campaigns";
 import Customers from "@/pages/customers";
+import SettingsPage from "@/pages/settings";
 import { ProtectedRoute } from "./lib/protected-route";
 import { ThemeProvider } from "next-themes";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/rcs-formatter" component={RcsFormatter} />
       <Route path="/campaigns" component={Campaigns} />
       <Route path="/customers" component={Customers} />
+      <Route path="/settings" component={SettingsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/register" component={SimpleRegister} />
       {/* Fallback to 404 */}
