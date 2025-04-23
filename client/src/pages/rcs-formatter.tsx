@@ -8,7 +8,7 @@ import { FormatOptions } from "@/components/image-formatter/format-options";
 import { PreviewContainer } from "@/components/image-formatter/preview-container";
 import { Action, Customer } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Download, RotateCcw, Save } from "lucide-react";
 import { processImages } from "@/lib/image-processing";
@@ -43,9 +43,28 @@ export default function RcsFormatter() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   
   // Fetch customers data
-  const { data: customers, isLoading: isLoadingCustomers } = useQuery<Customer[]>({
+  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async ({ queryKey }) => {
+      try {
+        const res = await fetch(queryKey[0] as string, {
+          credentials: "include",
+        });
+        
+        if (res.status === 401) {
+          return []; // Return empty array on unauthorized
+        }
+        
+        if (!res.ok) {
+          throw new Error(res.statusText);
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+        return []; // Return empty array on any error
+      }
+    },
   });
   
   // Set brand logo URL from selected customer

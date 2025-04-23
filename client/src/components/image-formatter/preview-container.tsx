@@ -1,6 +1,7 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Action } from "@shared/schema";
 import { Badge, BadgeCheck, Battery, ChevronLeft, Info, Mic, Paperclip, Plus, Signal, SmilePlus, Wifi } from "lucide-react";
+import verificationBadge from "@/assets/verification_badge.svg";
 
 interface PreviewContainerProps {
   platform: "android" | "ios";
@@ -91,16 +92,18 @@ export function PreviewContainer({
               <div className="ml-2 flex-grow">
                 <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} relative`}>
                   {brandName}
-                  <div className="absolute" style={{ left: "75%" }}>
-                    <img 
-                      src="/src/assets/verification_badge.svg" 
-                      alt="Verified" 
-                      className="h-4 w-4"
-                      style={{ 
-                        filter: platform === "android" ? "brightness(2) invert(1)" : "brightness(0.7)"
-                      }}
-                    />
-                  </div>
+                  {verificationSymbol && (
+                    <div className="absolute" style={{ left: "75%" }}>
+                      <img 
+                        src={verificationBadge} 
+                        alt="Verified" 
+                        className="h-4 w-4"
+                        style={{ 
+                          filter: platform === "android" ? "brightness(2) invert(1)" : "brightness(0.7)"
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 {platform === "android" && <div className="text-xs text-blue-200">Online</div>}
               </div>
