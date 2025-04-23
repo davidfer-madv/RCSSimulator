@@ -96,11 +96,7 @@ export default function Campaigns() {
     createCampaignMutation.mutate(data);
   };
 
-  // Handle campaign edit
-  const handleEditCampaign = (id: number) => {
-    // This would typically navigate to an edit page or open an edit dialog
-    console.log(`Edit campaign ${id}`);
-  };
+  // Navigation to edit campaign is now handled directly in the CampaignCard component
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -326,7 +322,7 @@ export default function Campaigns() {
                     <CampaignCard
                       key={campaign.id}
                       campaign={campaign}
-                      onEdit={handleEditCampaign}
+                      onEdit={() => {}} // Prop is still required but no longer used
                     />
                   ))}
                 </div>

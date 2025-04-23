@@ -10,10 +10,10 @@ import { MessageSquare, Users, Loader2 } from "lucide-react";
 
 interface CampaignCardProps {
   campaign: Campaign;
-  onEdit: (id: number) => void;
+  onEdit?: (id: number) => void; // Kept for backward compatibility but no longer used
 }
 
-export function CampaignCard({ campaign, onEdit }: CampaignCardProps) {
+export function CampaignCard({ campaign }: CampaignCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
   
