@@ -104,6 +104,7 @@ export default function RcsFormatter() {
       // Find selected brand information
       const selectedBrand = customers?.find(c => c.id.toString() === selectedCustomerId);
       
+      // In case we have issues with file upload, also include the processedImageUrls as a backup
       const formatData = {
         formatType,
         cardOrientation,
@@ -117,10 +118,15 @@ export default function RcsFormatter() {
         customerId: selectedCustomerId || null,
         campaignId: null, // Can be set if coming from a campaign
         brandName: selectedBrand?.name || "Business Name", // Store brand name
-        campaignName: title || "Untitled Campaign" // Use title as campaign name
+        campaignName: title || "Untitled Campaign", // Use title as campaign name
+        processedImageUrls, // Include the already processed image URLs as backup
+        imageUrls: processedImageUrls, // Also include directly to help with validation requirements
       };
       
       formData.append('formatData', JSON.stringify(formatData));
+      
+      // Log the data being sent to help with debugging
+      console.log("Saving RCS format with data:", formatData);
       
       // Make API request
       const res = await fetch('/api/rcs-formats', {
@@ -130,7 +136,8 @@ export default function RcsFormatter() {
       });
       
       if (!res.ok) {
-        const errorText = await res.text();
+        const errorData = await res.json().catch(() => null);
+        const errorText = errorData ? JSON.stringify(errorData) : await res.text();
         throw new Error(errorText || res.statusText);
       }
       
