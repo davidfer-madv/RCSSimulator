@@ -47,13 +47,24 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log(`Login attempt for username: ${username}`);
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        } else {
-          return done(null, user);
+        
+        if (!user) {
+          console.log(`User ${username} not found`);
+          return done(null, false, { message: "Invalid username or password" });
         }
+        
+        const isPasswordValid = await comparePasswords(password, user.password);
+        if (!isPasswordValid) {
+          console.log(`Invalid password for user ${username}`);
+          return done(null, false, { message: "Invalid username or password" });
+        }
+        
+        console.log(`User ${username} authenticated successfully`);
+        return done(null, user);
       } catch (error) {
+        console.error("Login error:", error);
         return done(error);
       }
     }),
@@ -106,8 +117,30 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    console.log("Login request received:", { username: req.body.username, password: "***" });
+    
+    passport.authenticate("local", (err: any, user: Express.User | false, info: { message?: string } | undefined) => {
+      if (err) {
+        console.error("Login authentication error:", err);
+        return next(err);
+      }
+      
+      if (!user) {
+        console.log("Login failed:", info?.message || "Authentication failed");
+        return res.status(401).json({ message: info?.message || "Invalid username or password" });
+      }
+      
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error("Login session error:", loginErr);
+          return next(loginErr);
+        }
+        
+        console.log("Login successful for user:", user.username);
+        return res.status(200).json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {

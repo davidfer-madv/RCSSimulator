@@ -68,12 +68,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include'
       });
       
+      console.log('Login response status:', response.status);
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Login failed');
+        let errorMessage = 'Login failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.log('Login error from server:', errorData);
+        } catch (e) {
+          try {
+            const text = await response.text();
+            if (text) errorMessage = text;
+            console.log('Login error text:', text);
+          } catch (e2) {
+            console.error('Could not parse error response', e2);
+          }
+        }
+        throw new Error(errorMessage);
       }
       
       const userData = await response.json();
+      console.log('Login successful, user data:', { ...userData, password: '***' });
       setUser(userData);
       
       toast({
@@ -81,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome back, ${userData.name || userData.username}!`,
       });
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err);
       toast({
         title: "Login failed",
