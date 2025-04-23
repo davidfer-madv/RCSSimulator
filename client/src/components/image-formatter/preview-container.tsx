@@ -202,7 +202,7 @@ export function PreviewContainer({
                             className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                           />
                           <div className="ml-2 flex-1">
-                            <h4 className="font-medium text-base">{title || "Check-in for your flight"}</h4>
+                            <h4 className="font-medium text-base text-black">{title || "Check-in for your flight"}</h4>
                             <p className="text-xs text-gray-600 mt-1 line-clamp-3">{description || "Happy morning, Jo! Check-in is now open for your flight from London to Mumbai on May 23 at 2:00PM."}</p>
                           </div>
                         </div>
@@ -274,7 +274,7 @@ export function PreviewContainer({
                           className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} rounded-lg mb-1`} 
                         />
                         <div className="bg-gray-200 rounded-2xl p-3">
-                          <h4 className="font-medium text-base">{title || "Check-in for your flight"}</h4>
+                          <h4 className="font-medium text-base text-black">{title || "Check-in for your flight"}</h4>
                           <p className="text-xs text-gray-600 mt-1 line-clamp-3">{description || "Happy morning, Jo! Check-in is now open for your flight from London to Mumbai on May 23 at 2:00PM."}</p>
                           
                           {actions.length > 0 && (
