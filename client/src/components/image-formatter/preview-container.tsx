@@ -14,6 +14,7 @@ interface PreviewContainerProps {
   lockAspectRatio?: boolean;
   brandLogoUrl?: string;
   verificationSymbol?: boolean;
+  brandName?: string;
 }
 
 export function PreviewContainer({
@@ -27,7 +28,8 @@ export function PreviewContainer({
   formatType = "richCard",
   lockAspectRatio = true,
   brandLogoUrl = "",
-  verificationSymbol = false
+  verificationSymbol = false,
+  brandName = "Business Name"
 }: PreviewContainerProps) {
   const previewImage = imageUrls.length > 0 ? imageUrls[0] : null;
   
@@ -88,7 +90,7 @@ export function PreviewContainer({
               </div>
               <div className="ml-2 flex-grow">
                 <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} relative`}>
-                  Business Name
+                  {brandName}
                   <div className="absolute" style={{ left: "75%" }}>
                     <img 
                       src="/src/assets/verification_badge.svg" 

@@ -87,6 +87,7 @@ export default function RcsFormatter() {
         title,
         description,
         actions,
+        customerId: selectedCustomerId || null,
         campaignId: null, // Can be set if coming from a campaign
       };
       
@@ -190,8 +191,9 @@ export default function RcsFormatter() {
     setMediaHeight("medium");
     setLockAspectRatio(true);
     setBrandLogoUrl("");
-    setVerificationSymbol(false);
+    setVerificationSymbol(true);
     setActions([]);
+    setSelectedCustomerId("");
     
     toast({
       title: "Form reset",
@@ -371,6 +373,7 @@ export default function RcsFormatter() {
                         lockAspectRatio={lockAspectRatio}
                         brandLogoUrl={brandLogoUrl}
                         verificationSymbol={verificationSymbol}
+                        brandName={customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name"}
                       />
                     </TabsContent>
                     
@@ -387,6 +390,7 @@ export default function RcsFormatter() {
                         lockAspectRatio={lockAspectRatio}
                         brandLogoUrl={brandLogoUrl}
                         verificationSymbol={verificationSymbol}
+                        brandName={customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name"}
                       />
                     </TabsContent>
                   </Tabs>
