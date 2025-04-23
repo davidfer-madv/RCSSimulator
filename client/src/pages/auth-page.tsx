@@ -68,9 +68,12 @@ export default function AuthPage() {
   const onLoginSubmit = async (data: LoginFormValues) => {
     setFormLoading(true);
     try {
+      console.log("Attempting login with:", { username: data.username, password: "***" });
       await login(data);
+      console.log("Login successful");
     } catch (error) {
       // Error is already handled in the login function
+      console.error("Login error:", error);
     } finally {
       setFormLoading(false);
     }
@@ -78,7 +81,7 @@ export default function AuthPage() {
 
   // Handle registration
   const onRegisterSubmit = async (data: RegisterFormValues) => {
-    console.log("Register form data:", data);
+    console.log("Register form data:", { ...data, password: "***" });
     setFormLoading(true);
     try {
       // Transform data to ensure name and email are null if not provided
@@ -88,8 +91,9 @@ export default function AuthPage() {
         name: data.name || null,
         email: data.email || null
       };
-      console.log("Processed user data:", userData);
+      console.log("Processed user data:", { ...userData, password: "***" });
       await register(userData);
+      console.log("Registration successful");
     } catch (error) {
       // Error is already handled in the register function
       console.error("Error during registration:", error);

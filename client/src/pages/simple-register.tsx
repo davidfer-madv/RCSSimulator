@@ -20,7 +20,7 @@ export default function SimpleRegister() {
     setIsLoading(true);
 
     try {
-      console.log("Sending registration data:", { username, password, name, email });
+      console.log("Sending registration data:", { username, password: "***", name, email });
       
       const response = await fetch("/api/register", {
         method: "POST",
@@ -55,7 +55,7 @@ export default function SimpleRegister() {
       }
       
       const data = await response.json();
-      console.log("Registration successful, user data:", data);
+      console.log("Registration successful, user data:", { ...data, password: "***" });
       
       toast({
         title: "Registration successful",
