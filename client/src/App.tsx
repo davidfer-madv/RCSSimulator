@@ -10,14 +10,19 @@ import Campaigns from "@/pages/campaigns";
 import Customers from "@/pages/customers";
 import { ProtectedRoute } from "./lib/protected-route";
 import { ThemeProvider } from "next-themes";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { AuthProvider } from "@/hooks/use-auth";
 
 function Router() {
+  // Direct routing without protection for immediate functionality
   return (
     <Switch>
-      <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/rcs-formatter" component={RcsFormatter} />
-      <ProtectedRoute path="/campaigns" component={Campaigns} />
-      <ProtectedRoute path="/customers" component={Customers} />
+      <Route path="/" component={RcsFormatter} />
+      <Route path="/home" component={HomePage} />
+      <Route path="/rcs-formatter" component={RcsFormatter} />
+      <Route path="/campaigns" component={Campaigns} />
+      <Route path="/customers" component={Customers} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/register" component={SimpleRegister} />
       {/* Fallback to 404 */}
@@ -28,12 +33,16 @@ function Router() {
 
 function App() {
   return (
-    <ThemeProvider attribute="class">
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ThemeProvider attribute="class">
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

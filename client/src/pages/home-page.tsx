@@ -9,6 +9,53 @@ import { Link } from "wouter";
 import { CampaignCard } from "@/components/campaigns/campaign-card";
 import { Campaign } from "@shared/schema";
 
+// Mock data for demo purposes
+const mockStats = {
+  totalFormats: 5,
+  activeCampaigns: 3,
+  totalCustomers: 10
+};
+
+// Hardcoded campaigns data for demo
+const mockCampaigns = [
+  {
+    id: 1,
+    name: "Summer Promotion",
+    description: "Summer promotional campaign for retail customers",
+    status: "active",
+    customerId: 1,
+    userId: 1,
+    formatType: "richCard",
+    provider: "Google Messages",
+    createdAt: new Date(),
+    scheduledDate: null
+  },
+  {
+    id: 2,
+    name: "New Product Launch",
+    description: "Campaign for new product line introduction",
+    status: "active",
+    customerId: 2,
+    userId: 1,
+    formatType: "carousel",
+    provider: "Apple Business Chat",
+    createdAt: new Date(),
+    scheduledDate: null
+  },
+  {
+    id: 3,
+    name: "Holiday Special",
+    description: "Special holiday messaging campaign",
+    status: "scheduled",
+    customerId: 1,
+    userId: 1,
+    formatType: "richCard",
+    provider: "Google Messages",
+    scheduledDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    createdAt: new Date()
+  }
+];
+
 export default function HomePage() {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -17,17 +64,13 @@ export default function HomePage() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Fetch statistics
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["/api/statistics"],
-    staleTime: 60000, // 1 minute
-  });
+  // Use local mock data 
+  const stats = mockStats;
+  const isLoadingStats = false;
 
-  // Fetch recent campaigns
-  const { data: campaigns, isLoading: isLoadingCampaigns } = useQuery<Campaign[]>({
-    queryKey: ["/api/campaigns"],
-    staleTime: 60000, // 1 minute
-  });
+  // Use local mock campaigns data
+  const campaigns = mockCampaigns as Campaign[];
+  const isLoadingCampaigns = false;
 
   // Handle campaign edit
   const handleEditCampaign = (id: number) => {
