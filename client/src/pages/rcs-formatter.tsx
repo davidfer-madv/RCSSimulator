@@ -21,6 +21,16 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 export default function RcsFormatter() {
   const { user } = useAuth();
@@ -118,7 +128,7 @@ export default function RcsFormatter() {
         customerId: selectedCustomerId || null,
         campaignId: null, // Can be set if coming from a campaign
         brandName: selectedBrand?.name || "Business Name", // Store brand name
-        campaignName: title || "Untitled Campaign", // Use title as campaign name
+        campaignName: campaignName || title || "Untitled Campaign", // Use campaign name from dialog
         processedImageUrls, // Include the already processed image URLs as backup
         imageUrls: processedImageUrls, // Also include directly to help with validation requirements
       };
@@ -196,7 +206,7 @@ export default function RcsFormatter() {
           brandLogoUrl,
           verificationSymbol,
           brandName: selectedBrand?.name || "Business Name", // Include brand name
-          campaignName: title || "Untitled Campaign" // Include campaign name
+          campaignName: campaignName || title || "Untitled Campaign" // Include campaign name
         },
         exportType,
         activePlatform
@@ -242,6 +252,10 @@ export default function RcsFormatter() {
     });
   };
 
+  // State for campaign dialog
+  const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
+  const [campaignName, setCampaignName] = useState("");
+  
   // Handle save
   const handleSave = () => {
     if (selectedImages.length === 0) {
@@ -253,6 +267,14 @@ export default function RcsFormatter() {
       return;
     }
     
+    // Open dialog to ask for campaign name
+    setCampaignName(title || ""); // Pre-fill with title
+    setIsCampaignDialogOpen(true);
+  };
+  
+  // Handle campaign name confirmation
+  const handleCampaignNameConfirm = () => {
+    setIsCampaignDialogOpen(false);
     saveFormatMutation.mutate();
   };
 
@@ -465,6 +487,41 @@ export default function RcsFormatter() {
           </div>
         </main>
       </div>
+      
+      {/* Campaign Name Dialog */}
+      <Dialog open={isCampaignDialogOpen} onOpenChange={setIsCampaignDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Enter Campaign Name</DialogTitle>
+            <DialogDescription>
+              Provide a name for your campaign. This will help you organize your RCS formats.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="campaign-name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="campaign-name"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+                placeholder="Enter campaign name"
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              type="submit" 
+              onClick={handleCampaignNameConfirm}
+              disabled={!campaignName.trim()}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

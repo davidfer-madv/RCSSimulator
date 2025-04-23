@@ -133,6 +133,32 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+                
+                {/* Export Images Guidance */}
+                <div className="mt-6 p-4 border border-blue-200 bg-blue-50 rounded-md">
+                  <h3 className="font-medium text-blue-800 mb-2">Export Options</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-white p-3 rounded shadow-sm">
+                      <h4 className="font-medium text-gray-800 mb-1">Export as JSON</h4>
+                      <p className="text-sm text-gray-600">
+                        Export the RCS format as a JSON configuration file to be used in real RCS campaigns. 
+                        This format can be directly implemented in RCS messaging platforms or Business Messaging APIs.
+                      </p>
+                    </div>
+                    <div className="bg-white p-3 rounded shadow-sm">
+                      <h4 className="font-medium text-gray-800 mb-1">Export as Image</h4>
+                      <p className="text-sm text-gray-600">
+                        Export a high-quality screenshot of your formatted RCS message for presentations, 
+                        approvals, or marketing materials. Perfect for sharing with stakeholders who need 
+                        to visualize the final message.
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm text-blue-700">
+                    <strong>Tip:</strong> When saving formats, you'll be prompted to enter a campaign name. 
+                    Organizing your formats by campaign makes it easier to manage and find related assets.
+                  </p>
+                </div>
 
                 <div className="mt-6 flex gap-3">
                   <Link href="/customers">
