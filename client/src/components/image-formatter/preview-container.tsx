@@ -89,9 +89,7 @@ export function PreviewContainer({
               <div className="ml-2">
                 <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} flex items-center`}>
                   Business Name
-                  {verificationSymbol && (
-                    <BadgeCheck className={`ml-1 h-4 w-4 ${platform === "android" ? "text-blue-200" : "text-blue-500"}`} />
-                  )}
+                  <BadgeCheck className={`ml-1 h-4 w-4 ${platform === "android" ? "text-blue-200" : "text-blue-500"}`} />
                 </div>
                 {platform === "android" && <div className="text-xs text-blue-200">Online</div>}
               </div>

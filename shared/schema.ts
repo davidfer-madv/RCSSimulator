@@ -27,6 +27,7 @@ export const customers = pgTable("customers", {
   phone: text("phone"),
   company: text("company"),
   address: text("address"),
+  brandLogoUrl: text("brand_logo_url"), // Brand logo URL is associated with the customer (brand)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

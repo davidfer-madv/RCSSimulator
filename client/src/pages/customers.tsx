@@ -25,6 +25,7 @@ const customerSchema = z.object({
   phone: z.string().optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
   company: z.string().optional().or(z.literal("")),
+  brandLogoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -189,6 +190,60 @@ export default function Customers() {
                                     {...field} 
                                     value={field.value || ''}
                                   />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="brandLogoUrl"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  Brand Logo URL
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="inline-flex items-center">
+                                          <Info className="ml-1 h-4 w-4 text-gray-400" />
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="w-80">
+                                        <p>Brand logo displays in RCS message headers. Recommended size: Square, 32x32 pixels.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center gap-3">
+                                    <Input
+                                      type="url"
+                                      placeholder="https://example.com/logo.png"
+                                      {...field}
+                                      value={field.value || ''}
+                                      className="flex-1"
+                                    />
+                                    <div className="flex-shrink-0">
+                                      {field.value ? (
+                                        <div className="w-10 h-10 border rounded-md overflow-hidden">
+                                          <img 
+                                            src={field.value} 
+                                            alt="Brand logo" 
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                                            }}
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div className="w-10 h-10 border rounded-md flex items-center justify-center bg-gray-50">
+                                          <Upload className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

@@ -170,7 +170,7 @@ export function FormatOptions({
         </Select>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div>
         <div className="flex items-center space-x-2">
           <Switch 
             id="lock-aspect-ratio"
@@ -187,27 +187,6 @@ export function FormatOptions({
               </TooltipTrigger>
               <TooltipContent className="w-80">
                 <p>When enabled, images will maintain their original proportions within RCS format constraints.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="verification-symbol"
-            checked={verificationSymbol}
-            onCheckedChange={setVerificationSymbol}
-          />
-          <Label htmlFor="verification-symbol">Verification Symbol</Label>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="inline-flex items-center">
-                  <Info className="ml-1 h-4 w-4 text-gray-400" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="w-80">
-                <p>Shows a verification checkmark next to business name (applies to verified businesses in RCS services).</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
