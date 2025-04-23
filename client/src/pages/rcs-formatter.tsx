@@ -314,7 +314,17 @@ export default function RcsFormatter() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Select Brand
                       </label>
-                      <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                      <Select 
+                        value={selectedCustomerId} 
+                        onValueChange={(value) => {
+                          setSelectedCustomerId(value);
+                          // Automatically set the brand logo URL when a brand is selected
+                          const selectedBrand = customers?.find(c => c.id.toString() === value);
+                          if (selectedBrand?.brandLogoUrl) {
+                            setBrandLogoUrl(selectedBrand.brandLogoUrl);
+                          }
+                        }}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select a brand" />
                         </SelectTrigger>
