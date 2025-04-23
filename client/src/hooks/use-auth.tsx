@@ -1,21 +1,19 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
-import {
-  useQuery,
-  useMutation,
-  QueryClient
-} from "@tanstack/react-query";
 import { User as SelectUser, InsertUser } from "@shared/schema";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+// Login data type
+type LoginData = Pick<InsertUser, "username" | "password">;
 
 // Define the shape of our authentication context
 type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: any;
-  registerMutation: any;
-  logoutMutation: any;
+  login: (credentials: LoginData) => Promise<void>;
+  register: (userData: InsertUser) => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 // Create the context with a default value
@@ -23,12 +21,10 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: false,
   error: null,
-  loginMutation: { isLoading: false },
-  registerMutation: { isLoading: false },
-  logoutMutation: { isLoading: false }
+  login: async () => {},
+  register: async () => {},
+  logout: async () => {}
 });
-
-type LoginData = Pick<InsertUser, "username" | "password">;
 
 // Provider component that wraps app and makes auth object available
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -41,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch('/api/user');
+        const response = await fetch('/api/user', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setUser(data);
@@ -59,129 +55,141 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, []);
 
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      setIsLoading(true);
-      const res = await apiRequest("POST", "/api/login", credentials);
-      const userData = await res.json();
+  // Login function
+  const login = async (credentials: LoginData) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Login failed');
+      }
+      
+      const userData = await response.json();
       setUser(userData);
-      queryClient.setQueryData(["/api/user"], userData);
-      return userData;
-    },
-    onSuccess: (userData: SelectUser) => {
+      
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.name || userData.username}!`,
       });
-      setIsLoading(false);
-    },
-    onError: (err: Error) => {
+    } catch (err: any) {
       setError(err);
       toast({
         title: "Login failed",
         description: err.message,
         variant: "destructive",
       });
+      throw err;
+    } finally {
       setIsLoading(false);
-    },
-  });
+    }
+  };
 
-  // Register mutation
-  const registerMutation = useMutation({
-    mutationFn: async (userData: InsertUser) => {
-      console.log("Registering with data:", userData);
-      setIsLoading(true);
+  // Register function
+  const register = async (userData: InsertUser) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log("Registering with data:", { ...userData, password: "***" });
       
-      try {
-        // Directly use fetch instead of apiRequest to have more control over error handling
-        const response = await fetch("/api/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData),
-          credentials: "include"
-        });
-        
-        console.log("Registration response status:", response.status);
-        
-        if (!response.ok) {
-          let errorMessage = "Registration failed";
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+        credentials: "include"
+      });
+      
+      console.log("Registration response status:", response.status);
+      
+      if (!response.ok) {
+        let errorMessage = "Registration failed";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
           try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorData.error || errorMessage;
-          } catch (e) {
-            // If parsing JSON fails, try to get text
             const text = await response.text();
             if (text) errorMessage = text;
+          } catch (e2) {
+            // Ignore error
           }
-          throw new Error(errorMessage);
         }
-        
-        const newUser = await response.json();
-        console.log("New user data:", newUser);
-        setUser(newUser);
-        queryClient.setQueryData(["/api/user"], newUser);
-        return newUser;
-      } catch (error) {
-        console.error("Registration error:", error);
-        setIsLoading(false);
-        throw error;
+        throw new Error(errorMessage);
       }
-    },
-    onSuccess: (userData: SelectUser) => {
-      console.log("Registration success:", userData);
+      
+      const newUser = await response.json();
+      console.log("New user data:", { ...newUser, password: "***" });
+      setUser(newUser);
+      
       toast({
         title: "Registration successful",
         description: "Your account has been created successfully.",
       });
-      setIsLoading(false);
-    },
-    onError: (err: any) => {
-      console.error("Registration onError handler:", err);
+    } catch (err: any) {
+      console.error("Registration error:", err);
       setError(err);
       toast({
         title: "Registration failed",
         description: err.message || "Failed to create account",
         variant: "destructive",
       });
+      throw err;
+    } finally {
       setIsLoading(false);
-    },
-  });
+    }
+  };
 
-  // Logout mutation
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      setIsLoading(true);
-      await apiRequest("POST", "/api/logout");
+  // Logout function
+  const logout = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+      
       setUser(null);
-      queryClient.setQueryData(["/api/user"], null);
-    },
-    onSuccess: () => {
+      
       toast({
         title: "Logged out",
         description: "You have been logged out successfully.",
       });
-      setIsLoading(false);
-    },
-    onError: (err: Error) => {
+    } catch (err: any) {
       setError(err);
       toast({
         title: "Logout failed",
         description: err.message,
         variant: "destructive",
       });
+      throw err;
+    } finally {
       setIsLoading(false);
-    },
-  });
+    }
+  };
 
   // The value passed to the provider
-  const value = {
+  const value: AuthContextType = {
     user,
     isLoading,
     error,
-    loginMutation,
-    registerMutation,
-    logoutMutation
+    login,
+    register,
+    logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -189,9 +197,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // Hook for using the auth context
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  return useContext(AuthContext);
 }

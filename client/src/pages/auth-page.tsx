@@ -31,10 +31,11 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation, isLoading } = useAuth();
+  const { user, login, register, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [formLoading, setFormLoading] = useState<boolean>(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -64,13 +65,21 @@ export default function AuthPage() {
   });
 
   // Handle login
-  const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
+  const onLoginSubmit = async (data: LoginFormValues) => {
+    setFormLoading(true);
+    try {
+      await login(data);
+    } catch (error) {
+      // Error is already handled in the login function
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   // Handle registration
-  const onRegisterSubmit = (data: RegisterFormValues) => {
+  const onRegisterSubmit = async (data: RegisterFormValues) => {
     console.log("Register form data:", data);
+    setFormLoading(true);
     try {
       // Transform data to ensure name and email are null if not provided
       const userData = {
@@ -80,14 +89,12 @@ export default function AuthPage() {
         email: data.email || null
       };
       console.log("Processed user data:", userData);
-      registerMutation.mutate(userData);
+      await register(userData);
     } catch (error) {
-      console.error("Error during registration mutation:", error);
-      toast({
-        title: "Registration failed",
-        description: "There was an error creating your account. Please try again.",
-        variant: "destructive"
-      });
+      // Error is already handled in the register function
+      console.error("Error during registration:", error);
+    } finally {
+      setFormLoading(false);
     }
   };
   
@@ -160,9 +167,9 @@ export default function AuthPage() {
                       <Button
                         type="submit"
                         className="w-full"
-                        disabled={isLoading}
+                        disabled={isLoading || formLoading}
                       >
-                        {isLoading ? "Logging in..." : "Login"}
+                        {isLoading || formLoading ? "Logging in..." : "Login"}
                       </Button>
                     </CardFooter>
                   </form>
@@ -236,9 +243,9 @@ export default function AuthPage() {
                       <Button
                         type="submit"
                         className="w-full"
-                        disabled={isLoading}
+                        disabled={isLoading || formLoading}
                       >
-                        {isLoading ? "Creating account..." : "Create Account"}
+                        {isLoading || formLoading ? "Creating account..." : "Create Account"}
                       </Button>
                     </CardFooter>
                   </form>
