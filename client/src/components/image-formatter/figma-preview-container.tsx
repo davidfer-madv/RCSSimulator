@@ -90,7 +90,7 @@ export function FigmaPreviewContainer({
             <>{iOSHeader({ 
               brandName, 
               brandLogoUrl, 
-              verificationBadgeUrl: verificationBadge, 
+              verificationBadgeUrl: verificationIcon, 
               verificationSymbol 
             })}</>
           )}

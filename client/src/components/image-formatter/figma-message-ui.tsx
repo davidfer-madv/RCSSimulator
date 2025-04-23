@@ -69,7 +69,7 @@ export const iOSHeader: React.FC<{ brandName: string; brandLogoUrl?: string; ver
               <img 
                 src={verificationBadgeUrl || '/assets/verification_icon.svg'} 
                 alt="Verified" 
-                className="h-4 w-4"
+                className="h-5 w-5"
               />
             </span>
           )}
@@ -193,8 +193,7 @@ export const AndroidHeader: React.FC<{ brandName: string; brandLogoUrl?: string;
               <img 
                 src={verificationBadgeUrl || '/assets/verification_icon.svg'} 
                 alt="Verified" 
-                className="h-4 w-4"
-                style={{ filter: "brightness(2) invert(1)" }}
+                className="h-5 w-5"
               />
             </span>
           )}
