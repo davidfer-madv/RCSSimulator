@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="300" height="48" viewBox="0 0 300 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="48" fill="#F2F2F7"/>
+  <path d="M16 24L26 24" stroke="#007AFF" stroke-width="2" stroke-linecap="round"/>
+  <path d="M21 19L16 24L21 29" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="149" y="29" font-family="SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, sans-serif" font-size="14" fill="#000000" text-anchor="middle" dominant-baseline="middle" font-weight="500">Messages</text>
+</svg>
