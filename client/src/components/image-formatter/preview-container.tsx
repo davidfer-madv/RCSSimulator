@@ -91,7 +91,7 @@ export function PreviewContainer({
             {previewImage && (
               <div className="mb-3 flex justify-start">
                 {platform === "android" ? (
-                  <div className="bg-white rounded-lg overflow-hidden max-w-[85%] shadow-sm">
+                  <div id="android-preview-container" className="bg-white rounded-lg overflow-hidden max-w-[85%] shadow-sm">
                     {cardOrientation === "horizontal" ? (
                       <div className="flex">
                         <img 
@@ -100,8 +100,8 @@ export function PreviewContainer({
                           className={`w-1/2 ${getImageHeight()} object-cover`} 
                         />
                         <div className="p-3 flex-1">
-                          <h4 className="font-medium text-sm">{title || "New Product"}</h4>
-                          <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
+                          <h4 className="font-semibold text-base">{title || "Check-in for your flight"}</h4>
+                          <p className="text-sm text-gray-700 mt-2">{description || "Happy morning, Jo! Check-in is now open for your flight from London to Mumbai on May 23 at 2:00PM. What would you like to do?"}</p>
                         </div>
                       </div>
                     ) : (
@@ -111,27 +111,30 @@ export function PreviewContainer({
                           alt="Product" 
                           className={`w-full ${getImageHeight()} object-cover`} 
                         />
-                        <div className="p-3">
-                          <h4 className="font-medium text-sm">{title || "New Product"}</h4>
-                          <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
+                        <div className="p-4">
+                          <h4 className="font-semibold text-base">{title || "Check-in for your flight"}</h4>
+                          <p className="text-sm text-gray-700 mt-2">{description || "Happy morning, Jo! Check-in is now open for your flight from London to Mumbai on May 23 at 2:00PM. What would you like to do?"}</p>
                         </div>
                       </>
                     )}
                     {actions.length > 0 && (
-                      <div className="border-t border-gray-200 p-2 flex flex-wrap gap-1">
+                      <div className="border-t border-gray-200">
                         {actions.map((action, index) => (
                           <button 
                             key={index} 
-                            className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full"
+                            className="flex w-full items-center px-4 py-3 text-blue-600 hover:bg-blue-50 border-b border-gray-200 last:border-b-0"
                           >
-                            {action.text}
+                            {action.type === "url" && <span className="mr-2">⚡</span>}
+                            {action.type === "phone" && <span className="mr-2">📞</span>}
+                            {action.type === "calendar" && <span className="mr-2">🕒</span>}
+                            <span className="font-medium">{action.text}</span>
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="max-w-[85%]">
+                  <div id="ios-preview-container" className="max-w-[85%]">
                     {cardOrientation === "horizontal" ? (
                       <div className="flex flex-col">
                         <div className="flex bg-gray-200 rounded-t-2xl p-3">
@@ -141,21 +144,40 @@ export function PreviewContainer({
                             className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} object-cover`} 
                           />
                           <div className="ml-2 flex-1">
-                            <h4 className="font-medium text-sm">{title || "New Product"}</h4>
-                            <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
+                            <h4 className="font-medium text-base">{title || "Check-in for your flight"}</h4>
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-3">{description || "Happy morning, Jo! Check-in is now open for your flight from London to Mumbai on May 23 at 2:00PM."}</p>
                           </div>
                         </div>
                         {actions.length > 0 && (
-                          <div className="bg-gray-200 rounded-b-2xl p-3 pt-0 mt-0">
+                          <div className="bg-gray-200 rounded-b-2xl p-3 pt-1 mt-0">
                             <div className="flex flex-wrap gap-1">
-                              {actions.map((action, index) => (
+                              {/* Show text actions directly */}
+                              {actions.filter(a => a.type !== "url" && a.type !== "phone" && a.type !== "calendar").map((action, index) => (
                                 <button 
                                   key={index} 
-                                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full"
+                                  className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
                                 >
                                   {action.text}
                                 </button>
                               ))}
+                              
+                              {/* For URL/Phone/Calendar actions */}
+                              {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length === 1 ? (
+                                // If there's only one URL/Phone/Calendar action, show it
+                                actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, index) => (
+                                  <button 
+                                    key={index} 
+                                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                                  >
+                                    {action.text}
+                                  </button>
+                                ))
+                              ) : actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length > 1 ? (
+                                // If there are multiple URL/Phone/Calendar actions, show Options button
+                                <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium">
+                                  Options
+                                </button>
+                              ) : null}
                             </div>
                           </div>
                         )}
@@ -168,18 +190,38 @@ export function PreviewContainer({
                           className={`w-full ${getImageHeight()} object-cover rounded-lg mb-1`} 
                         />
                         <div className="bg-gray-200 rounded-2xl p-3">
-                          <h4 className="font-medium text-sm">{title || "New Product"}</h4>
-                          <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
+                          <h4 className="font-medium text-base">{title || "Check-in for your flight"}</h4>
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-3">{description || "Happy morning, Jo! Check-in is now open for your flight from London to Mumbai on May 23 at 2:00PM."}</p>
+                          
                           {actions.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
-                              {actions.map((action, index) => (
+                              {/* Show text actions directly */}
+                              {actions.filter(a => a.type !== "url" && a.type !== "phone" && a.type !== "calendar").map((action, index) => (
                                 <button 
                                   key={index} 
-                                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full"
+                                  className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
                                 >
                                   {action.text}
                                 </button>
                               ))}
+                              
+                              {/* For URL/Phone/Calendar actions */}
+                              {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length === 1 ? (
+                                // If there's only one URL/Phone/Calendar action, show it
+                                actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, index) => (
+                                  <button 
+                                    key={index} 
+                                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                                  >
+                                    {action.text}
+                                  </button>
+                                ))
+                              ) : actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length > 1 ? (
+                                // If there are multiple URL/Phone/Calendar actions, show Options button
+                                <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium">
+                                  Options
+                                </button>
+                              ) : null}
                             </div>
                           )}
                         </div>
