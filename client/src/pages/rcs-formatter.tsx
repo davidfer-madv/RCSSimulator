@@ -67,12 +67,16 @@ export default function RcsFormatter() {
     },
   });
   
-  // Set brand logo URL from selected customer
+  // Set brand logo URL from selected brand
   useEffect(() => {
     if (selectedCustomerId && customers) {
-      const customer = customers.find(c => c.id.toString() === selectedCustomerId);
-      if (customer?.brandLogoUrl) {
-        setBrandLogoUrl(customer.brandLogoUrl);
+      const brand = customers.find(c => c.id.toString() === selectedCustomerId);
+      if (brand) {
+        // Update the brand logo if available, otherwise use a default one
+        setBrandLogoUrl(brand.brandLogoUrl || "");
+        
+        // The brandName is handled directly in the PreviewContainer with a lookup
+        // No need to set a separate state variable for it
       }
     }
   }, [selectedCustomerId, customers]);
