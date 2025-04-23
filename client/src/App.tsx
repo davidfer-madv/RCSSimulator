@@ -22,6 +22,7 @@ function Router() {
       <Route path="/" component={RcsFormatter} />
       <Route path="/home" component={HomePage} />
       <Route path="/rcs-formatter" component={RcsFormatter} />
+      <Route path="/rcs-formatter/campaign/:campaignId" component={RcsFormatter} />
       <Route path="/campaigns" component={Campaigns} />
       <Route path="/customers" component={Customers} />
       <Route path="/settings" component={SettingsPage} />

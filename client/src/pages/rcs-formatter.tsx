@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
 import { PreviewContainer } from "@/components/image-formatter/preview-container";
-import { Action, Customer } from "@shared/schema";
+import { Action, Customer, Campaign, RcsFormat } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useParams } from "wouter";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
@@ -36,6 +37,8 @@ export default function RcsFormatter() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const params = useParams();
+  const campaignId = params?.campaignId;
   
   // State for form fields
   const [selectedImages, setSelectedImages] = useState<File[]>([]);

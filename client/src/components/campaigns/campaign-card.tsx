@@ -15,6 +15,7 @@ interface CampaignCardProps {
 
 export function CampaignCard({ campaign, onEdit }: CampaignCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [, navigate] = useLocation();
   
   // Format date using date-fns
   const formatDate = (date: Date | string | null | undefined) => {
@@ -133,7 +134,7 @@ export function CampaignCard({ campaign, onEdit }: CampaignCardProps) {
           <Button
             variant="ghost"
             className="text-sm font-medium text-primary hover:text-blue-700"
-            onClick={() => onEdit(campaign.id)}
+            onClick={() => navigate(`/rcs-formatter/campaign/${campaign.id}`)}
           >
             Edit
           </Button>
