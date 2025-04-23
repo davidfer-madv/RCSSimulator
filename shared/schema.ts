@@ -106,7 +106,7 @@ export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
       errorMap: () => ({ message: "Action type must be URL, Phone, or Calendar" }),
     }),
     value: z.string().min(1, "Action value is required"),
-  })).max(3, "Maximum of 3 actions allowed").optional(),
+  })).max(4, "Maximum of 4 actions allowed").optional(),
   imageUrls: z.array(z.string().url("Must be a valid URL"))
     .min(1, "At least one image is required")
     .max(10, "Maximum of 10 images for carousel"),

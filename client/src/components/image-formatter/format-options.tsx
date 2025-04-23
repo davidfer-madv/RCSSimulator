@@ -205,7 +205,7 @@ export function FormatOptions({
         <div className="flex items-center gap-2">
           <Label className="block">Suggested Actions</Label>
           <Badge variant="outline" className="ml-2">
-            {actions.length} of 3 max
+            {actions.length} of 4 max
           </Badge>
         </div>
         <div className="space-y-2 mt-2">
@@ -226,7 +226,7 @@ export function FormatOptions({
             </div>
           ))}
 
-          {actions.length < 3 && (
+          {actions.length < 4 && (
             <>
               <div className="flex items-center gap-2">
                 <Input

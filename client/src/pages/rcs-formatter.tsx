@@ -277,7 +277,7 @@ export default function RcsFormatter() {
                       <li>Description: Maximum 2000 characters (iOS may truncate to ~144 chars)</li>
                       <li>Media Height: Short (112 DP), Medium (168 DP), Tall (264 DP)</li>
                       <li>Image Requirements: Max 1500x1000 pixels, under 1.8MB, JPEG/PNG only</li>
-                      <li>Actions: Maximum 3 actions (URL links, phone numbers, or calendar events)</li>
+                      <li>Actions: Maximum 4 actions (URL links, phone numbers, or calendar events)</li>
                       <li>iOS Compatibility: No GIF support, JPEG recommended</li>
                     </ul>
                   </div>
