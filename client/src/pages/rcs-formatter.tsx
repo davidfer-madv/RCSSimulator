@@ -8,7 +8,7 @@ import { FormatOptions } from "@/components/image-formatter/format-options";
 import { PreviewContainer } from "@/components/image-formatter/preview-container";
 import { Action, Customer } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Download, RotateCcw, Save } from "lucide-react";
 import { processImages } from "@/lib/image-processing";
@@ -45,6 +45,7 @@ export default function RcsFormatter() {
   // Fetch customers data
   const { data: customers, isLoading: isLoadingCustomers } = useQuery<Customer[]>({
     queryKey: ["/api/customers"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
   
   // Set brand logo URL from selected customer
