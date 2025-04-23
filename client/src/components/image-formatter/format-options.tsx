@@ -207,24 +207,16 @@ export function FormatOptions({
                 </div>
               </TooltipTrigger>
               <TooltipContent className="w-80">
-                <p>Brand logo displays in the header section of RCS cards. Recommended size: Square, 32x32 pixels.</p>
+                <p>Brand logo displays in the header section of RCS cards. Recommended size: Square, 224x224 pixels.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Input
-            id="brand-logo"
-            type="url"
-            value={brandLogoUrl}
-            onChange={(e) => setBrandLogoUrl(e.target.value)}
-            placeholder="https://example.com/logo.png"
-            className="flex-1"
-          />
-          <div className="flex-shrink-0">
-            {brandLogoUrl ? (
-              <div className="w-10 h-10 border rounded-md overflow-hidden">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex-shrink-0 w-10 h-10 border rounded-md overflow-hidden">
+              {brandLogoUrl ? (
                 <img 
                   src={brandLogoUrl} 
                   alt="Brand logo" 
@@ -233,12 +225,47 @@ export function FormatOptions({
                     e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
                   }}
                 />
-              </div>
-            ) : (
-              <div className="w-10 h-10 border rounded-md flex items-center justify-center bg-gray-50">
-                <Upload className="w-5 h-5 text-gray-400" />
-              </div>
-            )}
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                  <Upload className="w-5 h-5 text-gray-400" />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1">
+              <div className="text-sm font-medium">Upload or enter URL</div>
+              <div className="text-xs text-gray-500">Square image recommended (224x224px)</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Input
+              id="brand-logo"
+              type="url"
+              value={brandLogoUrl}
+              onChange={(e) => setBrandLogoUrl(e.target.value)}
+              placeholder="https://example.com/logo.png"
+              className="flex-1"
+            />
+            <div className="relative">
+              <input
+                type="file"
+                id="logo-upload"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const objectUrl = URL.createObjectURL(file);
+                    setBrandLogoUrl(objectUrl);
+                  }
+                }}
+              />
+              <Button type="button" size="sm" variant="outline">
+                <Upload className="w-4 h-4 mr-1" />
+                Browse
+              </Button>
+            </div>
           </div>
         </div>
       </div>
