@@ -23,7 +23,7 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const { user } = useAuth();
 
   const navItems = [
-    { href: "/", label: "Dashboard", icon: <Home className="mr-3 h-5 w-5" /> },
+    { href: "/home", label: "Dashboard", icon: <Home className="mr-3 h-5 w-5" /> },
     { href: "/rcs-formatter", label: "RCS Formatter", icon: <FileImage className="mr-3 h-5 w-5" /> },
     { href: "/campaigns", label: "Campaigns", icon: <FolderOpen className="mr-3 h-5 w-5" /> },
     { href: "/customers", label: "Customers", icon: <Users className="mr-3 h-5 w-5" /> },
@@ -40,8 +40,8 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   return (
     <div className={sidebarClasses}>
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-700">
-        <Link href="/">
-          <span className="text-xl font-bold text-white cursor-pointer">RCS Format</span>
+        <Link href="/home">
+          <button className="text-xl font-bold text-white">RCS Format</button>
         </Link>
         <Button
           variant="ghost"
@@ -56,19 +56,21 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
       <div className="flex flex-col flex-grow overflow-y-auto">
         <nav className="flex-1 px-2 py-4 space-y-1">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <a
-                className={cn(
-                  "flex items-center px-2 py-2 text-sm font-medium rounded-md group",
-                  location === item.href
-                    ? "text-white bg-gray-900"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                )}
-              >
-                {item.icon}
-                {item.label}
-              </a>
-            </Link>
+            <div key={item.href}>
+              <Link href={item.href}>
+                <button
+                  className={cn(
+                    "flex items-center px-2 py-2 text-sm font-medium rounded-md group w-full text-left",
+                    location === item.href
+                      ? "text-white bg-gray-900"
+                      : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  )}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              </Link>
+            </div>
           ))}
         </nav>
         
