@@ -128,7 +128,14 @@ export function ImageUploader({
               htmlFor="file-upload"
               className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-blue-500 focus-within:outline-none"
             >
-              <span onClick={onButtonClick}>Upload files</span>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="text-primary p-0 m-0 h-auto font-medium"
+                onClick={onButtonClick}
+              >
+                Upload files
+              </Button>
               <input
                 id="file-upload"
                 name="file-upload"

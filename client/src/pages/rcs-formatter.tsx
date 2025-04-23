@@ -81,9 +81,13 @@ export default function RcsFormatter() {
   useEffect(() => {
     if (selectedCustomerId && customers) {
       const brand = customers.find(c => c.id.toString() === selectedCustomerId);
-      if (brand) {
-        // Update the brand logo if available, otherwise use a default one
-        setBrandLogoUrl(brand.brandLogoUrl || "");
+      if (brand && brand.brandLogoUrl) {
+        // Update the brand logo URL - making sure it's properly prefixed for server-stored images
+        const logoUrl = brand.brandLogoUrl.startsWith('/') 
+          ? `http://localhost:5000${brand.brandLogoUrl}` 
+          : brand.brandLogoUrl;
+        
+        setBrandLogoUrl(logoUrl);
         
         // The brandName is handled directly in the PreviewContainer with a lookup
         // No need to set a separate state variable for it
@@ -350,7 +354,13 @@ export default function RcsFormatter() {
                           // Automatically set the brand logo URL when a brand is selected
                           const selectedBrand = customers?.find(c => c.id.toString() === value);
                           if (selectedBrand?.brandLogoUrl) {
-                            setBrandLogoUrl(selectedBrand.brandLogoUrl);
+                            // Make sure to properly format the URL for server-stored images
+                            const logoUrl = selectedBrand.brandLogoUrl.startsWith('/') 
+                              ? `http://localhost:5000${selectedBrand.brandLogoUrl}` 
+                              : selectedBrand.brandLogoUrl;
+                            
+                            setBrandLogoUrl(logoUrl);
+                            console.log("Set brand logo URL to:", logoUrl);
                           }
                         }}
                       >
@@ -367,7 +377,9 @@ export default function RcsFormatter() {
                                   {customer.brandLogoUrl && (
                                     <div className="w-5 h-5 mr-2">
                                       <img 
-                                        src={customer.brandLogoUrl} 
+                                        src={customer.brandLogoUrl && customer.brandLogoUrl.startsWith('/') 
+                                          ? `http://localhost:5000${customer.brandLogoUrl}` 
+                                          : customer.brandLogoUrl} 
                                         alt="" 
                                         className="w-full h-full object-contain"
                                         onError={(e) => {

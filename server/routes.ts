@@ -323,6 +323,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Saving RCS format with data:", formatData);
       
+      // First check if we need to create a new campaign
+      let campaignId = formatData.campaignId;
+      if (!campaignId && formatData.campaignName) {
+        try {
+          // Create a new campaign
+          const campaign = await storage.createCampaign({
+            name: formatData.campaignName,
+            userId: req.user!.id,
+            formatType: formatData.formatType,
+            customerId: formatData.customerId ? parseInt(formatData.customerId) : null,
+            status: 'active',
+            description: formatData.description || null,
+          });
+          
+          console.log("Created new campaign:", campaign);
+          campaignId = campaign.id;
+          
+          // Update formatData with the new campaign ID
+          formatData.campaignId = campaignId;
+        } catch (campaignError) {
+          console.error("Error creating campaign:", campaignError);
+          // Continue with RCS format creation even if campaign creation fails
+        }
+      }
+      
       const validatedData = rcsFormatValidationSchema.parse(formatData);
       const rcsFormat = await storage.createRcsFormat(validatedData);
       
