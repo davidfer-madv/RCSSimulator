@@ -8,6 +8,9 @@ interface PreviewContainerProps {
   description: string;
   imageUrls: string[];
   actions: Action[];
+  cardOrientation?: "vertical" | "horizontal";
+  mediaHeight?: "short" | "medium" | "tall";
+  formatType?: "richCard" | "carousel";
 }
 
 export function PreviewContainer({
@@ -16,8 +19,25 @@ export function PreviewContainer({
   description,
   imageUrls,
   actions,
+  cardOrientation = "vertical",
+  mediaHeight = "medium",
+  formatType = "richCard"
 }: PreviewContainerProps) {
   const previewImage = imageUrls.length > 0 ? imageUrls[0] : null;
+  
+  // Calculate image height based on mediaHeight
+  const getImageHeight = () => {
+    switch (mediaHeight) {
+      case "short":
+        return "h-28"; // 112 DP
+      case "medium":
+        return "h-40"; // 168 DP
+      case "tall":
+        return "h-56"; // 264 DP
+      default:
+        return "h-40";
+    }
+  };
 
   return (
     <Card className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -72,11 +92,31 @@ export function PreviewContainer({
               <div className="mb-3 flex justify-start">
                 {platform === "android" ? (
                   <div className="bg-white rounded-lg overflow-hidden max-w-[85%] shadow-sm">
-                    <img src={previewImage} alt="Product" className="w-full h-32 object-cover" />
-                    <div className="p-3">
-                      <h4 className="font-medium text-sm">{title || "New Product"}</h4>
-                      <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
-                    </div>
+                    {cardOrientation === "horizontal" ? (
+                      <div className="flex">
+                        <img 
+                          src={previewImage} 
+                          alt="Product" 
+                          className={`w-1/2 ${getImageHeight()} object-cover`} 
+                        />
+                        <div className="p-3 flex-1">
+                          <h4 className="font-medium text-sm">{title || "New Product"}</h4>
+                          <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <img 
+                          src={previewImage} 
+                          alt="Product" 
+                          className={`w-full ${getImageHeight()} object-cover`} 
+                        />
+                        <div className="p-3">
+                          <h4 className="font-medium text-sm">{title || "New Product"}</h4>
+                          <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
+                        </div>
+                      </>
+                    )}
                     {actions.length > 0 && (
                       <div className="border-t border-gray-200 p-2 flex flex-wrap gap-1">
                         {actions.map((action, index) => (
@@ -92,23 +132,59 @@ export function PreviewContainer({
                   </div>
                 ) : (
                   <div className="max-w-[85%]">
-                    <img src={previewImage} alt="Product" className="w-full h-32 object-cover rounded-lg mb-1" />
-                    <div className="bg-gray-200 rounded-2xl p-3">
-                      <h4 className="font-medium text-sm">{title || "New Product"}</h4>
-                      <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
-                      {actions.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {actions.map((action, index) => (
-                            <button 
-                              key={index} 
-                              className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full"
-                            >
-                              {action.text}
-                            </button>
-                          ))}
+                    {cardOrientation === "horizontal" ? (
+                      <div className="flex flex-col">
+                        <div className="flex bg-gray-200 rounded-t-2xl p-3">
+                          <img 
+                            src={previewImage} 
+                            alt="Product" 
+                            className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} object-cover`} 
+                          />
+                          <div className="ml-2 flex-1">
+                            <h4 className="font-medium text-sm">{title || "New Product"}</h4>
+                            <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        {actions.length > 0 && (
+                          <div className="bg-gray-200 rounded-b-2xl p-3 pt-0 mt-0">
+                            <div className="flex flex-wrap gap-1">
+                              {actions.map((action, index) => (
+                                <button 
+                                  key={index} 
+                                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full"
+                                >
+                                  {action.text}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <img 
+                          src={previewImage} 
+                          alt="Product" 
+                          className={`w-full ${getImageHeight()} object-cover rounded-lg mb-1`} 
+                        />
+                        <div className="bg-gray-200 rounded-2xl p-3">
+                          <h4 className="font-medium text-sm">{title || "New Product"}</h4>
+                          <p className="text-xs text-gray-600 mt-1">{description || "Check out our latest products!"}</p>
+                          {actions.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {actions.map((action, index) => (
+                                <button 
+                                  key={index} 
+                                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full"
+                                >
+                                  {action.text}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

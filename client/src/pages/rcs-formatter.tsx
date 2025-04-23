@@ -25,6 +25,8 @@ export default function RcsFormatter() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [formatType, setFormatType] = useState<"richCard" | "carousel">("richCard");
+  const [cardOrientation, setCardOrientation] = useState<"vertical" | "horizontal">("vertical");
+  const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">("medium");
   const [actions, setActions] = useState<Action[]>([]);
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   
@@ -130,6 +132,8 @@ export default function RcsFormatter() {
     setTitle("");
     setDescription("");
     setFormatType("richCard");
+    setCardOrientation("vertical");
+    setMediaHeight("medium");
     setActions([]);
     
     toast({
@@ -214,6 +218,10 @@ export default function RcsFormatter() {
                         setDescription={setDescription}
                         formatType={formatType}
                         setFormatType={setFormatType}
+                        cardOrientation={cardOrientation}
+                        setCardOrientation={setCardOrientation}
+                        mediaHeight={mediaHeight}
+                        setMediaHeight={setMediaHeight}
                         actions={actions}
                         setActions={setActions}
                       />
