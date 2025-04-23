@@ -52,6 +52,8 @@ export default function RcsFormatter() {
       // Append format data as JSON
       const formatData = {
         formatType,
+        cardOrientation,
+        mediaHeight,
         title,
         description,
         actions,
@@ -111,6 +113,8 @@ export default function RcsFormatter() {
         description,
         actions,
         formatType,
+        cardOrientation,
+        mediaHeight,
       });
       
       toast({
@@ -244,6 +248,9 @@ export default function RcsFormatter() {
                         description={description}
                         imageUrls={processedImageUrls}
                         actions={actions}
+                        formatType={formatType}
+                        cardOrientation={cardOrientation}
+                        mediaHeight={mediaHeight}
                       />
                     </TabsContent>
                     
@@ -254,6 +261,9 @@ export default function RcsFormatter() {
                         description={description}
                         imageUrls={processedImageUrls}
                         actions={actions}
+                        formatType={formatType}
+                        cardOrientation={cardOrientation}
+                        mediaHeight={mediaHeight}
                       />
                     </TabsContent>
                   </Tabs>
@@ -261,10 +271,14 @@ export default function RcsFormatter() {
                   <div className="mt-4 text-sm text-gray-500">
                     <p className="mb-2"><strong>RCS Format Requirements:</strong></p>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li>Rich Cards: Single image with title, description, and action buttons</li>
+                      <li>Rich Cards: Single image with vertical or horizontal layout</li>
                       <li>Carousels: Up to 10 images with shared title and actions</li>
-                      <li>Image Requirements: Recommended 1200x900px, max 10MB per image</li>
-                      <li>Actions: URL links, phone numbers, or calendar events</li>
+                      <li>Title: Maximum 200 characters</li>
+                      <li>Description: Maximum 2000 characters (iOS may truncate to ~144 chars)</li>
+                      <li>Media Height: Short (112 DP), Medium (168 DP), Tall (264 DP)</li>
+                      <li>Image Requirements: Max 1500x1000 pixels, under 1.8MB, JPEG/PNG only</li>
+                      <li>Actions: Maximum 3 actions (URL links, phone numbers, or calendar events)</li>
+                      <li>iOS Compatibility: No GIF support, JPEG recommended</li>
                     </ul>
                   </div>
                 </div>

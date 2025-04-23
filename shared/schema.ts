@@ -60,6 +60,8 @@ export const rcsFormats = pgTable("rcs_formats", {
   userId: integer("user_id").notNull().references(() => users.id),
   campaignId: integer("campaign_id").references(() => campaigns.id),
   formatType: text("format_type").notNull(), // richCard, carousel
+  cardOrientation: text("card_orientation").default("vertical"), // vertical, horizontal
+  mediaHeight: text("media_height").default("medium"), // short, medium, tall
   title: text("title"),
   description: text("description"),
   actions: json("actions").default([]),
@@ -87,19 +89,27 @@ export type RcsFormat = typeof rcsFormats.$inferSelect;
 
 // Extended schema for RCS format with validations
 export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
-  title: z.string().min(3, "Title must be at least 3 characters").max(50, "Title cannot exceed 50 characters"),
-  description: z.string().max(200, "Description cannot exceed 200 characters").optional(),
+  title: z.string().min(3, "Title must be at least 3 characters").max(200, "Title cannot exceed 200 characters"),
+  description: z.string().max(2000, "Description cannot exceed 2000 characters").optional(),
   formatType: z.enum(["richCard", "carousel"], {
     errorMap: () => ({ message: "Format type must be either Rich Card or Carousel" }),
   }),
+  cardOrientation: z.enum(["vertical", "horizontal"], {
+    errorMap: () => ({ message: "Card orientation must be either Vertical or Horizontal" }),
+  }).optional().default("vertical"),
+  mediaHeight: z.enum(["short", "medium", "tall"], {
+    errorMap: () => ({ message: "Media height must be Short, Medium, or Tall" }),
+  }).optional().default("medium"),
   actions: z.array(z.object({
     text: z.string().min(1, "Action text is required"),
     type: z.enum(["url", "phone", "calendar"], {
       errorMap: () => ({ message: "Action type must be URL, Phone, or Calendar" }),
     }),
     value: z.string().min(1, "Action value is required"),
-  })).optional(),
-  imageUrls: z.array(z.string().url("Must be a valid URL")).min(1, "At least one image is required"),
+  })).max(3, "Maximum of 3 actions allowed").optional(),
+  imageUrls: z.array(z.string().url("Must be a valid URL"))
+    .min(1, "At least one image is required")
+    .max(10, "Maximum of 10 images for carousel"),
 });
 
 // Schema for action items
