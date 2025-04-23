@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Action } from "@shared/schema";
-import { PlusCircle, Info } from "lucide-react";
+import { PlusCircle, Info, BadgeCheck, Upload } from "lucide-react";
 import { useState } from "react";
 import { 
   Tooltip,
@@ -25,6 +25,12 @@ interface FormatOptionsProps {
   setCardOrientation: (orientation: "vertical" | "horizontal") => void;
   mediaHeight: "short" | "medium" | "tall";
   setMediaHeight: (height: "short" | "medium" | "tall") => void;
+  lockAspectRatio?: boolean;
+  setLockAspectRatio?: (lock: boolean) => void;
+  brandLogoUrl?: string;
+  setBrandLogoUrl?: (url: string) => void;
+  verificationSymbol?: boolean;
+  setVerificationSymbol?: (verified: boolean) => void;
   actions: Action[];
   setActions: (actions: Action[]) => void;
 }
@@ -40,6 +46,12 @@ export function FormatOptions({
   setCardOrientation,
   mediaHeight,
   setMediaHeight,
+  lockAspectRatio = true,
+  setLockAspectRatio = () => {},
+  brandLogoUrl = "",
+  setBrandLogoUrl = () => {},
+  verificationSymbol = false,
+  setVerificationSymbol = () => {},
   actions,
   setActions,
 }: FormatOptionsProps) {

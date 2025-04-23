@@ -62,6 +62,9 @@ export const rcsFormats = pgTable("rcs_formats", {
   formatType: text("format_type").notNull(), // richCard, carousel
   cardOrientation: text("card_orientation").default("vertical"), // vertical, horizontal
   mediaHeight: text("media_height").default("medium"), // short, medium, tall
+  lockAspectRatio: boolean("lock_aspect_ratio").default(true),
+  brandLogoUrl: text("brand_logo_url"),
+  verificationSymbol: boolean("verification_symbol").default(false),
   title: text("title"),
   description: text("description"),
   actions: json("actions").default([]),
@@ -89,7 +92,7 @@ export type RcsFormat = typeof rcsFormats.$inferSelect;
 
 // Extended schema for RCS format with validations
 export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
-  title: z.string().min(3, "Title must be at least 3 characters").max(200, "Title cannot exceed 200 characters"),
+  title: z.string().min(1, "Title is required").max(200, "Title cannot exceed 200 characters"),
   description: z.string().max(2000, "Description cannot exceed 2000 characters").optional(),
   formatType: z.enum(["richCard", "carousel"], {
     errorMap: () => ({ message: "Format type must be either Rich Card or Carousel" }),
@@ -100,6 +103,9 @@ export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
   mediaHeight: z.enum(["short", "medium", "tall"], {
     errorMap: () => ({ message: "Media height must be Short, Medium, or Tall" }),
   }).optional().default("medium"),
+  lockAspectRatio: z.boolean().optional().default(true),
+  brandLogoUrl: z.string().url("Brand logo must be a valid URL").optional(),
+  verificationSymbol: z.boolean().optional().default(false),
   actions: z.array(z.object({
     text: z.string().min(1, "Action text is required"),
     type: z.enum(["url", "phone", "calendar"], {
