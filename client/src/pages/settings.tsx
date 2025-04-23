@@ -490,7 +490,7 @@ export default function SettingsPage() {
                               <Label htmlFor="company">Company</Label>
                               <Input
                                 id="company"
-                                defaultValue={user?.company || ""}
+                                placeholder="Your company"
                                 className="mt-1"
                               />
                             </div>
