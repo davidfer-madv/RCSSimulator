@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Campaign } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import { Campaign, RcsFormat } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { MessageSquare, Users, Loader2 } from "lucide-react";
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -10,6 +14,8 @@ interface CampaignCardProps {
 }
 
 export function CampaignCard({ campaign, onEdit }: CampaignCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   // Format date using date-fns
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return "N/A";
@@ -29,6 +35,21 @@ export function CampaignCard({ campaign, onEdit }: CampaignCardProps) {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  // Fetch RCS formats for this campaign
+  const { 
+    data: formats, 
+    isLoading: isLoadingFormats,
+    isError,
+  } = useQuery<RcsFormat[]>({
+    queryKey: ["/api/campaign", campaign.id, "formats"],
+    queryFn: async () => {
+      const res = await fetch(`/api/campaign/${campaign.id}/formats`);
+      if (!res.ok) throw new Error("Failed to fetch formats");
+      return res.json();
+    },
+    enabled: isExpanded, // Only fetch when expanded
+  });
 
   return (
     <Card className="overflow-hidden">
@@ -68,6 +89,43 @@ export function CampaignCard({ campaign, onEdit }: CampaignCardProps) {
                   : formatDate(campaign.createdAt)}
               </div>
             </div>
+            
+            {isExpanded && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">RCS Formats</h4>
+                
+                {isLoadingFormats ? (
+                  <div className="flex justify-center py-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                  </div>
+                ) : isError ? (
+                  <p className="text-sm text-red-500">Error loading formats</p>
+                ) : formats && formats.length > 0 ? (
+                  <div className="space-y-2">
+                    {formats.map((format) => (
+                      <div key={format.id} className="p-2 bg-gray-50 rounded-md text-sm">
+                        <div className="flex justify-between items-center">
+                          <div className="font-medium">{format.title || "Untitled Format"}</div>
+                          <Badge variant="outline">{format.formatType === "richCard" ? "Rich Card" : "Carousel"}</Badge>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 line-clamp-1">
+                          {format.description || "No description"}
+                        </div>
+                        <div className="mt-2">
+                          <Link href={`/format/${format.id}`}>
+                            <Button variant="ghost" size="sm" className="h-7 text-xs">
+                              View Format
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No RCS formats created yet</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
         
@@ -80,11 +138,21 @@ export function CampaignCard({ campaign, onEdit }: CampaignCardProps) {
             Edit
           </Button>
           
-          <Link href={`/campaigns/${campaign.id}`}>
-            <Button variant="ghost" className="text-sm font-medium text-primary hover:text-blue-700">
-              {campaign.status === "active" ? "View Report" : "View Details"}
+          <div className="flex space-x-2">
+            <Button 
+              variant="ghost" 
+              className="text-sm font-medium text-primary hover:text-blue-700"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? "Hide Formats" : "Show Formats"}
             </Button>
-          </Link>
+            
+            <Link href={`/campaigns/${campaign.id}`}>
+              <Button variant="ghost" className="text-sm font-medium text-primary hover:text-blue-700">
+                View Details
+              </Button>
+            </Link>
+          </div>
         </div>
       </CardContent>
     </Card>

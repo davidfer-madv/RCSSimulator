@@ -114,9 +114,28 @@ export default function RcsFormatter() {
         formData.append('images', file);
       });
       
-      // Append format data as JSON
       // Find selected brand information
       const selectedBrand = customers?.find(c => c.id.toString() === selectedCustomerId);
+      
+      // Handle brand logo - if it's a blob URL, we need to upload it with the images
+      let finalBrandLogoUrl = brandLogoUrl;
+      if (brandLogoUrl && brandLogoUrl.startsWith('blob:')) {
+        // For blob URLs, we need to retrieve the actual file from the browser
+        try {
+          const response = await fetch(brandLogoUrl);
+          const blob = await response.blob();
+          const brandLogoFile = new File([blob], 'brand_logo.jpg', { type: blob.type });
+          formData.append('brandLogo', brandLogoFile);
+          finalBrandLogoUrl = 'PENDING_UPLOAD'; // Will be replaced by the server
+        } catch (error) {
+          console.error('Error retrieving brand logo blob:', error);
+          // Fall back to the actual URL or empty string
+          finalBrandLogoUrl = selectedBrand?.brandLogoUrl || '';
+        }
+      } else if (selectedBrand?.brandLogoUrl && !brandLogoUrl) {
+        // If no logo is set but the brand has one, use the brand's logo
+        finalBrandLogoUrl = selectedBrand.brandLogoUrl;
+      }
       
       // In case we have issues with file upload, also include the processedImageUrls as a backup
       const formatData = {
@@ -124,7 +143,7 @@ export default function RcsFormatter() {
         cardOrientation,
         mediaHeight,
         lockAspectRatio,
-        brandLogoUrl,
+        brandLogoUrl: finalBrandLogoUrl,
         verificationSymbol,
         title,
         description,

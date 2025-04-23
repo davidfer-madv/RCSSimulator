@@ -130,7 +130,7 @@ export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
     errorMap: () => ({ message: "Media height must be Short, Medium, or Tall" }),
   }).optional().default("medium").nullable(),
   lockAspectRatio: z.boolean().optional().default(true).nullable(),
-  brandLogoUrl: z.string().url("Brand logo must be a valid URL").optional().nullable(),
+  brandLogoUrl: z.string().optional().nullable(), // Allow any string value for now
   verificationSymbol: z.boolean().optional().default(false).nullable(),
   actions: z.array(actionSchema).max(4, "Maximum of 4 actions allowed").optional().default([]),
   imageUrls: z.array(z.string())

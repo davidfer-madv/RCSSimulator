@@ -274,7 +274,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/rcs-formats", isAuthenticated, upload.array('images', 10), async (req, res) => {
+  app.post("/api/rcs-formats", isAuthenticated, upload.fields([
+    { name: 'images', maxCount: 10 },
+    { name: 'brandLogo', maxCount: 1 }
+  ]), async (req, res) => {
     try {
       const formatData = JSON.parse(req.body.formatData || '{}');
       
@@ -282,24 +285,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       formatData.userId = req.user!.id;
       
       // Handle image uploads
-      if (req.files && Array.isArray(req.files)) {
-        const imageUrls: string[] = [];
+      if (req.files) {
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         
-        for (const file of req.files as Express.Multer.File[]) {
+        // Process main images
+        if (files.images && files.images.length > 0) {
+          const imageUrls: string[] = [];
+          
+          for (const file of files.images) {
+            // Validate file type
+            if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+              return res.status(400).json({ 
+                message: `Images must be valid formats (${ALLOWED_IMAGE_TYPES.join(', ')})` 
+              });
+            }
+            
+            // Save the file and get the URL
+            const imageUrl = saveFile(file.buffer, file.originalname);
+            imageUrls.push(imageUrl);
+          }
+          
+          if (imageUrls.length > 0) {
+            formatData.imageUrls = imageUrls;
+          }
+        }
+        
+        // Process brand logo if present
+        if (files.brandLogo && files.brandLogo.length > 0) {
+          const brandLogoFile = files.brandLogo[0];
+          
           // Validate file type
-          if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          if (!ALLOWED_IMAGE_TYPES.includes(brandLogoFile.mimetype)) {
             return res.status(400).json({ 
-              message: `Images must be valid formats (${ALLOWED_IMAGE_TYPES.join(', ')})` 
+              message: `Brand logo must be a valid format (${ALLOWED_IMAGE_TYPES.join(', ')})` 
             });
           }
           
-          // Save the file and get the URL
-          const imageUrl = saveFile(file.buffer, file.originalname);
-          imageUrls.push(imageUrl);
-        }
-        
-        if (imageUrls.length > 0) {
-          formatData.imageUrls = imageUrls;
+          // Save the brand logo and get the URL
+          const brandLogoUrl = saveFile(brandLogoFile.buffer, brandLogoFile.originalname);
+          
+          // Check if the brand ID exists and update the customer record with the new logo URL
+          if (formatData.customerId) {
+            try {
+              const customerId = parseInt(formatData.customerId);
+              const customer = await storage.getCustomer(customerId);
+              
+              if (customer && customer.userId === req.user!.id) {
+                // Update the customer with the new brand logo URL if it exists
+                await storage.updateCustomer(customerId, { brandLogoUrl });
+                console.log(`Updated customer ${customerId} with brand logo URL: ${brandLogoUrl}`);
+              }
+            } catch (error) {
+              console.error("Error updating customer brand logo:", error);
+              // Continue even if customer update fails
+            }
+          }
+          
+          // Update the format data with the brand logo URL
+          formatData.brandLogoUrl = brandLogoUrl;
         }
       }
       
