@@ -360,10 +360,25 @@ export default function Customers() {
                                           type="file"
                                           id="logo-upload"
                                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                          accept="image/*"
+                                          accept=".jpg,.jpeg,.png"
+                                          onClick={(e) => {
+                                            // Reset value to ensure onChange fires even if selecting the same file
+                                            e.currentTarget.value = '';
+                                          }}
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
+                                              // Check file type
+                                              const validTypes = ['image/jpeg', 'image/png'];
+                                              if (!validTypes.includes(file.type)) {
+                                                toast({
+                                                  title: "Invalid file type",
+                                                  description: "Only JPG and PNG images are supported",
+                                                  variant: "destructive",
+                                                });
+                                                return;
+                                              }
+                                              
                                               const objectUrl = URL.createObjectURL(file);
                                               field.onChange(objectUrl);
                                             }
@@ -549,10 +564,25 @@ export default function Customers() {
                                           type="file"
                                           id="banner-upload"
                                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                          accept="image/*"
+                                          accept=".jpg,.jpeg,.png"
+                                          onClick={(e) => {
+                                            // Reset value to ensure onChange fires even if selecting the same file
+                                            e.currentTarget.value = '';
+                                          }}
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
+                                              // Check file type
+                                              const validTypes = ['image/jpeg', 'image/png'];
+                                              if (!validTypes.includes(file.type)) {
+                                                toast({
+                                                  title: "Invalid file type",
+                                                  description: "Only JPG and PNG images are supported",
+                                                  variant: "destructive",
+                                                });
+                                                return;
+                                              }
+                                              
                                               const objectUrl = URL.createObjectURL(file);
                                               field.onChange(objectUrl);
                                             }
@@ -745,10 +775,25 @@ export default function Customers() {
                                           type="file"
                                           id="edit-logo-upload"
                                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                          accept="image/*"
+                                          accept=".jpg,.jpeg,.png"
+                                          onClick={(e) => {
+                                            // Reset value to ensure onChange fires even if selecting the same file
+                                            e.currentTarget.value = '';
+                                          }}
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
+                                              // Check file type
+                                              const validTypes = ['image/jpeg', 'image/png'];
+                                              if (!validTypes.includes(file.type)) {
+                                                toast({
+                                                  title: "Invalid file type",
+                                                  description: "Only JPG and PNG images are supported",
+                                                  variant: "destructive",
+                                                });
+                                                return;
+                                              }
+                                              
                                               const objectUrl = URL.createObjectURL(file);
                                               field.onChange(objectUrl);
                                             }
@@ -932,10 +977,25 @@ export default function Customers() {
                                           type="file"
                                           id="edit-banner-upload"
                                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                          accept="image/*"
+                                          accept=".jpg,.jpeg,.png"
+                                          onClick={(e) => {
+                                            // Reset value to ensure onChange fires even if selecting the same file
+                                            e.currentTarget.value = '';
+                                          }}
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
+                                              // Check file type
+                                              const validTypes = ['image/jpeg', 'image/png'];
+                                              if (!validTypes.includes(file.type)) {
+                                                toast({
+                                                  title: "Invalid file type",
+                                                  description: "Only JPG and PNG images are supported",
+                                                  variant: "destructive",
+                                                });
+                                                return;
+                                              }
+                                              
                                               const objectUrl = URL.createObjectURL(file);
                                               field.onChange(objectUrl);
                                             }
