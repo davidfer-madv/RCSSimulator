@@ -101,6 +101,9 @@ export default function RcsFormatter() {
       });
       
       // Append format data as JSON
+      // Find selected brand information
+      const selectedBrand = customers?.find(c => c.id.toString() === selectedCustomerId);
+      
       const formatData = {
         formatType,
         cardOrientation,
@@ -113,6 +116,8 @@ export default function RcsFormatter() {
         actions,
         customerId: selectedCustomerId || null,
         campaignId: null, // Can be set if coming from a campaign
+        brandName: selectedBrand?.name || "Business Name", // Store brand name
+        campaignName: title || "Untitled Campaign" // Use title as campaign name
       };
       
       formData.append('formatData', JSON.stringify(formatData));
@@ -167,6 +172,9 @@ export default function RcsFormatter() {
       // Get the active platform from the current tab
       const activePlatform = activePreviewTab as 'android' | 'ios';
       
+      // Find selected brand information
+      const selectedBrand = customers?.find(c => c.id.toString() === selectedCustomerId);
+      
       // Process and export the images
       await processImages(
         selectedImages, 
@@ -180,6 +188,8 @@ export default function RcsFormatter() {
           lockAspectRatio,
           brandLogoUrl,
           verificationSymbol,
+          brandName: selectedBrand?.name || "Business Name", // Include brand name
+          campaignName: title || "Untitled Campaign" // Include campaign name
         },
         exportType,
         activePlatform

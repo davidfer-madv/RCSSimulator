@@ -105,7 +105,6 @@ export function PreviewContainer({
                     </span>
                   )}
                 </div>
-                {platform === "android" && <div className="text-xs text-blue-200">Online</div>}
               </div>
               {platform === "ios" && (
                 <div className="ml-auto">
@@ -160,6 +159,7 @@ export function PreviewContainer({
                             key={index} 
                             className="flex w-full items-center px-4 py-3 text-blue-600 hover:bg-blue-50 border-b border-gray-200 last:border-b-0"
                           >
+                            {action.type === "text" && <span className="mr-2">💬</span>}
                             {action.type === "url" && <span className="mr-2">⚡</span>}
                             {action.type === "phone" && <span className="mr-2">📞</span>}
                             {action.type === "calendar" && <span className="mr-2">🕒</span>}

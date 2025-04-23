@@ -10,6 +10,8 @@ interface FormatOptions {
   brandLogoUrl?: string;
   verificationSymbol?: boolean;
   actions: Action[];
+  brandName?: string;
+  campaignName?: string;
 }
 
 interface RcsCardJson {
