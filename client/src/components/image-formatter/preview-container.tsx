@@ -90,10 +90,10 @@ export function PreviewContainer({
                 )}
               </div>
               <div className="ml-2 flex-grow">
-                <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} relative`}>
-                  {brandName}
+                <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} flex items-center`}>
+                  <span>{brandName}</span>
                   {verificationSymbol && (
-                    <div className="absolute" style={{ left: "75%" }}>
+                    <span className="ml-1 inline-flex items-center">
                       <img 
                         src={verificationBadge} 
                         alt="Verified" 
@@ -102,7 +102,7 @@ export function PreviewContainer({
                           filter: platform === "android" ? "brightness(2) invert(1)" : "brightness(0.7)"
                         }}
                       />
-                    </div>
+                    </span>
                   )}
                 </div>
                 {platform === "android" && <div className="text-xs text-blue-200">Online</div>}
