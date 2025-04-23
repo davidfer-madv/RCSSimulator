@@ -1169,10 +1169,10 @@ export default function Customers() {
                               <Palette className="h-4 w-4 mr-2 text-muted-foreground" />
                               <div className="flex items-center">
                                 <div 
-                                  className="h-4 w-4 rounded-full mr-2" 
+                                  className="h-6 w-6 rounded-full mr-2 border border-gray-200 shadow-sm" 
                                   style={{backgroundColor: customer.brandColor}}
                                 ></div>
-                                <span>{customer.brandColor}</span>
+                                <span className="font-medium">{customer.brandColor}</span>
                               </div>
                             </div>
                           )}
@@ -1188,9 +1188,8 @@ export default function Customers() {
                           Edit
                         </Button>
                         <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="text-destructive hover:text-destructive"
+                          variant="destructive" 
+                          size="sm"
                           onClick={() => handleDeleteCustomer(customer)}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
