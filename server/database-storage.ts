@@ -139,7 +139,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRcsFormat(insertFormat: InsertRcsFormat): Promise<RcsFormat> {
-    const result = await db.insert(rcsFormats).values(insertFormat).returning();
+    // Ensure we have properly typed data that meets the database schema requirements
+    const formattedData = {
+      ...insertFormat,
+      // Ensure nullable fields are explicitly null when undefined
+      title: insertFormat.title ?? null,
+      description: insertFormat.description ?? null,
+      brandLogoUrl: insertFormat.brandLogoUrl ?? null,
+      cardOrientation: insertFormat.cardOrientation ?? null,
+      mediaHeight: insertFormat.mediaHeight ?? null,
+      lockAspectRatio: insertFormat.lockAspectRatio ?? null,
+      verificationSymbol: insertFormat.verificationSymbol ?? null,
+      brandName: insertFormat.brandName ?? null,
+      campaignName: insertFormat.campaignName ?? null,
+      campaignId: insertFormat.campaignId ?? null,
+      // Ensure we always have a valid formatType
+      formatType: insertFormat.formatType || "richCard"
+    };
+    
+    const result = await db.insert(rcsFormats).values(formattedData).returning();
     return result[0];
   }
 

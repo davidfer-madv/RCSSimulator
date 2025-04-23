@@ -72,6 +72,8 @@ export const rcsFormats = pgTable("rcs_formats", {
   description: text("description"),
   actions: json("actions").default([]),
   imageUrls: json("image_urls").default([]),
+  brandName: text("brand_name"), // Added to store brand name
+  campaignName: text("campaign_name"), // Added to store campaign name 
   createdAt: timestamp("created_at").defaultNow(),
 });
 

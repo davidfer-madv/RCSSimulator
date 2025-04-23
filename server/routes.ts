@@ -209,13 +209,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const imageUrls: string[] = [];
         
         for (const file of req.files as Express.Multer.File[]) {
-          // In production, this would be uploaded to cloud storage
-          // For the purpose of this example, we'll use a placeholder URL
+          // In a production environment, we would upload to cloud storage
+          // For development, we'll use placeholders with timestamped filenames
           const imageUrl = `/uploads/${Date.now()}-${file.originalname}`;
           imageUrls.push(imageUrl);
         }
         
         formatData.imageUrls = imageUrls;
+      } else {
+        // For development, ensure there's at least something in imageUrls
+        formatData.imageUrls = formatData.imageUrls || [];
+        
+        // If we have processed images but Multer didn't capture them, use placeholders
+        if (formatData.imageUrls.length === 0 && Array.isArray(formatData.processedImageUrls)) {
+          formatData.imageUrls = formatData.processedImageUrls;
+        }
+      }
+      
+      // Make sure we have valid data for required fields
+      if (!formatData.formatType) formatData.formatType = "richCard";
+      if (!formatData.cardOrientation) formatData.cardOrientation = "vertical";
+      if (!formatData.mediaHeight) formatData.mediaHeight = "medium";
+      
+      // Add campaign-related fields
+      if (!formatData.campaignName) {
+        formatData.campaignName = formatData.title || "Untitled Campaign";
       }
       
       const validatedData = rcsFormatValidationSchema.parse(formatData);
@@ -223,10 +241,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(201).json(rcsFormat);
     } catch (error) {
+      console.error("Error saving RCS format:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ message: fromZodError(error).message });
       }
-      res.status(500).json({ message: "Failed to create RCS format" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to create RCS format" });
     }
   });
 
