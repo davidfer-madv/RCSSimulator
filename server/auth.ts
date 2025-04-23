@@ -71,22 +71,38 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      console.log("Registration request received:", { ...req.body, password: "***" });
+      
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
-        return res.status(400).send("Username already exists");
+        console.log("Username already exists:", req.body.username);
+        return res.status(400).json({ message: "Username already exists" });
       }
 
+      console.log("Creating user with data:", { 
+        username: req.body.username,
+        name: req.body.name,
+        email: req.body.email
+      });
+      
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
       });
+      
+      console.log("User created successfully:", { id: user.id, username: user.username });
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Login error after registration:", err);
+          return next(err);
+        }
+        console.log("User logged in successfully after registration");
         res.status(201).json(user);
       });
     } catch (error) {
-      next(error);
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
