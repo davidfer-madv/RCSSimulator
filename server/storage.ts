@@ -124,7 +124,10 @@ export class MemStorage implements IStorage {
       email: insertCustomer.email || null,
       phone: insertCustomer.phone || null,
       company: insertCustomer.company || null,
-      address: insertCustomer.address || null 
+      address: insertCustomer.address || null,
+      brandLogoUrl: insertCustomer.brandLogoUrl || null,
+      brandColor: insertCustomer.brandColor || null,
+      brandBannerUrl: insertCustomer.brandBannerUrl || null
     };
     this.customers.set(id, customer);
     return customer;

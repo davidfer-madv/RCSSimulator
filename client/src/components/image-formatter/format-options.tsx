@@ -57,16 +57,19 @@ export function FormatOptions({
   setActions,
 }: FormatOptionsProps) {
   const [newActionText, setNewActionText] = useState("");
-  const [newActionType, setNewActionType] = useState<"url" | "phone" | "calendar">("url");
+  const [newActionType, setNewActionType] = useState<"url" | "phone" | "calendar" | "text">("url");
   const [newActionValue, setNewActionValue] = useState("");
 
   const addAction = () => {
-    if (!newActionText || !newActionValue) return;
+    if (!newActionText) return;
+    
+    // For text type actions, value is optional
+    if (newActionType !== 'text' && !newActionValue) return;
 
     const newAction: Action = {
       text: newActionText,
       type: newActionType,
-      value: newActionValue,
+      value: newActionType === 'text' ? '' : newActionValue,
     };
 
     setActions([...actions, newAction]);
@@ -320,12 +323,13 @@ export function FormatOptions({
                 />
                 <Select
                   value={newActionType}
-                  onValueChange={(value) => setNewActionType(value as "url" | "phone" | "calendar")}
+                  onValueChange={(value) => setNewActionType(value as "url" | "phone" | "calendar" | "text")}
                 >
                   <SelectTrigger className="w-24">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
                     <SelectItem value="url">URL</SelectItem>
                     <SelectItem value="phone">Phone</SelectItem>
                     <SelectItem value="calendar">Calendar</SelectItem>
@@ -334,27 +338,32 @@ export function FormatOptions({
               </div>
               
               <div className="flex items-center gap-2">
-                <Input
-                  value={newActionValue}
-                  onChange={(e) => setNewActionValue(e.target.value)}
-                  placeholder={
-                    newActionType === "url"
-                      ? "https://example.com"
-                      : newActionType === "phone"
-                      ? "+1234567890"
-                      : "2023-10-25T10:00:00"
-                  }
-                  className="flex-1"
-                />
+                {newActionType !== 'text' && (
+                  <Input
+                    value={newActionValue}
+                    onChange={(e) => setNewActionValue(e.target.value)}
+                    placeholder={
+                      newActionType === "url"
+                        ? "https://example.com"
+                        : newActionType === "phone"
+                        ? "+1234567890"
+                        : "2023-10-25T10:00:00"
+                    }
+                    className="flex-1"
+                  />
+                )}
                 <Button
                   type="button"
                   size="sm"
                   onClick={addAction}
                   className="inline-flex items-center text-xs"
-                  disabled={!newActionText || !newActionValue}
+                  disabled={
+                    !newActionText || 
+                    (newActionType !== 'text' && !newActionValue)
+                  }
                 >
                   <PlusCircle className="mr-1 h-4 w-4" />
-                  Add Action
+                  {newActionType === 'text' ? 'Add Reply' : 'Add Action'}
                 </Button>
               </div>
             </>
