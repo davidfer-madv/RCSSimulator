@@ -16,7 +16,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, UserPlus, Mail, Phone, Building, MapPin, Trash2, Edit, Info, Upload } from "lucide-react";
+import { Loader2, Plus, UserPlus, Mail, Phone, Building, MapPin, Trash2, Edit, Info, Upload, Palette } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Customer form schema
@@ -27,6 +27,8 @@ const customerSchema = z.object({
   address: z.string().optional().or(z.literal("")),
   company: z.string().optional().or(z.literal("")),
   brandLogoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  brandColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Please enter a valid hex color code (e.g., #FF5733)").optional().or(z.literal("")),
+  brandBannerUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -52,6 +54,9 @@ export default function Customers() {
       phone: "",
       address: "",
       company: "",
+      brandLogoUrl: "",
+      brandColor: "",
+      brandBannerUrl: "",
     },
   });
 
@@ -212,7 +217,7 @@ export default function Customers() {
                                         </div>
                                       </TooltipTrigger>
                                       <TooltipContent className="w-80">
-                                        <p>Brand logo displays in RCS message headers. Recommended size: Square, 32x32 pixels.</p>
+                                        <p>Brand logo displays in RCS message headers. Recommended size: 224x224 pixels.</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -244,6 +249,98 @@ export default function Customers() {
                                         </div>
                                       )}
                                     </div>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="brandColor"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  Brand Color
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="inline-flex items-center">
+                                          <Info className="ml-1 h-4 w-4 text-gray-400" />
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Brand color used for accents and card borders.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center gap-3">
+                                    <Input
+                                      type="text"
+                                      placeholder="#FF5733"
+                                      {...field}
+                                      value={field.value || ''}
+                                      className="flex-1"
+                                    />
+                                    <div className="flex-shrink-0">
+                                      <div 
+                                        className="w-10 h-10 border rounded-md" 
+                                        style={{backgroundColor: field.value || '#ffffff'}}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="brandBannerUrl"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  Brand Banner URL
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="inline-flex items-center">
+                                          <Info className="ml-1 h-4 w-4 text-gray-400" />
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="w-80">
+                                        <p>Brand banner image for large format display. Recommended size: 1440x448 pixels.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center gap-3">
+                                    <Input
+                                      type="url"
+                                      placeholder="https://example.com/banner.png"
+                                      {...field}
+                                      value={field.value || ''}
+                                      className="flex-1"
+                                    />
+                                    {field.value && (
+                                      <div className="flex-shrink-0">
+                                        <div className="w-10 h-4 border rounded-md overflow-hidden">
+                                          <img 
+                                            src={field.value} 
+                                            alt="Brand banner" 
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              e.currentTarget.style.display = 'none';
+                                            }}
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </FormControl>
                                 <FormMessage />
@@ -289,15 +386,30 @@ export default function Customers() {
               ) : customers?.length ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {customers.map((customer) => (
-                    <Card key={customer.id} className="overflow-hidden">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-xl">{customer.name}</CardTitle>
-                        {customer.company && (
-                          <CardDescription className="flex items-center text-sm">
-                            <Building className="h-4 w-4 mr-1 opacity-70" />
-                            {customer.company}
-                          </CardDescription>
+                    <Card key={customer.id} className={`overflow-hidden ${customer.brandColor ? `border-l-4` : ''}`} 
+                      style={customer.brandColor ? {borderLeftColor: customer.brandColor} : undefined}>
+                      <CardHeader className="pb-2 flex flex-row items-center">
+                        {customer.brandLogoUrl && (
+                          <div className="mr-3 h-14 w-14 flex-shrink-0 overflow-hidden rounded-md">
+                            <img 
+                              src={customer.brandLogoUrl} 
+                              alt={`${customer.name} logo`} 
+                              className="h-full w-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
                         )}
+                        <div>
+                          <CardTitle className="text-xl">{customer.name}</CardTitle>
+                          {customer.company && (
+                            <CardDescription className="flex items-center text-sm">
+                              <Building className="h-4 w-4 mr-1 opacity-70" />
+                              {customer.company}
+                            </CardDescription>
+                          )}
+                        </div>
                       </CardHeader>
                       <CardContent className="pb-2">
                         <div className="space-y-2 text-sm">
@@ -317,6 +429,18 @@ export default function Customers() {
                             <div className="flex items-center">
                               <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
                               <span>{customer.address}</span>
+                            </div>
+                          )}
+                          {customer.brandColor && (
+                            <div className="flex items-center">
+                              <Palette className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <div className="flex items-center">
+                                <div 
+                                  className="h-4 w-4 rounded-full mr-2" 
+                                  style={{backgroundColor: customer.brandColor}}
+                                ></div>
+                                <span>{customer.brandColor}</span>
+                              </div>
                             </div>
                           )}
                         </div>
