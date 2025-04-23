@@ -90,18 +90,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Register mutation
   const registerMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
+      console.log("Registering with data:", userData);
+      setIsLoading(true);
+      
       try {
-        console.log("Registering with data:", userData);
-        setIsLoading(true);
-        const res = await apiRequest("POST", "/api/register", userData);
-        console.log("Registration response:", res);
-        const newUser = await res.json();
+        // Directly use fetch instead of apiRequest to have more control over error handling
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+          credentials: "include"
+        });
+        
+        console.log("Registration response status:", response.status);
+        
+        if (!response.ok) {
+          let errorMessage = "Registration failed";
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch (e) {
+            // If parsing JSON fails, try to get text
+            const text = await response.text();
+            if (text) errorMessage = text;
+          }
+          throw new Error(errorMessage);
+        }
+        
+        const newUser = await response.json();
         console.log("New user data:", newUser);
         setUser(newUser);
         queryClient.setQueryData(["/api/user"], newUser);
         return newUser;
       } catch (error) {
         console.error("Registration error:", error);
+        setIsLoading(false);
         throw error;
       }
     },
