@@ -49,6 +49,9 @@ export const campaigns = pgTable("campaigns", {
   formatType: text("format_type").notNull(), // richCard, carousel
   provider: text("provider"),
   scheduledDate: timestamp("scheduled_date"),
+  isActive: boolean("is_active").default(false), // Whether campaign is currently active
+  activatedAt: timestamp("activated_at"), // When the campaign was last activated
+  targetPhoneNumbers: json("target_phone_numbers").default([]), // List of phone numbers to send to
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -82,6 +85,37 @@ export const insertRcsFormatSchema = createInsertSchema(rcsFormats).omit({
   createdAt: true,
 });
 
+// Webhook configuration schema
+export const webhookConfigs = pgTable("webhook_configs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  token: text("token"), // Authentication token if needed
+  provider: text("provider").notNull(), // google, apple, etc.
+  isActive: boolean("is_active").default(true),
+  lastUsed: timestamp("last_used"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWebhookConfigSchema = createInsertSchema(webhookConfigs).omit({
+  id: true,
+  createdAt: true,
+  lastUsed: true,
+});
+
+// Webhook log schema to track sent messages
+export const webhookLogs = pgTable("webhook_logs", {
+  id: serial("id").primaryKey(),
+  webhookId: integer("webhook_id").references(() => webhookConfigs.id),
+  campaignId: integer("campaign_id").references(() => campaigns.id),
+  formatId: integer("format_id").references(() => rcsFormats.id),
+  phoneNumber: text("phone_number"),
+  status: text("status").notNull(), // success, failed
+  response: text("response"),
+  sentAt: timestamp("sent_at").defaultNow(),
+});
+
 // Export types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -94,6 +128,11 @@ export type Campaign = typeof campaigns.$inferSelect;
 
 export type InsertRcsFormat = z.infer<typeof insertRcsFormatSchema>;
 export type RcsFormat = typeof rcsFormats.$inferSelect;
+
+export type InsertWebhookConfig = z.infer<typeof insertWebhookConfigSchema>;
+export type WebhookConfig = typeof webhookConfigs.$inferSelect;
+
+export type WebhookLog = typeof webhookLogs.$inferSelect;
 
 // Action type schemas
 const actionTextSchema = z.object({

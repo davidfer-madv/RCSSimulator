@@ -1,9 +1,13 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import multer from "multer";
-import { insertCustomerSchema, insertCampaignSchema, insertRcsFormatSchema, rcsFormatValidationSchema } from "@shared/schema";
+import { 
+  insertCustomerSchema, insertCampaignSchema, insertRcsFormatSchema, 
+  rcsFormatValidationSchema, insertWebhookConfigSchema, WebhookConfig
+} from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import path from "path";
