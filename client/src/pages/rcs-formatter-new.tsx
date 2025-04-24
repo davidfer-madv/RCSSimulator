@@ -454,13 +454,15 @@ export default function RcsFormatter() {
     }
     
     setExporting(true);
-    setProcessingStage(ProcessingStage.Preparing);
+    setProcessingStage(ProcessingStage.PREPARING);
     setProcessingProgress(0);
     
     try {
       const handleProcessingProgress: ProcessingEventHandler = (stage, progress) => {
         setProcessingStage(stage);
-        setProcessingProgress(progress);
+        if (progress !== undefined) {
+          setProcessingProgress(progress);
+        }
       };
       
       const result = await processImages(
@@ -475,8 +477,10 @@ export default function RcsFormatter() {
           brandLogoUrl,
           actions,
           verificationSymbol,
-          selectedBrand: customers?.find(c => c.id.toString() === selectedCustomerId)?.name,
+          brandName: customers?.find(c => c.id.toString() === selectedCustomerId)?.name,
         },
+        'json',
+        'android',
         handleProcessingProgress
       );
       

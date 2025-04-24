@@ -18,6 +18,7 @@ export type ProcessingEventHandler = (stage: ProcessingStage, progress?: number)
 
 export enum ProcessingStage {
   INIT = "Initializing...",
+  PREPARING = "Preparing images...",
   ANALYZING = "Analyzing images...",
   FORMATTING = "Applying RCS format...",
   RENDERING = "Rendering preview...",
