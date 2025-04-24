@@ -317,8 +317,8 @@ export const AndroidRichCard: React.FC<{
                 alt="Content" 
                 className={
                   lockAspectRatio 
-                    ? `w-full ${mediaHeight === "short" ? "h-28" : mediaHeight === "medium" ? "h-42" : "h-66"} aspect-[2/1] object-cover bg-gray-100`
-                    : `w-full ${mediaHeight === "short" ? "h-28" : mediaHeight === "medium" ? "h-42" : "h-66"} object-contain bg-gray-100`
+                    ? `w-full ${mediaHeight === "short" ? "h-28" : mediaHeight === "medium" ? "h-42" : "h-66"} aspect-[2/1] object-contain bg-gray-100`
+                    : `w-full ${mediaHeight === "short" ? "h-28" : mediaHeight === "medium" ? "h-42" : "h-66"} object-cover bg-gray-100`
                 }
               />
             </div>
@@ -386,10 +386,10 @@ export const IOSRichCard: React.FC<{
   lockAspectRatio, 
   actions 
 }) => {
-  // Calculate image height based on mediaHeight
+  // Calculate image height based on mediaHeight (iOS uses slightly smaller sizes)
   const getImageHeight = () => {
     switch (mediaHeight) {
-      case "short": return "h-24"; // iOS uses slightly smaller sizes
+      case "short": return "h-24"; 
       case "medium": return "h-36";
       case "tall": return "h-52";
       default: return "h-36";
@@ -558,7 +558,7 @@ export const AndroidCarousel: React.FC<{
                 <img 
                   src={item.imageUrl} 
                   alt={`Carousel item ${index + 1}`} 
-                  className={`w-full ${getCarouselItemStyle()} ${lockAspectRatio ? 'object-cover' : 'object-contain'} bg-gray-100`}
+                  className={`w-full ${getCarouselItemStyle()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`}
                 />
               </div>
             )}
@@ -661,7 +661,7 @@ export const IOSCarousel: React.FC<{
                 <img 
                   src={item.imageUrl} 
                   alt={`Carousel item ${index + 1}`} 
-                  className={`w-full rounded-2xl ${getIOSCarouselHeight()} ${lockAspectRatio ? 'object-cover' : 'object-contain'} mb-2 bg-white`} 
+                  className={`w-full rounded-2xl ${getIOSCarouselHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} mb-2 bg-white`} 
                 />
               )}
               
