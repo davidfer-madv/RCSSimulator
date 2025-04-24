@@ -14,7 +14,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Download, RotateCcw, Save, CalendarIcon } from "lucide-react";
-import { processImages } from "@/lib/image-processing";
+import { processImages, ProcessingStage, ProcessingEventHandler } from "@/lib/image-processing";
+import { ImageProcessingLoader } from "@/components/image-formatter/image-processing-loader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -120,6 +121,8 @@ export default function RcsFormatter() {
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   const [exporting, setExporting] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [processingStage, setProcessingStage] = useState<ProcessingStage | undefined>();
+  const [processingProgress, setProcessingProgress] = useState<number>(0);
   
   // Add click outside handler for export menu
   useEffect(() => {
@@ -427,13 +430,24 @@ export default function RcsFormatter() {
     }
     
     try {
+      // Initialize processing state
       setExporting(true);
+      setProcessingStage(ProcessingStage.INIT);
+      setProcessingProgress(0);
       
       // Get the active platform from the current tab
       const activePlatform = activePreviewTab as 'android' | 'ios';
       
       // Find selected brand information
       const selectedBrand = customers?.find(c => c.id.toString() === selectedCustomerId);
+      
+      // Define progress callback handler
+      const handleProcessingProgress: ProcessingEventHandler = (stage, progress) => {
+        setProcessingStage(stage);
+        if (progress !== undefined) {
+          setProcessingProgress(progress);
+        }
+      };
       
       // Process and export the images
       await processImages(
@@ -452,7 +466,8 @@ export default function RcsFormatter() {
           campaignName: campaignName || title || "Untitled Campaign" // Include campaign name
         },
         exportType,
-        platform
+        platform,
+        handleProcessingProgress
       );
       
       const exportTypeText = 
@@ -467,13 +482,25 @@ export default function RcsFormatter() {
         description: `Your RCS format has been exported as ${exportTypeText}.`,
       });
     } catch (error) {
+      setProcessingStage(ProcessingStage.ERROR);
       toast({
         title: "Export failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
     } finally {
-      setExporting(false);
+      // Keep showing the success state for a moment before clearing
+      if (processingStage !== ProcessingStage.ERROR) {
+        setTimeout(() => {
+          setExporting(false);
+          setProcessingStage(undefined);
+        }, 1000);
+      } else {
+        // For errors, let the user dismiss the error manually
+        setTimeout(() => {
+          setExporting(false);
+        }, 5000);
+      }
     }
   };
 
@@ -586,6 +613,13 @@ export default function RcsFormatter() {
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       
+      {/* Image Processing Loader */}
+      <ImageProcessingLoader 
+        isLoading={exporting}
+        stage={processingStage}
+        progress={processingProgress}
+      />
+      
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar toggleSidebar={toggleSidebar} />
         
@@ -605,7 +639,7 @@ export default function RcsFormatter() {
                     variant="outline" 
                     className="mr-2"
                     onClick={handleReset}
-                    disabled={saveFormatMutation.isPending}
+                    disabled={saveFormatMutation.isPending || exporting}
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Reset
@@ -614,7 +648,7 @@ export default function RcsFormatter() {
                     variant="outline" 
                     className="mr-2"
                     onClick={handleSave}
-                    disabled={saveFormatMutation.isPending}
+                    disabled={saveFormatMutation.isPending || exporting}
                   >
                     <Save className="mr-2 h-4 w-4" />
                     Save Campaign
