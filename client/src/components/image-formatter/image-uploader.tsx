@@ -2,18 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { UploadCloud, X } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface ImageUploaderProps {
-  onImagesSelected: (files: File[]) => void;
+  selectedImages: File[];
+  setSelectedImages: (files: File[]) => void;
   maxImages?: number;
+  onImagesSelected?: (files: File[]) => void; // Optional for backward compatibility
 }
 
 export function ImageUploader({
-  onImagesSelected,
+  selectedImages,
+  setSelectedImages,
   maxImages = 10,
+  onImagesSelected,
 }: ImageUploaderProps) {
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -94,14 +97,22 @@ export function ImageUploader({
     if (validFiles.length > 0) {
       const newImages = [...selectedImages, ...validFiles];
       setSelectedImages(newImages);
-      onImagesSelected(newImages);
+      
+      // For backward compatibility
+      if (onImagesSelected) {
+        onImagesSelected(newImages);
+      }
     }
   };
 
   const removeImage = (index: number) => {
     const newImages = selectedImages.filter((_, i) => i !== index);
     setSelectedImages(newImages);
-    onImagesSelected(newImages);
+    
+    // For backward compatibility
+    if (onImagesSelected) {
+      onImagesSelected(newImages);
+    }
   };
 
   const onButtonClick = () => {

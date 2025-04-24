@@ -3,8 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Action } from "@shared/schema";
-import { PlusCircle, Info, BadgeCheck, Upload } from "lucide-react";
+import { Action, Customer } from "@shared/schema";
+import { PlusCircle, Info, BadgeCheck, Upload, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { 
   Tooltip,
@@ -34,6 +34,10 @@ interface FormatOptionsProps {
   setVerificationSymbol?: (verified: boolean) => void;
   actions: Action[];
   setActions: (actions: Action[]) => void;
+  customers: Customer[];
+  selectedCustomerId: string;
+  setSelectedCustomerId: (id: string) => void;
+  isLoadingCustomers?: boolean;
 }
 
 export function FormatOptions({
@@ -55,6 +59,10 @@ export function FormatOptions({
   setVerificationSymbol = () => {},
   actions,
   setActions,
+  customers = [],
+  selectedCustomerId = "",
+  setSelectedCustomerId = () => {},
+  isLoadingCustomers = false,
 }: FormatOptionsProps) {
   const [newActionText, setNewActionText] = useState("");
   const [newActionType, setNewActionType] = useState<"url" | "phone" | "calendar" | "text">("url");
@@ -196,7 +204,55 @@ export function FormatOptions({
         </div>
       </div>
       
-      {/* Brand logo section removed as requested - will be added directly from the Brand selection */}
+      <div>
+        <Label htmlFor="customer-select">Business/Brand</Label>
+        <Select 
+          value={selectedCustomerId}
+          onValueChange={setSelectedCustomerId}
+          disabled={isLoadingCustomers}
+        >
+          <SelectTrigger id="customer-select" className="mt-1">
+            <SelectValue placeholder={isLoadingCustomers ? "Loading..." : "Select business or brand"} />
+          </SelectTrigger>
+          <SelectContent>
+            {isLoadingCustomers ? (
+              <div className="flex items-center justify-center p-2">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <span>Loading...</span>
+              </div>
+            ) : customers.length === 0 ? (
+              <div className="p-2 text-sm text-gray-500">No businesses found</div>
+            ) : (
+              customers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id.toString()}>
+                  {customer.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+        <div className="flex items-center space-x-2 mt-2">
+          <Switch 
+            id="verification-symbol"
+            checked={verificationSymbol}
+            onCheckedChange={setVerificationSymbol}
+          />
+          <Label htmlFor="verification-symbol">Show Verification Badge</Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center">
+                  <Info className="ml-1 h-4 w-4 text-gray-400" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="w-80">
+                <p>When enabled, shows a verification mark next to the business name.</p>
+                <p className="text-xs mt-1">Only use this for officially verified businesses.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
 
       <div>
         <div className="flex justify-between">

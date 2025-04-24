@@ -1,19 +1,23 @@
 import React from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { ProcessingStage } from "@/lib/image-processing";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 type ImageProcessingLoaderProps = {
-  isLoading: boolean;
+  isLoading?: boolean;
   stage?: ProcessingStage;
   progress?: number;
   message?: string;
+  onCancel?: () => void;
 };
 
 export const ImageProcessingLoader: React.FC<ImageProcessingLoaderProps> = ({ 
-  isLoading, 
+  isLoading = true, 
   stage = ProcessingStage.INIT,
   progress = 0,
-  message
+  message,
+  onCancel
 }) => {
   if (!isLoading) return null;
 
@@ -58,13 +62,25 @@ export const ImageProcessingLoader: React.FC<ImageProcessingLoaderProps> = ({
         </h3>
         <p className="text-muted-foreground">{displayMessage}</p>
         
-        {isError && (
+        {isError ? (
           <button 
             className="mt-4 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-sm font-medium transition-colors"
             onClick={() => window.location.reload()}
           >
             Try Again
           </button>
+        ) : onCancel && (
+          <div className="mt-4 flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+              className="flex items-center"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cancel
+            </Button>
+          </div>
         )}
       </div>
     </div>
