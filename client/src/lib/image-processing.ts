@@ -1,4 +1,5 @@
 import { Action } from "@shared/schema";
+import { generateRichCardJson, generateCarouselJson } from "./rcs-json-template";
 
 interface FormatOptions {
   title: string;
@@ -62,8 +63,43 @@ export async function processImages(
   try {
     // Report initialization stage
     progressCallback?.(ProcessingStage.INIT);
-    // Create JSON representation of the RCS format
-    const rcsJson: RcsCardJson = {
+    // Create JSON representation of the RCS format using new template format
+    let rcsJson: any;
+    
+    // Generate the appropriate JSON format based on format type
+    if (options.formatType === "richCard") {
+      // Single rich card
+      rcsJson = generateRichCardJson({
+        title: options.title,
+        description: options.description,
+        imageUrl: images.length > 0 ? URL.createObjectURL(images[0]) : '',
+        mediaHeight: options.mediaHeight || "medium",
+        orientation: options.cardOrientation || "vertical",
+        suggestions: options.actions,
+        brandDisplayName: options.brandName || "Business",
+        verificationStatus: options.verificationSymbol || true
+      });
+    } else {
+      // Carousel of cards
+      const cards = images.map((image, index) => ({
+        title: index === 0 ? options.title : `${options.title} (${index + 1})`,
+        description: options.description,
+        imageUrl: URL.createObjectURL(image),
+        mediaHeight: options.mediaHeight || "medium",
+        suggestions: options.actions
+      }));
+      
+      rcsJson = generateCarouselJson({
+        cards,
+        cardWidth: options.cardOrientation === "horizontal" ? "MEDIUM" : "TALL",
+        suggestions: options.actions,
+        brandDisplayName: options.brandName || "Business",
+        verificationStatus: options.verificationSymbol || true
+      });
+    }
+    
+    // Also create backward-compatible format for existing code
+    const backwardCompatibleJson: RcsCardJson = {
       formatType: options.formatType,
       orientation: options.cardOrientation || "vertical",
       mediaHeight: options.mediaHeight || "medium",

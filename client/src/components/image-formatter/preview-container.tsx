@@ -36,6 +36,9 @@ export function PreviewContainer({
   const previewImage = imageUrls.length > 0 ? imageUrls[0] : null;
   console.log("Preview image URL:", previewImage);
   
+  // Always display verification symbol in preview
+  const displayVerificationSymbol = true;
+  
   // Add event listener to close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -116,18 +119,17 @@ export function PreviewContainer({
               <div className="ml-2 flex-grow">
                 <div className={`text-sm font-medium ${platform === "android" ? "text-white" : "text-gray-900"} flex items-center`}>
                   <span>{brandName}</span>
-                  {verificationSymbol && (
-                    <span className="ml-1 inline-flex items-center">
-                      <img 
-                        src={verificationBadge} 
-                        alt="Verified" 
-                        className="h-4 w-4"
-                        style={{ 
-                          filter: platform === "android" ? "brightness(2) invert(1)" : "brightness(0.7)"
-                        }}
-                      />
-                    </span>
-                  )}
+                  {/* Always show verification badge next to brand name */}
+                  <span className="ml-1 inline-flex items-center">
+                    <img 
+                      src={verificationBadge} 
+                      alt="Verified" 
+                      className="h-4 w-4"
+                      style={{ 
+                        filter: platform === "android" ? "brightness(2) invert(1)" : "brightness(0.7)"
+                      }}
+                    />
+                  </span>
                 </div>
               </div>
               {platform === "ios" && (
