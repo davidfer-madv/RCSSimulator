@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { 
@@ -16,8 +17,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { WebhookConfig as WebhookConfigType } from "@shared/schema";
-import Sidebar from "@/components/navigation/sidebar";
-import Navbar from "@/components/navigation/navbar";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Navbar } from "@/components/layout/navbar";
 
 export default function WebhooksPage() {
   const { user } = useAuth();
