@@ -14,6 +14,18 @@ interface FormatOptions {
   campaignName?: string;
 }
 
+export type ProcessingEventHandler = (stage: ProcessingStage, progress?: number) => void;
+
+export enum ProcessingStage {
+  INIT = "Initializing...",
+  ANALYZING = "Analyzing images...",
+  FORMATTING = "Applying RCS format...",
+  RENDERING = "Rendering preview...",
+  EXPORTING = "Exporting files...",
+  COMPLETE = "Processing complete!",
+  ERROR = "Error processing images"
+}
+
 interface RcsCardJson {
   formatType: string;
   orientation?: string;
