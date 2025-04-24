@@ -102,7 +102,7 @@ export const iOSInputBar: React.FC = () => (
         <path d="M5 12H19" stroke="#007AFF" strokeWidth="2" strokeLinecap="round"/>
       </svg>
       <div className="flex-grow p-2 bg-white border border-gray-300 rounded-full text-sm text-gray-500">
-        Message
+        Text Message - RCS
       </div>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="3" stroke="#007AFF" strokeWidth="2"/>
@@ -218,8 +218,8 @@ export const AndroidInputBar: React.FC = () => (
         <path d="M9 9L15 15" stroke="#9CA3AF" strokeWidth="2"/>
         <path d="M15 9L9 15" stroke="#9CA3AF" strokeWidth="2"/>
       </svg>
-      <div className="flex-grow p-2 bg-gray-100 rounded-full text-sm text-gray-500">
-        Message
+      <div className="flex-grow p-2 bg-gray-100 rounded-full text-sm text-blue-600">
+        RCS Message
       </div>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="3" stroke="#9CA3AF" strokeWidth="2"/>
