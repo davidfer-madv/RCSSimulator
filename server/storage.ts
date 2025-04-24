@@ -42,6 +42,13 @@ export interface IStorage {
   deleteRcsFormat(id: number): Promise<boolean>;
   countRcsFormatsByUserId(userId: number): Promise<number>;
   
+  // Webhook Configurations
+  getWebhookConfig(id: number): Promise<WebhookConfig | undefined>;
+  getWebhookConfigsByUserId(userId: number): Promise<WebhookConfig[]>;
+  createWebhookConfig(webhookConfig: InsertWebhookConfig): Promise<WebhookConfig>;
+  updateWebhookConfig(id: number, webhookConfig: Partial<WebhookConfig>): Promise<WebhookConfig>;
+  deleteWebhookConfig(id: number): Promise<boolean>;
+  
   // Session store
   sessionStore: session.Store;
 }
@@ -51,12 +58,14 @@ export class MemStorage implements IStorage {
   private customers: Map<number, Customer>;
   private campaigns: Map<number, Campaign>;
   private rcsFormats: Map<number, RcsFormat>;
+  private webhookConfigs: Map<number, WebhookConfig>;
   
   // Counters for IDs
   private userIdCounter: number;
   private customerIdCounter: number;
   private campaignIdCounter: number;
   private rcsFormatIdCounter: number;
+  private webhookConfigIdCounter: number;
   
   // Session store
   sessionStore: session.Store;

@@ -6,13 +6,15 @@ import { setupAuth } from "./auth";
 import multer from "multer";
 import { 
   insertCustomerSchema, insertCampaignSchema, insertRcsFormatSchema, 
-  rcsFormatValidationSchema, insertWebhookConfigSchema, WebhookConfig
+  rcsFormatValidationSchema, insertWebhookConfigSchema, WebhookConfig,
+  Campaign, RcsFormat
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import path from "path";
 import fs from "fs";
 import { saveFile } from "./file-storage";
+import { z } from "zod";
 
 // Setup multer for in-memory storage
 const upload = multer({ 
@@ -477,6 +479,256 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Webhook API
+  app.get("/api/webhooks", isAuthenticated, async (req, res) => {
+    try {
+      const webhooks = await storage.getWebhookConfigsByUserId(req.user!.id);
+      res.json(webhooks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch webhook configurations" });
+    }
+  });
+
+  app.post("/api/webhooks", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertWebhookConfigSchema.parse({
+        ...req.body,
+        userId: req.user!.id
+      });
+      
+      const webhook = await storage.createWebhookConfig(validatedData);
+      res.status(201).json(webhook);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      res.status(500).json({ message: "Failed to create webhook configuration" });
+    }
+  });
+
+  app.patch("/api/webhooks/:id", isAuthenticated, async (req, res) => {
+    try {
+      const webhookId = parseInt(req.params.id);
+      const webhook = await storage.getWebhookConfig(webhookId);
+      
+      if (!webhook || webhook.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Webhook configuration not found" });
+      }
+      
+      const updatedWebhook = await storage.updateWebhookConfig(webhookId, req.body);
+      res.json(updatedWebhook);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update webhook configuration" });
+    }
+  });
+
+  app.delete("/api/webhooks/:id", isAuthenticated, async (req, res) => {
+    try {
+      const webhookId = parseInt(req.params.id);
+      const webhook = await storage.getWebhookConfig(webhookId);
+      
+      if (!webhook || webhook.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Webhook configuration not found" });
+      }
+      
+      const success = await storage.deleteWebhookConfig(webhookId);
+      
+      if (success) {
+        res.status(200).json({ message: "Webhook configuration deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to delete webhook configuration" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete webhook configuration" });
+    }
+  });
+
+  // Campaign Activation API
+  app.post("/api/campaigns/:id/activate", isAuthenticated, async (req, res) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const campaign = await storage.getCampaign(campaignId);
+      
+      if (!campaign || campaign.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      // Update campaign status to active
+      const activatedCampaign = await storage.updateCampaign(campaignId, {
+        isActive: true,
+        activatedAt: new Date()
+      });
+      
+      res.json(activatedCampaign);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to activate campaign" });
+    }
+  });
+
+  app.post("/api/campaigns/:id/deactivate", isAuthenticated, async (req, res) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const campaign = await storage.getCampaign(campaignId);
+      
+      if (!campaign || campaign.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      // Update campaign status to inactive
+      const deactivatedCampaign = await storage.updateCampaign(campaignId, {
+        isActive: false
+      });
+      
+      res.json(deactivatedCampaign);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to deactivate campaign" });
+    }
+  });
+
+  // Send RCS message via webhook
+  app.post("/api/rcs/send", isAuthenticated, async (req, res) => {
+    try {
+      const sendSchema = z.object({
+        campaignId: z.number(),
+        formatId: z.number(),
+        webhookId: z.number(),
+        phoneNumbers: z.array(z.string()).optional(),
+      });
+      
+      const validatedData = sendSchema.parse(req.body);
+      
+      // Get campaign, format and webhook configuration
+      const campaign = await storage.getCampaign(validatedData.campaignId);
+      const format = await storage.getRcsFormat(validatedData.formatId);
+      const webhook = await storage.getWebhookConfig(validatedData.webhookId);
+      
+      if (!campaign || campaign.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      if (!format || format.userId !== req.user!.id) {
+        return res.status(404).json({ message: "RCS format not found" });
+      }
+      
+      if (!webhook || webhook.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Webhook not found" });
+      }
+      
+      // Prepare phone numbers to send to
+      const phoneNumbers = validatedData.phoneNumbers || campaign.targetPhoneNumbers as string[];
+      
+      // Prepare RCS message payload
+      const rcsPayload = {
+        formatType: format.formatType,
+        orientation: format.cardOrientation,
+        mediaHeight: format.mediaHeight,
+        title: format.title,
+        description: format.description,
+        images: format.imageUrls,
+        actions: format.actions,
+        brand: {
+          name: format.brandName,
+          logoUrl: format.brandLogoUrl,
+          verified: format.verificationSymbol,
+        },
+        recipients: phoneNumbers,
+      };
+      
+      // Call webhook to send RCS message
+      const response = await fetch(webhook.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': webhook.token ? `Bearer ${webhook.token}` : '',
+        },
+        body: JSON.stringify(rcsPayload),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Webhook responded with status: ${response.status}`);
+      }
+      
+      // Update webhook last used timestamp
+      await storage.updateWebhookConfig(webhook.id, {
+        lastUsed: new Date()
+      });
+      
+      // Return success response
+      res.json({
+        message: "RCS message sent successfully",
+        recipients: phoneNumbers.length,
+      });
+    } catch (error) {
+      console.error("Error sending RCS message:", error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      
+      res.status(500).json({ message: "Failed to send RCS message" });
+    }
+  });
+
+  // Setup WebSocket server for real-time updates
   const httpServer = createServer(app);
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store active WebSocket connections
+  const activeConnections: Map<number, Set<WebSocket>> = new Map();
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket connection established');
+    let userId: number | null = null;
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Authentication message
+        if (data.type === 'auth' && data.userId) {
+          userId = parseInt(data.userId);
+          
+          // Add this connection to the user's set of connections
+          if (!activeConnections.has(userId)) {
+            activeConnections.set(userId, new Set());
+          }
+          activeConnections.get(userId)?.add(ws);
+          
+          console.log(`WebSocket authenticated for user ${userId}`);
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('WebSocket connection closed');
+      
+      // Remove from active connections
+      if (userId) {
+        const connections = activeConnections.get(userId);
+        if (connections) {
+          connections.delete(ws);
+          if (connections.size === 0) {
+            activeConnections.delete(userId);
+          }
+        }
+      }
+    });
+  });
+  
+  // Helper function to send updates to a specific user
+  function notifyUser(userId: number, data: any) {
+    const connections = activeConnections.get(userId);
+    if (connections) {
+      const message = JSON.stringify(data);
+      connections.forEach((connection) => {
+        if (connection.readyState === WebSocket.OPEN) {
+          connection.send(message);
+        }
+      });
+    }
+  }
+
   return httpServer;
 }
