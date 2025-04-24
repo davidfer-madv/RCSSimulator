@@ -44,7 +44,7 @@ export function FigmaPreviewContainer({
   formatType = "richCard",
   lockAspectRatio = true,
   brandLogoUrl = "",
-  verificationSymbol = false,
+  verificationSymbol = true,
   brandName = "Business Name"
 }: FigmaPreviewContainerProps) {
   // Close dropdowns when clicking outside of them
