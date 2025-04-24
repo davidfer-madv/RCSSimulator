@@ -416,8 +416,33 @@ export default function RcsFormatter() {
     
     // If we're in edit mode and already have a campaign name, use it
     if (campaignId && campaign?.name) {
-      // Skip dialog and save directly using existing campaign name
-      saveFormatMutation.mutate();
+      // For edit mode, still show the dialog to allow setting/updating active campaign settings
+      setCampaignName(campaign.name);
+      
+      // If campaign is already active, pre-fill activation settings
+      if (campaign.isActive) {
+        setIsActiveCampaign(true);
+        
+        // Set target phone numbers from campaign data if available
+        if (campaign.targetPhoneNumbers) {
+          try {
+            const phoneNumbers = Array.isArray(campaign.targetPhoneNumbers) 
+              ? campaign.targetPhoneNumbers
+              : (typeof campaign.targetPhoneNumbers === 'string' ? JSON.parse(campaign.targetPhoneNumbers) : []);
+              
+            setTargetPhoneNumbers(phoneNumbers.join(', '));
+          } catch (e) {
+            console.error("Error parsing target phone numbers:", e);
+          }
+        }
+        
+        // Set scheduled date if available
+        if (campaign.scheduledDate) {
+          setScheduledDate(new Date(campaign.scheduledDate));
+        }
+      }
+      
+      setIsCampaignDialogOpen(true);
     } else {
       // Open dialog to ask for campaign name
       setCampaignName(title || ""); // Pre-fill with title
@@ -681,13 +706,13 @@ export default function RcsFormatter() {
       
       {/* Campaign Name Dialog */}
       <Dialog open={isCampaignDialogOpen} onOpenChange={setIsCampaignDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>{campaignId ? "Update Campaign" : "Enter Campaign Name"}</DialogTitle>
+            <DialogTitle>{campaignId ? "Update Campaign Settings" : "Campaign Settings"}</DialogTitle>
             <DialogDescription>
               {campaignId 
-                ? "Update the campaign information for this RCS format."
-                : "Provide a name for your campaign. This will help you organize your RCS formats."}
+                ? "Update campaign information and activation settings for this RCS format."
+                : "Name your campaign and configure activation settings. You can activate it now or schedule it for later."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -730,13 +755,18 @@ export default function RcsFormatter() {
                   <Label htmlFor="target-numbers" className="text-right pt-2">
                     Target Numbers
                   </Label>
-                  <Textarea
-                    id="target-numbers"
-                    value={targetPhoneNumbers}
-                    onChange={(e) => setTargetPhoneNumbers(e.target.value)}
-                    placeholder="Enter phone numbers separated by commas"
-                    className="col-span-3 h-24"
-                  />
+                  <div className="col-span-3">
+                    <Textarea
+                      id="target-numbers"
+                      value={targetPhoneNumbers}
+                      onChange={(e) => setTargetPhoneNumbers(e.target.value)}
+                      placeholder="Enter phone numbers separated by commas"
+                      className="h-24 w-full"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter phone numbers in international format (e.g., +12025550123) separated by commas.
+                    </p>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -759,10 +789,16 @@ export default function RcsFormatter() {
                           mode="single"
                           selected={scheduledDate}
                           onSelect={setScheduledDate}
+                          disabled={(date) => date < new Date()}
                           initialFocus
                         />
                       </PopoverContent>
                     </Popover>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {scheduledDate ? 
+                        `Campaign will activate on ${format(scheduledDate, "PPP")}` : 
+                        "Leave empty to activate immediately, or select a future date to schedule."}
+                    </p>
                   </div>
                 </div>
               </>
