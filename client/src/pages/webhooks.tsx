@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { 
@@ -11,7 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { WebhookConfig } from "@shared/schema";
-import { Loader2, Plus, Trash2, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Trash2, ExternalLink, MessageSquare, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Campaign, RcsFormat } from "@shared/schema";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
@@ -26,6 +29,21 @@ export default function WebhooksPage() {
   const queryClient = useQueryClient();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
+  const [selectedWebhook, setSelectedWebhook] = useState<WebhookConfigType | null>(null);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [testPhoneNumbers, setTestPhoneNumbers] = useState<string>("");
+  const [location] = useLocation();
+  
+  // Get campaignId from URL query parameter if present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const campaignId = params.get("campaignId");
+    if (campaignId) {
+      setSelectedCampaignId(campaignId);
+      setIsTestDialogOpen(true);
+    }
+  }, [location]);
   
   // Form state for new webhook
   const [newWebhook, setNewWebhook] = useState({
@@ -36,6 +54,109 @@ export default function WebhooksPage() {
     isActive: true
   });
   
+  // Fetch campaigns if we're in test mode
+  const { data: campaign, isLoading: isLoadingCampaign } = useQuery<Campaign>({
+    queryKey: ["/api/campaigns", selectedCampaignId],
+    queryFn: async () => {
+      const res = await fetch(`/api/campaigns/${selectedCampaignId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch campaign");
+      return res.json();
+    },
+    enabled: !!selectedCampaignId,
+  });
+
+  // Fetch campaign formats if we're in test mode
+  const { data: formats = [], isLoading: isLoadingFormats } = useQuery<RcsFormat[]>({
+    queryKey: ["/api/campaign", selectedCampaignId, "formats"],
+    queryFn: async () => {
+      const res = await fetch(`/api/campaign/${selectedCampaignId}/formats`);
+      if (!res.ok) throw new Error("Failed to fetch formats");
+      return res.json();
+    },
+    enabled: !!selectedCampaignId,
+  });
+
+  // Test webhook mutation
+  const testWebhookMutation = useMutation({
+    mutationFn: async ({ webhookId, campaignId, phoneNumbers }: { webhookId: number, campaignId: number, phoneNumbers: string[] }) => {
+      const res = await fetch(`/api/webhooks/${webhookId}/test`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          campaignId,
+          phoneNumbers
+        }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/webhooks"] });
+      setIsTestDialogOpen(false);
+      setSelectedWebhook(null);
+      setSelectedCampaignId(null);
+      setTestPhoneNumbers("");
+      toast({
+        title: "Success",
+        description: "RCS message sent successfully via webhook",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle phone numbers change
+  const handlePhoneNumbersChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTestPhoneNumbers(e.target.value);
+  };
+
+  // Submit test
+  const handleTestSubmit = () => {
+    if (!selectedWebhook || !selectedCampaignId) {
+      toast({
+        title: "Error",
+        description: "Please select a webhook and campaign",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Convert phone numbers string to array
+    const phoneNumbers = testPhoneNumbers
+      .split(',')
+      .map(num => num.trim())
+      .filter(num => num.length > 0);
+    
+    if (phoneNumbers.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please enter at least one phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    testWebhookMutation.mutate({
+      webhookId: selectedWebhook.id,
+      campaignId: parseInt(selectedCampaignId, 10),
+      phoneNumbers
+    });
+  };
+
   // Fetch webhooks
   const { data: webhooks = [], isLoading } = useQuery<WebhookConfigType[]>({
     queryKey: ["/api/webhooks"],
