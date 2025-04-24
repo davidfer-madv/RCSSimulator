@@ -46,17 +46,21 @@ interface RcsCardJson {
  * @param options - Format options including title, description, formatType, and actions
  * @param exportType - The type of export to perform (json, image, or both)
  * @param platform - The platform to export for preview capture (android or ios)
+ * @param progressCallback - Optional callback function to report processing progress stages
  */
 export async function processImages(
   images: File[], 
   options: FormatOptions, 
   exportType: 'json' | 'image' | 'both' | 'device-image' | 'raw-image' = 'json', 
-  platform: 'android' | 'ios' | 'both' = 'android'
+  platform: 'android' | 'ios' | 'both' = 'android',
+  progressCallback?: ProcessingEventHandler
 ): Promise<void> {
   // This is a simplified version that would normally involve server-side image processing
   // Here we're just triggering downloads of the original files
   
   try {
+    // Report initialization stage
+    progressCallback?.(ProcessingStage.INIT);
     // Create JSON representation of the RCS format
     const rcsJson: RcsCardJson = {
       formatType: options.formatType,
@@ -72,6 +76,9 @@ export async function processImages(
       }))
     };
 
+    // Report analyzing stage
+    progressCallback?.(ProcessingStage.ANALYZING, 20);
+    
     // Handle JSON export if requested
     if (exportType === 'json' || exportType === 'both') {
       // Export JSON file
@@ -93,6 +100,9 @@ export async function processImages(
       }, 100);
     }
     
+    // Report formatting stage
+    progressCallback?.(ProcessingStage.FORMATTING, 40);
+
     // Handle device image export (full UI preview)
     if (exportType === 'image' || exportType === 'both' || exportType === 'device-image') {
       const platforms = platform === 'both' ? ['android', 'ios'] : [platform];
@@ -109,6 +119,9 @@ export async function processImages(
           continue;
         }
         
+        // Report rendering stage
+        progressCallback?.(ProcessingStage.RENDERING, 60);
+        
         // Use html2canvas to capture the preview as an image
         const html2canvas = await import('html2canvas');
         
@@ -122,6 +135,9 @@ export async function processImages(
         
         // Convert to image data URL
         const imageDataUrl = canvas.toDataURL('image/png');
+        
+        // Report exporting stage 
+        progressCallback?.(ProcessingStage.EXPORTING, 80);
         
         // Create download link
         const link = document.createElement("a");
@@ -278,9 +294,14 @@ export async function processImages(
       }
     }
     
+    // Report completion stage
+    progressCallback?.(ProcessingStage.COMPLETE, 100);
+    
     return Promise.resolve();
   } catch (error) {
     console.error("Error processing images:", error);
+    // Report error stage
+    progressCallback?.(ProcessingStage.ERROR);
     return Promise.reject(new Error("Failed to process images"));
   }
 }
