@@ -121,7 +121,7 @@ export default function RcsFormatter() {
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   const [exporting, setExporting] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  const [processingStage, setProcessingStage] = useState<ProcessingStage | undefined>();
+  const [processingStage, setProcessingStage] = useState<ProcessingStage | undefined>(undefined);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   
   // Add click outside handler for export menu

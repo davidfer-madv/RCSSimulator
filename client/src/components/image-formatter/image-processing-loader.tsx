@@ -1,6 +1,5 @@
 import React from "react";
 import { Spinner } from "@/components/ui/spinner";
-import { motion } from "framer-motion";
 import { ProcessingStage } from "@/lib/image-processing";
 
 type ImageProcessingLoaderProps = {
@@ -25,12 +24,9 @@ export const ImageProcessingLoader: React.FC<ImageProcessingLoaderProps> = ({
   const isError = stage === ProcessingStage.ERROR;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center z-50 rounded-md"
+    <div 
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center z-50"
+      style={{ opacity: 1, transition: 'opacity 0.3s ease' }}
     >
       <div className="bg-background rounded-lg p-6 shadow-lg max-w-sm w-full mx-auto text-center">
         {!isError ? (
@@ -46,19 +42,15 @@ export const ImageProcessingLoader: React.FC<ImageProcessingLoaderProps> = ({
         )}
         
         {!isError && (
-          <motion.div
-            className="w-full bg-secondary h-2 rounded-full overflow-hidden my-4"
-          >
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ 
-                duration: 0.5, 
-                ease: "easeOut"
-              }}
+          <div className="w-full bg-secondary h-2 rounded-full overflow-hidden my-4">
+            <div 
               className="h-full bg-primary rounded-full"
+              style={{ 
+                width: `${progress}%`, 
+                transition: 'width 0.5s ease-out' 
+              }}
             />
-          </motion.div>
+          </div>
         )}
         
         <h3 className={`text-xl font-semibold mb-2 ${isError ? 'text-destructive' : ''}`}>
@@ -75,6 +67,6 @@ export const ImageProcessingLoader: React.FC<ImageProcessingLoaderProps> = ({
           </button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
