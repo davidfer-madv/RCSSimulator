@@ -68,7 +68,7 @@ export const iOSHeader: React.FC<{ brandName: string; brandLogoUrl?: string; ver
           {verificationSymbol && (
             <span className="ml-1 inline-flex items-center">
               <img 
-                src={verificationBadgeUrl || '/assets/verification_icon.svg'} 
+                src={verificationBadgeUrl || verificationBadgeImg} 
                 alt="Verified" 
                 className="h-5 w-5"
               />
@@ -191,7 +191,7 @@ export const AndroidHeader: React.FC<{ brandName: string; brandLogoUrl?: string;
           {verificationSymbol && (
             <span className="ml-1 inline-flex items-center">
               <img 
-                src={verificationBadgeUrl || '/assets/verification_icon.svg'} 
+                src={verificationBadgeUrl || verificationBadgeImg} 
                 alt="Verified" 
                 className="h-5 w-5"
               />
@@ -343,6 +343,12 @@ export const IOSRichCard: React.FC<{
     }
   };
 
+  // In iOS, only text actions show directly on the card
+  // Other actions are hidden under an "Options" button if there's more than one action
+  const textActions = actions.filter(a => a.type === "text");
+  const otherActions = actions.filter(a => a.type !== "text");
+  const showOptionsButton = otherActions.length > 1;
+
   return (
     <div className="max-w-[85%]">
       {cardOrientation === "horizontal" ? (
@@ -360,161 +366,71 @@ export const IOSRichCard: React.FC<{
               <p className="text-xs text-gray-600 mt-1 line-clamp-3">{description || "Card description text would appear here."}</p>
             </div>
           </div>
-          {actions.length > 0 && (
-            <div className="bg-gray-200 rounded-b-2xl p-3 pt-1 mt-0">
-              {/* Text actions */}
-              <div className="flex flex-wrap gap-1">
-                {actions.filter(a => a.type === "text").map((action, index) => (
-                  <button 
-                    key={index} 
-                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                  >
-                    {action.text}
-                  </button>
-                ))}
-                
-                {/* Single URL/Phone/Calendar action */}
-                {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length === 1 && 
-                  actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, index) => (
-                    <button 
-                      key={index} 
-                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                    >
-                      {action.text}
-                    </button>
-                  ))
-                }
-              </div>
-              
-              {/* Multiple URL/Phone/Calendar actions - Options button on new line */}
-              {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length > 1 && (
-                <div className="mt-2">
-                  <div className="relative dropdown-container">
-                    <button 
-                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium options-btn"
-                      onClick={(e) => {
-                        // Toggle dropdown visibility when clicked
-                        const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (dropdown) {
-                          dropdown.classList.toggle('hidden');
-                        }
-                        e.stopPropagation();
-                      }}
-                    >
-                      Options
-                    </button>
-                    {/* Dropdown that shows on click */}
-                    <div className="absolute left-0 mt-1 w-48 bg-gray-200 shadow-md rounded-lg overflow-hidden z-10 hidden options-dropdown">
-                      {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, idx) => (
-                        <button 
-                          key={idx}
-                          className="block w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-300 border-b border-gray-300 last:border-b-0"
-                        >
-                          {action.text}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       ) : (
-        <>
+        <div className="bg-gray-200 rounded-2xl overflow-hidden">
           {imageUrl && (
             <img 
               src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
               alt="Content" 
-              className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} rounded-lg mb-1 bg-gray-100`} 
+              className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
             />
           )}
-          <div className="bg-gray-200 rounded-2xl p-3">
+          <div className="p-3">
             <h4 className="font-medium text-base text-black">{title || "Card Title"}</h4>
-            <p className="text-xs text-gray-600 mt-1 line-clamp-3">{description || "Card description text would appear here."}</p>
-            
-            {actions.length > 0 && (
-              <>
-                {/* Text actions and single URL action */}
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {actions.filter(a => a.type === "text").map((action, index) => (
-                    <button 
-                      key={index} 
-                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                    >
-                      {action.text}
-                    </button>
-                  ))}
-                  
-                  {/* Single URL/Phone/Calendar action */}
-                  {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length === 1 && 
-                    actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, index) => (
-                      <button 
-                        key={index} 
-                        className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                      >
-                        {action.text}
-                      </button>
-                    ))
-                  }
-                </div>
-                
-                {/* Multiple URL/Phone/Calendar actions - Options button */}
-                {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length > 1 && (
-                  <div className="mt-2">
-                    <div className="relative dropdown-container">
-                      <button 
-                        className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium options-btn"
-                        onClick={(e) => {
-                          // Toggle dropdown visibility when clicked
-                          const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (dropdown) {
-                            dropdown.classList.toggle('hidden');
-                          }
-                          e.stopPropagation();
-                        }}
-                      >
-                        Options
-                      </button>
-                      {/* Dropdown that shows on click */}
-                      <div className="absolute left-0 mt-1 w-48 bg-gray-200 shadow-md rounded-lg overflow-hidden z-10 hidden options-dropdown">
-                        {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, idx) => (
-                          <button 
-                            key={idx}
-                            className="block w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-300 border-b border-gray-300 last:border-b-0"
-                          >
-                            {action.text}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+            <p className="text-xs text-gray-600 mt-1">{description || "Card description text would appear here."}</p>
           </div>
-        </>
+        </div>
+      )}
+      {/* Text Actions are always shown */}
+      {textActions.length > 0 && (
+        <div className="mt-2 flex flex-col gap-2">
+          {textActions.map((action, index) => (
+            <button 
+              key={index} 
+              className="bg-gray-200 text-blue-500 px-4 py-2 rounded-2xl text-sm font-medium"
+            >
+              {action.text}
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Single non-text action is shown directly */}
+      {otherActions.length === 1 && !showOptionsButton && (
+        <div className="mt-2">
+          <button className="bg-gray-200 text-blue-500 px-4 py-2 rounded-2xl text-sm font-medium">
+            {otherActions[0].text}
+          </button>
+        </div>
+      )}
+      {/* Multiple non-text actions are hidden under an "Options" button */}
+      {showOptionsButton && (
+        <div className="mt-2">
+          <button className="bg-gray-200 text-blue-500 px-4 py-2 rounded-2xl text-sm font-medium flex items-center justify-center">
+            <span>Options</span>
+            <svg className="ml-1 w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
       )}
     </div>
   );
 };
 
-// Carousel Components
 export const AndroidCarousel: React.FC<{
-  title: string;
-  description: string;
-  imageUrls: string[];
+  items: Array<{
+    title: string;
+    description: string;
+    imageUrl?: string | null;
+    actions: { type: string; text: string; value?: string }[];
+  }>;
   mediaHeight: "short" | "medium" | "tall";
   lockAspectRatio: boolean;
-  actions: { type: string; text: string; value?: string }[];
-}> = ({ 
-  title, 
-  description, 
-  imageUrls, 
-  mediaHeight, 
-  lockAspectRatio, 
-  actions 
-}) => {
+}> = ({ items, mediaHeight, lockAspectRatio }) => {
+  // If no items, return nothing
+  if (!items || items.length === 0) return null;
+
   // Calculate image height based on mediaHeight
   const getImageHeight = () => {
     switch (mediaHeight) {
@@ -526,65 +442,66 @@ export const AndroidCarousel: React.FC<{
   };
 
   return (
-    <div className="mb-3 w-full">
-      <div className="overflow-x-auto pb-2">
-        <div className="flex space-x-2" style={{ width: `${imageUrls.length * 200}px` }}>
-          {imageUrls.map((imageUrl, index) => (
-            <div key={index} className="flex-shrink-0 w-48">
-              <div className="bg-white rounded-lg overflow-hidden max-w-full shadow-sm border border-gray-200">
-                <img 
-                  src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
-                  alt={`Carousel item ${index + 1}`} 
-                  className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
-                />
-                <div className="p-4">
-                  <h4 className="font-semibold text-base text-gray-900">{title || "Card Title"}</h4>
-                  <p className="text-sm text-gray-700 mt-2 line-clamp-2">{description || "Card description text would appear here."}</p>
-                </div>
-              </div>
+    <div className="max-w-[85%] relative">
+      <div className="flex overflow-x-auto pb-2 scrollbar-hide gap-3 snap-x snap-mandatory">
+        {items.map((item, index) => (
+          <div 
+            key={index} 
+            className="flex-shrink-0 w-60 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 snap-start"
+          >
+            {item.imageUrl && (
+              <img 
+                src={typeof item.imageUrl === 'string' && item.imageUrl.startsWith('/') ? `http://localhost:5000${item.imageUrl}` : item.imageUrl} 
+                alt={`Carousel item ${index + 1}`} 
+                className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
+              />
+            )}
+            <div className="p-3">
+              <h4 className="font-semibold text-base text-gray-900 line-clamp-1">{item.title}</h4>
+              <p className="text-sm text-gray-700 mt-1 line-clamp-2">{item.description}</p>
             </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Android Carousel Actions - Only shown once for all cards */}
-      {actions.length > 0 && (
-        <div className="bg-white rounded-lg overflow-hidden max-w-[85%] shadow-sm border border-gray-200 mt-2">
-          <div className="border-t border-gray-200">
-            {actions.map((action, index) => (
-              <button 
-                key={index} 
-                className="flex w-full items-center px-4 py-3 text-blue-600 hover:bg-blue-50 border-b border-gray-200 last:border-b-0"
-              >
-                {action.type === "text" && <span className="mr-2">💬</span>}
-                {action.type === "url" && <span className="mr-2">🔗</span>}
-                {action.type === "phone" && <span className="mr-2">📞</span>}
-                {action.type === "calendar" && <span className="mr-2">🗓️</span>}
-                <span className="font-medium">{action.text}</span>
-              </button>
-            ))}
+            {item.actions.length > 0 && (
+              <div className="border-t border-gray-200">
+                {item.actions.slice(0, 1).map((action, actionIndex) => (
+                  <button 
+                    key={actionIndex} 
+                    className="flex w-full items-center px-4 py-3 text-blue-600 hover:bg-blue-50"
+                  >
+                    {action.type === "text" && <span className="mr-2">💬</span>}
+                    {action.type === "url" && <span className="mr-2">🔗</span>}
+                    {action.type === "phone" && <span className="mr-2">📞</span>}
+                    {action.type === "calendar" && <span className="mr-2">🗓️</span>}
+                    <span className="font-medium">{action.text}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+      {/* Carousel indicators */}
+      <div className="flex justify-center mt-2 space-x-1">
+        {items.map((_, index) => (
+          <div key={index} className={`h-1.5 rounded-full ${index === 0 ? 'w-3 bg-blue-600' : 'w-1.5 bg-gray-300'}`}></div>
+        ))}
+      </div>
     </div>
   );
 };
 
 export const IOSCarousel: React.FC<{
-  title: string;
-  description: string;
-  imageUrls: string[];
+  items: Array<{
+    title: string;
+    description: string;
+    imageUrl?: string | null;
+    actions: { type: string; text: string; value?: string }[];
+  }>;
   mediaHeight: "short" | "medium" | "tall";
   lockAspectRatio: boolean;
-  actions: { type: string; text: string; value?: string }[];
-}> = ({ 
-  title, 
-  description, 
-  imageUrls, 
-  mediaHeight, 
-  lockAspectRatio, 
-  actions 
-}) => {
+}> = ({ items, mediaHeight, lockAspectRatio }) => {
+  // If no items, return nothing
+  if (!items || items.length === 0) return null;
+
   // Calculate image height based on mediaHeight
   const getImageHeight = () => {
     switch (mediaHeight) {
@@ -596,85 +513,54 @@ export const IOSCarousel: React.FC<{
   };
 
   return (
-    <div className="mb-3 w-full">
-      <div className="overflow-x-auto pb-2">
-        <div className="flex space-x-2" style={{ width: `${imageUrls.length * 180}px` }}>
-          {imageUrls.map((imageUrl, index) => (
-            <div key={index} className="flex-shrink-0 w-44">
-              <img 
-                src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
-                alt={`Carousel item ${index + 1}`} 
-                className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} rounded-lg mb-1 bg-gray-100`} 
-              />
-              <div className="bg-gray-200 rounded-2xl p-3">
-                <h4 className="font-medium text-base text-black">{title || "Card Title"}</h4>
-                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{description || "Card description text."}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* iOS Carousel Actions - Only shown once for all cards */}
-      {actions.length > 0 && (
-        <div className="bg-gray-200 rounded-2xl p-3 mt-2 max-w-[85%]">
-          {/* Text actions */}
-          <div className="flex flex-wrap gap-1">
-            {actions.filter(a => a.type === "text").map((action, index) => (
-              <button 
-                key={index} 
-                className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-              >
-                {action.text}
-              </button>
-            ))}
-            
-            {/* Single URL/Phone/Calendar action */}
-            {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length === 1 && 
-              actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, index) => (
-                <button 
-                  key={index} 
-                  className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                >
-                  {action.text}
-                </button>
-              ))
-            }
-          </div>
+    <div className="max-w-[85%] relative mb-2">
+      <div className="flex overflow-x-auto pb-2 scrollbar-hide gap-3 snap-x snap-mandatory">
+        {items.map((item, index) => {
+          // In iOS, only text actions show directly on the card
+          const textActions = item.actions.filter(a => a.type === "text");
           
-          {/* Multiple URL/Phone/Calendar actions - Options button on new line */}
-          {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").length > 1 && (
-            <div className="mt-2">
-              <div className="relative dropdown-container">
-                <button 
-                  className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium options-btn"
-                  onClick={(e) => {
-                    // Toggle dropdown visibility when clicked
-                    const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (dropdown) {
-                      dropdown.classList.toggle('hidden');
-                    }
-                    e.stopPropagation();
-                  }}
-                >
-                  Options
-                </button>
-                {/* Dropdown that shows on click */}
-                <div className="absolute left-0 mt-1 w-48 bg-gray-200 shadow-md rounded-lg overflow-hidden z-10 hidden options-dropdown">
-                  {actions.filter(a => a.type === "url" || a.type === "phone" || a.type === "calendar").map((action, idx) => (
+          return (
+            <div 
+              key={index} 
+              className="flex-shrink-0 w-60 snap-start"
+            >
+              <div className="bg-gray-200 rounded-2xl overflow-hidden">
+                {item.imageUrl && (
+                  <img 
+                    src={typeof item.imageUrl === 'string' && item.imageUrl.startsWith('/') ? `http://localhost:5000${item.imageUrl}` : item.imageUrl} 
+                    alt={`Carousel item ${index + 1}`} 
+                    className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
+                  />
+                )}
+                <div className="p-3">
+                  <h4 className="font-medium text-base text-black line-clamp-1">{item.title}</h4>
+                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">{item.description}</p>
+                </div>
+              </div>
+
+              {/* Text Actions */}
+              {textActions.length > 0 && (
+                <div className="mt-2 flex flex-col gap-2">
+                  {textActions.slice(0, 1).map((action, actionIndex) => (
                     <button 
-                      key={idx}
-                      className="block w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-300 border-b border-gray-300 last:border-b-0"
+                      key={actionIndex} 
+                      className="bg-gray-200 text-blue-500 px-4 py-2 rounded-2xl text-sm font-medium"
                     >
                       {action.text}
                     </button>
                   ))}
                 </div>
-              </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          );
+        })}
+      </div>
+      {/* Carousel indicators */}
+      <div className="flex justify-center mt-1 space-x-1">
+        {items.map((_, index) => (
+          <div key={index} className={`h-1.5 rounded-full ${index === 0 ? 'w-3 bg-blue-500' : 'w-1.5 bg-gray-300'}`}></div>
+        ))}
+      </div>
     </div>
   );
 };
