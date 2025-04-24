@@ -1,4 +1,5 @@
 import React from 'react';
+import verificationBadgeImg from '@/assets/verification_badge.svg';
 
 // iOS UI Components
 export const iOSStatusBar: React.FC = () => (
