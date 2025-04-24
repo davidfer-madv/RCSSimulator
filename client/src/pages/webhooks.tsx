@@ -617,7 +617,7 @@ export default function WebhooksPage() {
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-medium">Created:</span>
                             <span className="text-sm">
-                              {new Date(webhook.createdAt).toLocaleDateString()}
+                              {webhook.createdAt ? new Date(webhook.createdAt).toLocaleDateString() : "Unknown"}
                             </span>
                           </div>
                         </div>
@@ -626,7 +626,7 @@ export default function WebhooksPage() {
                         <div className="flex items-center space-x-2">
                           <Switch
                             id={`active-${webhook.id}`}
-                            checked={webhook.isActive}
+                            checked={!!webhook.isActive}
                             onCheckedChange={() => toggleWebhookActive(webhook)}
                           />
                           <Label htmlFor={`active-${webhook.id}`} className="font-normal text-sm">
