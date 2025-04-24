@@ -255,6 +255,15 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
               {isExpanded ? "Hide Formats" : "Show Formats"}
             </Button>
             
+            {campaign.isActive && (
+              <Link href={`/webhooks?campaignId=${campaign.id}`}>
+                <Button variant="ghost" className="text-sm font-medium text-green-600 hover:text-green-800">
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Test via Webhook
+                </Button>
+              </Link>
+            )}
+            
             <Link href={`/campaigns/${campaign.id}`}>
               <Button variant="ghost" className="text-sm font-medium text-primary hover:text-blue-700">
                 View Details
