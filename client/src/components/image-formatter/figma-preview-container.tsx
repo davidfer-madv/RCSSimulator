@@ -132,21 +132,25 @@ export function FigmaPreviewContainer({
             ) : formatType === "carousel" && imageUrls.length > 0 ? (
               platform === "android" ? (
                 <AndroidCarousel
-                  title={title}
-                  description={description}
-                  imageUrls={imageUrls}
+                  items={imageUrls.map(url => ({
+                    title,
+                    description,
+                    imageUrl: url,
+                    actions
+                  }))}
                   mediaHeight={mediaHeight}
                   lockAspectRatio={lockAspectRatio}
-                  actions={actions}
                 />
               ) : (
                 <IOSCarousel
-                  title={title}
-                  description={description}
-                  imageUrls={imageUrls}
+                  items={imageUrls.map(url => ({
+                    title,
+                    description,
+                    imageUrl: url,
+                    actions
+                  }))}
                   mediaHeight={mediaHeight}
                   lockAspectRatio={lockAspectRatio}
-                  actions={actions}
                 />
               )
             ) : null}
