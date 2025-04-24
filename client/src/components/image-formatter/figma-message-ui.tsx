@@ -34,7 +34,7 @@ export const iOSHeader: React.FC<{ brandName: string; brandLogoUrl?: string; ver
   brandName, 
   brandLogoUrl, 
   verificationBadgeUrl,
-  verificationSymbol = false
+  verificationSymbol = true
 }) => (
   <div className="bg-gray-100 p-2">
     <div className="flex items-center">
@@ -157,7 +157,7 @@ export const AndroidHeader: React.FC<{ brandName: string; brandLogoUrl?: string;
   brandName, 
   brandLogoUrl, 
   verificationBadgeUrl,
-  verificationSymbol = false
+  verificationSymbol = true
 }) => (
   <div className="bg-blue-600 p-2">
     <div className="flex items-center">
