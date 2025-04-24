@@ -570,7 +570,7 @@ export default function RcsFormatter() {
   // Render the UI
   return (
     <div className="flex flex-col h-screen">
-      <Navbar />
+      <Navbar toggleSidebar={toggleSidebar} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div className="flex-1 flex flex-col overflow-hidden">
