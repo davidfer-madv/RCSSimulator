@@ -154,6 +154,11 @@ export function FigmaPreviewContainer({
           
           {/* Input Area */}
           {platform === "android" ? <AndroidInputBar /> : <>{iOSInputBar({})}</>}
+          
+          {/* Platform Label */}
+          <div className={`text-center py-2 text-xs font-medium ${platform === "android" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"}`}>
+            {platform === "android" ? "RCS Message" : "Text Message - RCS"}
+          </div>
         </div>
       </CardContent>
       

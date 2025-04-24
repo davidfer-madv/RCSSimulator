@@ -90,7 +90,6 @@ export const iOSMessageBubble: React.FC<{ message: string }> = ({ message }) => 
   <div className="mb-3 flex justify-start">
     <div className="bg-gray-200 rounded-2xl py-2 px-3 max-w-[85%]">
       <p className="text-sm text-gray-800">{message}</p>
-      <p className="text-xs text-gray-500 mt-1">Text Message - RCS</p>
     </div>
   </div>
 );
@@ -207,7 +206,6 @@ export const AndroidMessageBubble: React.FC<{ message: string }> = ({ message })
   <div className="mb-3 flex justify-start">
     <div className="bg-white rounded-lg py-2 px-3 max-w-[85%] shadow-sm">
       <p className="text-sm text-gray-800">{message}</p>
-      <p className="text-xs text-blue-600 mt-1">RCS Message</p>
     </div>
   </div>
 );
