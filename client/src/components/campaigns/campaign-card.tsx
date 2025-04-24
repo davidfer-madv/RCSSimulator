@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Campaign, RcsFormat } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { MessageSquare, Users, Loader2 } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { MessageSquare, Users, Loader2, Power, PowerOff, Clock } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -16,6 +18,7 @@ interface CampaignCardProps {
 export function CampaignCard({ campaign }: CampaignCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   
   // Format date using date-fns
   const formatDate = (date: Date | string | null | undefined) => {
@@ -50,6 +53,50 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
       return res.json();
     },
     enabled: isExpanded, // Only fetch when expanded
+  });
+  
+  // Activate campaign mutation
+  const activateMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", `/api/campaigns/${campaign.id}/activate`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
+      toast({
+        title: "Campaign activated",
+        description: "The campaign is now active and ready to send RCS messages",
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Activation failed",
+        description: error.message || "Could not activate the campaign",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Deactivate campaign mutation
+  const deactivateMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", `/api/campaigns/${campaign.id}/deactivate`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
+      toast({
+        title: "Campaign deactivated",
+        description: "The campaign has been deactivated",
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Deactivation failed",
+        description: error.message || "Could not deactivate the campaign",
+        variant: "destructive",
+      });
+    }
   });
 
   return (
@@ -91,6 +138,33 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
               </div>
             </div>
             
+            {/* Active Campaign Status */}
+            <div className="flex items-center justify-between text-sm mt-1">
+              <div className="text-gray-500">Active:</div>
+              <div className="font-medium flex items-center">
+                {campaign.isActive ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center">
+                    <Power className="h-3 w-3 mr-1" />
+                    Active
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 flex items-center">
+                    <PowerOff className="h-3 w-3 mr-1" />
+                    Inactive
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            {campaign.isActive && campaign.activatedAt && (
+              <div className="flex items-center justify-between text-sm mt-1">
+                <div className="text-gray-500">Activated:</div>
+                <div className="font-medium text-gray-900">
+                  {formatDate(campaign.activatedAt)}
+                </div>
+              </div>
+            )}
+            
             {isExpanded && (
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <h4 className="text-sm font-medium text-gray-900 mb-2">RCS Formats</h4>
@@ -131,13 +205,46 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
         </div>
         
         <div className="bg-gray-50 px-5 py-3 flex justify-between">
-          <Button
-            variant="ghost"
-            className="text-sm font-medium text-primary hover:text-blue-700"
-            onClick={() => navigate(`/rcs-formatter/campaign/${campaign.id}`)}
-          >
-            Edit
-          </Button>
+          <div className="flex space-x-2">
+            <Button
+              variant="ghost"
+              className="text-sm font-medium text-primary hover:text-blue-700"
+              onClick={() => navigate(`/rcs-formatter/campaign/${campaign.id}`)}
+            >
+              Edit
+            </Button>
+            
+            {/* Activation/Deactivation Button */}
+            {campaign.isActive ? (
+              <Button
+                variant="ghost"
+                className="text-sm font-medium text-red-600 hover:text-red-800"
+                onClick={() => deactivateMutation.mutate()}
+                disabled={deactivateMutation.isPending}
+              >
+                {deactivateMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <PowerOff className="h-4 w-4 mr-1" />
+                )}
+                Deactivate
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                className="text-sm font-medium text-green-600 hover:text-green-800"
+                onClick={() => activateMutation.mutate()}
+                disabled={activateMutation.isPending}
+              >
+                {activateMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Power className="h-4 w-4 mr-1" />
+                )}
+                Activate
+              </Button>
+            )}
+          </div>
           
           <div className="flex space-x-2">
             <Button 
