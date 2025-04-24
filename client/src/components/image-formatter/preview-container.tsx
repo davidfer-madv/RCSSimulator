@@ -34,6 +34,7 @@ export function PreviewContainer({
   brandName = "Business Name"
 }: PreviewContainerProps) {
   const previewImage = imageUrls.length > 0 ? imageUrls[0] : null;
+  console.log("Preview image URL:", previewImage);
   
   // Add event listener to close dropdowns when clicking outside
   useEffect(() => {
@@ -151,11 +152,15 @@ export function PreviewContainer({
                 {platform === "android" ? (
                   <div id="android-preview-container" className="bg-white rounded-lg overflow-hidden max-w-[85%] shadow-sm">
                     {cardOrientation === "horizontal" ? (
-                      <div className="flex">
+                      <div className="flex" style={{ width: lockAspectRatio ? '256px' : '100%' }}>
                         <img 
                           src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `${window.location.origin}${previewImage}` : previewImage} 
                           alt="Product" 
-                          className={`w-1/2 ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
+                          className={`${lockAspectRatio ? 'w-32' : 'w-1/2'} ${getImageHeight()} ${lockAspectRatio ? 'object-contain bg-gray-50' : 'object-cover'}`} 
+                          onError={(e) => {
+                            console.log("Error loading preview image", e);
+                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                          }}
                         />
                         <div className="p-3 flex-1">
                           <h4 className="font-semibold text-base">{title || "Check-in for your flight"}</h4>
@@ -163,17 +168,21 @@ export function PreviewContainer({
                         </div>
                       </div>
                     ) : (
-                      <>
+                      <div style={{ width: lockAspectRatio ? '256px' : '100%' }}>
                         <img 
                           src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `${window.location.origin}${previewImage}` : previewImage} 
                           alt="Product" 
-                          className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
+                          className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain bg-gray-50' : 'object-cover'}`}
+                          onError={(e) => {
+                            console.log("Error loading preview image", e);
+                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                          }} 
                         />
                         <div className="p-4">
                           <h4 className="font-semibold text-base">{title || "Check-in for your flight"}</h4>
                           <p className="text-sm text-gray-700 mt-2">{description || "Happy morning, Jo! Check-in is now open for your flight from London to Mumbai on May 23 at 2:00PM. What would you like to do?"}</p>
                         </div>
-                      </>
+                      </div>
                     )}
                     {actions.length > 0 && (
                       <div className="border-t border-gray-200">
@@ -196,11 +205,15 @@ export function PreviewContainer({
                   <div id="ios-preview-container" className="max-w-[85%]">
                     {cardOrientation === "horizontal" ? (
                       <div className="flex flex-col">
-                        <div className="flex bg-gray-200 rounded-t-2xl p-3">
+                        <div className="flex bg-gray-200 rounded-t-2xl p-3" style={{ width: lockAspectRatio ? '256px' : '100%' }}>
                           <img 
                             src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `${window.location.origin}${previewImage}` : previewImage} 
                             alt="Product" 
-                            className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
+                            className={`${lockAspectRatio ? 'w-32' : 'w-1/2'} rounded-lg ${getImageHeight().replace('h-', 'max-h-')} ${lockAspectRatio ? 'object-contain bg-gray-50' : 'object-cover'}`} 
+                            onError={(e) => {
+                              console.log("Error loading preview image", e);
+                              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                            }}
                           />
                           <div className="ml-2 flex-1">
                             <h4 className="font-medium text-base text-black">{title || "Check-in for your flight"}</h4>
@@ -268,11 +281,15 @@ export function PreviewContainer({
                         )}
                       </div>
                     ) : (
-                      <>
+                      <div style={{ width: lockAspectRatio ? '256px' : '100%' }}>
                         <img 
                           src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `${window.location.origin}${previewImage}` : previewImage} 
                           alt="Product" 
-                          className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} rounded-lg mb-1`} 
+                          className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain bg-gray-50' : 'object-cover'} rounded-lg mb-1`}
+                          onError={(e) => {
+                            console.log("Error loading preview image", e);
+                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                          }}
                         />
                         <div className="bg-gray-200 rounded-2xl p-3">
                           <h4 className="font-medium text-base text-black">{title || "Check-in for your flight"}</h4>
@@ -338,7 +355,7 @@ export function PreviewContainer({
                             </>
                           )}
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}
