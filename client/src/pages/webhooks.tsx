@@ -448,6 +448,120 @@ export default function WebhooksPage() {
                     </form>
                   </DialogContent>
                 </Dialog>
+
+                {/* Test Webhook Dialog */}
+                <Dialog open={isTestDialogOpen} onOpenChange={setIsTestDialogOpen}>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Test RCS Message via Webhook</DialogTitle>
+                      <DialogDescription>
+                        {campaign ? (
+                          <>Send "{campaign.name}" campaign to test phone numbers using a webhook configuration.</>
+                        ) : (
+                          <>Select a webhook configuration to send a test RCS message.</>
+                        )}
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4 py-4">
+                      {isLoadingCampaign || isLoadingFormats ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <>
+                          {campaign && (
+                            <div className="space-y-2">
+                              <Label>Campaign Information</Label>
+                              <div className="rounded-md bg-muted p-3 text-sm">
+                                <div><strong>Name:</strong> {campaign.name}</div>
+                                <div><strong>Type:</strong> {campaign.formatType === "richCard" ? "Rich Card" : "Carousel"}</div>
+                                <div><strong>Status:</strong> <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${campaign.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                  {campaign.isActive ? 'Active' : 'Inactive'}
+                                </span></div>
+                                <div><strong>Formats:</strong> {formats.length}</div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="webhook">Select Webhook</Label>
+                            <Select
+                              value={selectedWebhook ? String(selectedWebhook.id) : undefined}
+                              onValueChange={(value) => {
+                                const webhook = webhooks.find(w => w.id === parseInt(value, 10));
+                                setSelectedWebhook(webhook || null);
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a webhook" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {webhooks
+                                  .filter(webhook => webhook.isActive)
+                                  .map((webhook) => (
+                                    <SelectItem key={webhook.id} value={String(webhook.id)}>
+                                      {webhook.name} ({webhook.provider})
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="phoneNumbers">Phone Numbers (comma-separated)</Label>
+                            <Textarea
+                              id="phoneNumbers"
+                              value={testPhoneNumbers}
+                              onChange={handlePhoneNumbersChange}
+                              placeholder="+1234567890, +0987654321"
+                              rows={3}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Enter phone numbers in international format, separated by commas.
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button
+                        onClick={() => {
+                          setIsTestDialogOpen(false);
+                          setSelectedWebhook(null);
+                          setSelectedCampaignId(null);
+                          setTestPhoneNumbers("");
+                        }}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleTestSubmit}
+                        disabled={
+                          testWebhookMutation.isPending || 
+                          !selectedWebhook || 
+                          !selectedCampaignId || 
+                          !testPhoneNumbers.trim()
+                        }
+                        className="ml-2"
+                      >
+                        {testWebhookMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-4 w-4" />
+                            Send Test
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

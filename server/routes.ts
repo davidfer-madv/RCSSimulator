@@ -565,6 +565,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete webhook configuration" });
     }
   });
+  
+  // Test webhook with a campaign
+  app.post("/api/webhooks/:id/test", isAuthenticated, async (req, res) => {
+    try {
+      const webhookId = parseInt(req.params.id);
+      const webhook = await storage.getWebhookConfig(webhookId);
+      
+      if (!webhook || webhook.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Webhook configuration not found" });
+      }
+      
+      if (!webhook.isActive) {
+        return res.status(400).json({ message: "Webhook is not active" });
+      }
+      
+      // Validate request body
+      const testSchema = z.object({
+        campaignId: z.number(),
+        phoneNumbers: z.array(z.string())
+      });
+      
+      const validatedData = testSchema.parse(req.body);
+      
+      // Get campaign and formats
+      const campaign = await storage.getCampaign(validatedData.campaignId);
+      if (!campaign || campaign.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      if (!campaign.isActive) {
+        return res.status(400).json({ message: "Campaign is not active" });
+      }
+      
+      const formats = await storage.getRcsFormatsByCampaignId(campaign.id);
+      if (!formats || formats.length === 0) {
+        return res.status(400).json({ message: "Campaign has no RCS formats" });
+      }
+      
+      // Prepare phone numbers to send to
+      const phoneNumbers = validatedData.phoneNumbers;
+      if (phoneNumbers.length === 0) {
+        return res.status(400).json({ message: "No phone numbers provided" });
+      }
+      
+      // Log the webhook test
+      await storage.updateWebhookConfig(webhookId, { lastUsed: new Date() });
+      
+      // Send to each phone number
+      const results = await Promise.all(phoneNumbers.map(async (phoneNumber) => {
+        try {
+          // Process formats for this phone number
+          const formatPromises = formats.map(async (format) => {
+            // Prepare RCS message payload
+            const rcsPayload = {
+              formatType: format.formatType,
+              orientation: format.cardOrientation,
+              mediaHeight: format.mediaHeight,
+              title: format.title,
+              description: format.description,
+              imageUrls: format.imageUrls,
+              brandLogoUrl: format.brandLogoUrl,
+              actions: format.actions,
+              verificationSymbol: format.verificationSymbol,
+              phone: phoneNumber,
+              campaign: campaign.name
+            };
+            
+            // Make request to webhook
+            const response = await fetch(webhook.url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(webhook.token ? { 'Authorization': `Bearer ${webhook.token}` } : {})
+              },
+              body: JSON.stringify(rcsPayload)
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`Webhook request failed (${response.status}): ${errorText}`);
+            }
+            
+            return { success: true, format: format.id };
+          });
+          
+          const formatResults = await Promise.all(formatPromises);
+          return { phoneNumber, success: true, formats: formatResults };
+        } catch (error: any) {
+          return { phoneNumber, success: false, error: error.message };
+        }
+      }));
+      
+      // Notify websocket clients of the test
+      const connections = activeConnections.get(req.user!.id);
+      if (connections) {
+        const message = JSON.stringify({
+          type: 'WEBHOOK_TEST',
+          data: {
+            campaign: campaign.id,
+            webhook: webhook.id,
+            results
+          }
+        });
+        
+        connections.forEach(connection => {
+          if (connection.readyState === WebSocket.OPEN) {
+            connection.send(message);
+          }
+        });
+      }
+      
+      res.json({ success: true, results });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error('Webhook test error:', error);
+      res.status(500).json({ message: `Failed to test webhook: ${error instanceof Error ? error.message : 'Unknown error'}` });
+    }
+  });
 
   // Campaign Activation API
   app.post("/api/campaigns/:id/activate", isAuthenticated, async (req, res) => {
