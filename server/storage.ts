@@ -2,7 +2,8 @@ import {
   User, InsertUser, 
   Customer, InsertCustomer, 
   Campaign, InsertCampaign, 
-  RcsFormat, InsertRcsFormat
+  RcsFormat, InsertRcsFormat,
+  WebhookConfig, InsertWebhookConfig
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -75,11 +76,13 @@ export class MemStorage implements IStorage {
     this.customers = new Map();
     this.campaigns = new Map();
     this.rcsFormats = new Map();
+    this.webhookConfigs = new Map();
     
     this.userIdCounter = 1;
     this.customerIdCounter = 1;
     this.campaignIdCounter = 1;
     this.rcsFormatIdCounter = 1;
+    this.webhookConfigIdCounter = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24 hours
@@ -253,6 +256,47 @@ export class MemStorage implements IStorage {
     return Array.from(this.rcsFormats.values()).filter(
       (format) => format.userId === userId
     ).length;
+  }
+  
+  // Webhook Configuration methods
+  async getWebhookConfig(id: number): Promise<WebhookConfig | undefined> {
+    return this.webhookConfigs.get(id);
+  }
+  
+  async getWebhookConfigsByUserId(userId: number): Promise<WebhookConfig[]> {
+    return Array.from(this.webhookConfigs.values()).filter(
+      (config) => config.userId === userId
+    );
+  }
+  
+  async createWebhookConfig(insertConfig: InsertWebhookConfig): Promise<WebhookConfig> {
+    const id = this.webhookConfigIdCounter++;
+    const createdAt = new Date();
+    const config: WebhookConfig = { 
+      ...insertConfig, 
+      id, 
+      createdAt,
+      token: insertConfig.token || null,
+      lastUsed: null,
+      isActive: insertConfig.isActive !== undefined ? insertConfig.isActive : true
+    };
+    this.webhookConfigs.set(id, config);
+    return config;
+  }
+  
+  async updateWebhookConfig(id: number, configUpdate: Partial<WebhookConfig>): Promise<WebhookConfig> {
+    const config = this.webhookConfigs.get(id);
+    if (!config) {
+      throw new Error(`Webhook Configuration with ID ${id} not found`);
+    }
+    
+    const updatedConfig = { ...config, ...configUpdate };
+    this.webhookConfigs.set(id, updatedConfig);
+    return updatedConfig;
+  }
+  
+  async deleteWebhookConfig(id: number): Promise<boolean> {
+    return this.webhookConfigs.delete(id);
   }
 }
 

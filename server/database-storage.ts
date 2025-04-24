@@ -3,7 +3,8 @@ import {
   Customer, InsertCustomer, 
   Campaign, InsertCampaign, 
   RcsFormat, InsertRcsFormat,
-  users, customers, campaigns, rcsFormats
+  WebhookConfig, InsertWebhookConfig,
+  users, customers, campaigns, rcsFormats, webhookConfigs
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -194,5 +195,45 @@ export class DatabaseStorage implements IStorage {
       .from(rcsFormats)
       .where(eq(rcsFormats.userId, userId));
     return Number(result[0]?.count || 0);
+  }
+  
+  // Webhook Configuration methods
+  async getWebhookConfig(id: number): Promise<WebhookConfig | undefined> {
+    const result = await db.select().from(webhookConfigs).where(eq(webhookConfigs.id, id));
+    return result[0];
+  }
+  
+  async getWebhookConfigsByUserId(userId: number): Promise<WebhookConfig[]> {
+    return await db.select().from(webhookConfigs).where(eq(webhookConfigs.userId, userId));
+  }
+  
+  async createWebhookConfig(insertConfig: InsertWebhookConfig): Promise<WebhookConfig> {
+    // Ensure we have properly typed data
+    const formattedData = {
+      ...insertConfig,
+      token: insertConfig.token ?? null,
+      lastUsed: null,
+      isActive: insertConfig.isActive !== undefined ? insertConfig.isActive : true
+    };
+    
+    const result = await db.insert(webhookConfigs).values(formattedData).returning();
+    return result[0];
+  }
+  
+  async updateWebhookConfig(id: number, configUpdate: Partial<WebhookConfig>): Promise<WebhookConfig> {
+    const result = await db
+      .update(webhookConfigs)
+      .set(configUpdate)
+      .where(eq(webhookConfigs.id, id))
+      .returning();
+    return result[0];
+  }
+  
+  async deleteWebhookConfig(id: number): Promise<boolean> {
+    const result = await db
+      .delete(webhookConfigs)
+      .where(eq(webhookConfigs.id, id))
+      .returning({ id: webhookConfigs.id });
+    return result.length > 0;
   }
 }
