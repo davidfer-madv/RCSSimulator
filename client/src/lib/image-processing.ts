@@ -151,13 +151,63 @@ export async function processImages(
           img.src = imageUrl;
         });
         
-        // Set canvas dimensions
-        canvas.width = img.width;
-        canvas.height = img.height;
+        // Apply RCS image size constraints (1500x1000 pixels max)
+        let width = img.width;
+        let height = img.height;
         
-        // Draw the image on the canvas
+        // Apply aspect ratio lock if specified
+        if (options.lockAspectRatio) {
+          // Keep the original aspect ratio
+        } else {
+          // Apply media height constraints based on DP specifications
+          if (options.mediaHeight) {
+            // Google RCS standard DP heights
+            // short: 112dp, medium: 168dp, tall: 264dp
+            // Convert DP to pixels (assuming 1dp ≈ 1px for simplicity)
+            const dpHeightMap = {
+              short: 112,
+              medium: 168,
+              tall: 264
+            };
+            
+            // Get the target height based on mediaHeight
+            const targetHeight = dpHeightMap[options.mediaHeight];
+            
+            // If card is horizontal, adjust dimensions differently
+            if (options.cardOrientation === 'horizontal') {
+              // For horizontal cards, the image takes about half the width
+              // so we can allow a different aspect ratio
+              height = targetHeight;
+              // Width can be adjusted based on the device width needs
+              width = height * (img.width / img.height);
+            } else {
+              // For vertical cards, the image spans the full width
+              height = targetHeight;
+              width = img.width * (height / img.height);
+            }
+          }
+        }
+        
+        // Ensure dimensions don't exceed maximum
+        if (width > 1500) {
+          const ratio = 1500 / width;
+          width = 1500;
+          height = height * ratio;
+        }
+        
+        if (height > 1000) {
+          const ratio = 1000 / height;
+          height = 1000;
+          width = width * ratio;
+        }
+        
+        // Set canvas dimensions to the calculated size
+        canvas.width = Math.round(width);
+        canvas.height = Math.round(height);
+        
+        // Draw the image on the canvas with the new dimensions
         if (ctx) {
-          ctx.drawImage(img, 0, 0);
+          ctx.drawImage(img, 0, 0, width, height);
         }
         
         // Convert to image data URL with the requested format
