@@ -30,13 +30,12 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "rcs-formatter-secret-key",
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     store: storage.sessionStore,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
+      secure: false, // Set to false for development
       httpOnly: true
     }
   };
@@ -72,12 +71,23 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user: any, done) => {
+    console.log("Serializing user:", user.id);
+    done(null, user.id);
+  });
+  
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log("Deserializing user:", id);
       const user = await storage.getUser(id);
+      if (!user) {
+        console.log("User not found during deserialization:", id);
+        return done(null, false);
+      }
+      console.log("User deserialized successfully:", user.id);
       done(null, user);
     } catch (error) {
+      console.error("Error deserializing user:", error);
       done(error);
     }
   });
