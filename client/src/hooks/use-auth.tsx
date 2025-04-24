@@ -16,15 +16,8 @@ type AuthContextType = {
   logout: () => Promise<void>;
 };
 
-// Create the context with a default value
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isLoading: false,
-  error: null,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {}
-});
+// Create the context with null as default value
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // Provider component that wraps app and makes auth object available
 export function AuthProvider({ children }: { children: ReactNode }) {

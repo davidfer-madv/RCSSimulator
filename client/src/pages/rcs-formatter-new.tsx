@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import debounce from "lodash/debounce";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, useParams } from "wouter";
 import { useRcsFormatter } from "@/context/rcs-formatter-context";
@@ -244,38 +245,64 @@ export default function RcsFormatter() {
     }
   }, [user, authLoading, setLocation]);
 
-  // Update context when local state changes
+  // Update processed image URLs when selected images change
   useEffect(() => {
-    // When updating images, also update the processed URLs
-    const newProcessedUrls = selectedImages.map(file => URL.createObjectURL(file));
-    updateState({ 
-      selectedImages,
-      processedImageUrls: newProcessedUrls,
-      title,
-      description,
-      formatType,
-      cardOrientation,
-      mediaHeight,
-      lockAspectRatio,
-      brandLogoUrl,
-      verificationSymbol,
-      actions,
+    if (selectedImages.length > 0) {
+      // Only create object URLs when we have images to process
+      const newProcessedUrls = selectedImages.map(file => URL.createObjectURL(file));
+      
+      // Update only the processed image URLs in state
+      updateState({ 
+        selectedImages,
+        processedImageUrls: newProcessedUrls
+      });
+      
+      // Cleanup function to revoke object URLs when component unmounts or images change
+      return () => {
+        newProcessedUrls.forEach(url => URL.revokeObjectURL(url));
+      };
+    }
+  }, [selectedImages, updateState]);
+  
+  // Update other state properties less frequently to avoid render loops
+  const debouncedStateUpdate = useCallback(
+    debounce(() => {
+      updateState({
+        title,
+        description,
+        formatType,
+        cardOrientation,
+        mediaHeight,
+        lockAspectRatio,
+        brandLogoUrl,
+        verificationSymbol,
+        actions,
+        selectedCustomerId
+      });
+    }, 500), 
+    [
+      title, 
+      description, 
+      formatType, 
+      cardOrientation, 
+      mediaHeight, 
+      lockAspectRatio, 
+      brandLogoUrl, 
+      verificationSymbol, 
+      actions, 
       selectedCustomerId
-    });
-  }, [
-    selectedImages, 
-    title, 
-    description, 
-    formatType, 
-    cardOrientation, 
-    mediaHeight, 
-    lockAspectRatio, 
-    brandLogoUrl, 
-    verificationSymbol, 
-    actions, 
-    selectedCustomerId,
-    updateState
-  ]);
+    ]
+  );
+  
+  // Call the debounced update when relevant values change
+  useEffect(() => {
+    debouncedStateUpdate();
+    
+    // Cleanup
+    return () => {
+      debouncedStateUpdate.cancel();
+    };
+  }, [debouncedStateUpdate]);
 
   // Add click outside handler for export menu
   useEffect(() => {
@@ -439,7 +466,7 @@ export default function RcsFormatter() {
     }
     
     // Save the format
-    saveFormatMutation.mutate();
+    saveFormatMutation.mutate({});
   };
 
   // Handle image export
