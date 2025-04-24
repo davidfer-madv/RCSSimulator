@@ -47,7 +47,7 @@ export const iOSHeader: React.FC<{ brandName: string; brandLogoUrl?: string; ver
         {brandLogoUrl ? (
           <div className="h-8 w-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200">
             <img 
-              src={brandLogoUrl.startsWith('/') ? `http://localhost:5000${brandLogoUrl}` : brandLogoUrl} 
+              src={brandLogoUrl} 
               alt="Brand logo" 
               className="h-full w-full object-contain"
               onError={(e) => {
@@ -170,7 +170,7 @@ export const AndroidHeader: React.FC<{ brandName: string; brandLogoUrl?: string;
         {brandLogoUrl ? (
           <div className="h-8 w-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200">
             <img 
-              src={brandLogoUrl.startsWith('/') ? `http://localhost:5000${brandLogoUrl}` : brandLogoUrl} 
+              src={brandLogoUrl} 
               alt="Brand logo" 
               className="h-full w-full object-contain"
               onError={(e) => {
@@ -271,7 +271,7 @@ export const AndroidRichCard: React.FC<{
         <div className="flex">
           {imageUrl && (
             <img 
-              src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
+              src={imageUrl} 
               alt="Content" 
               className={`w-1/2 ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
             />
@@ -285,7 +285,7 @@ export const AndroidRichCard: React.FC<{
         <>
           {imageUrl && (
             <img 
-              src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
+              src={imageUrl} 
               alt="Content" 
               className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
             />
@@ -356,7 +356,7 @@ export const IOSRichCard: React.FC<{
           <div className="flex bg-gray-200 rounded-t-2xl p-3">
             {imageUrl && (
               <img 
-                src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
+                src={imageUrl} 
                 alt="Content" 
                 className={`w-1/2 rounded-lg ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
               />
@@ -371,7 +371,7 @@ export const IOSRichCard: React.FC<{
         <div className="bg-gray-200 rounded-2xl overflow-hidden">
           {imageUrl && (
             <img 
-              src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
+              src={imageUrl} 
               alt="Content" 
               className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
             />
@@ -451,7 +451,7 @@ export const AndroidCarousel: React.FC<{
           >
             {item.imageUrl && (
               <img 
-                src={typeof item.imageUrl === 'string' && item.imageUrl.startsWith('/') ? `http://localhost:5000${item.imageUrl}` : item.imageUrl} 
+                src={item.imageUrl} 
                 alt={`Carousel item ${index + 1}`} 
                 className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
               />
@@ -527,7 +527,7 @@ export const IOSCarousel: React.FC<{
               <div className="bg-gray-200 rounded-2xl overflow-hidden">
                 {item.imageUrl && (
                   <img 
-                    src={typeof item.imageUrl === 'string' && item.imageUrl.startsWith('/') ? `http://localhost:5000${item.imageUrl}` : item.imageUrl} 
+                    src={item.imageUrl} 
                     alt={`Carousel item ${index + 1}`} 
                     className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
                   />

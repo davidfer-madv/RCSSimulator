@@ -19,18 +19,17 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { RcsFormatterProvider } from "@/context/rcs-formatter-context";
 
 function Router() {
-  // Direct routing without protection for immediate functionality
   return (
     <Switch>
-      <Route path="/" component={RcsFormatter} />
-      <Route path="/home" component={HomePage} />
-      <Route path="/rcs-formatter" component={RcsFormatter} />
-      <Route path="/rcs-formatter/campaign/:campaignId" component={RcsFormatter} />
-      <Route path="/campaigns" component={Campaigns} />
-      <Route path="/customers" component={Customers} />
-      <Route path="/settings" component={SettingsPage} />
-      <Route path="/webhooks" component={WebhooksPage} />
-      <Route path="/header-examples" component={HeaderExamplesPage} />
+      <ProtectedRoute path="/" component={RcsFormatter} />
+      <ProtectedRoute path="/home" component={HomePage} />
+      <ProtectedRoute path="/rcs-formatter" component={RcsFormatter} />
+      <ProtectedRoute path="/rcs-formatter/campaign/:campaignId" component={RcsFormatter} />
+      <ProtectedRoute path="/campaigns" component={Campaigns} />
+      <ProtectedRoute path="/customers" component={Customers} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/webhooks" component={WebhooksPage} />
+      <ProtectedRoute path="/header-examples" component={HeaderExamplesPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/register" component={SimpleRegister} />
       {/* Fallback to 404 */}
