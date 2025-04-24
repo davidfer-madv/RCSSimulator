@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useRcsFormatter } from "@/context/rcs-formatter-context";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
@@ -41,24 +42,61 @@ import { format } from "date-fns";
 export default function RcsFormatter() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { state, updateState, resetState } = useRcsFormatter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const params = useParams();
   const campaignId = params?.campaignId;
   
-  // State for form fields
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [formatType, setFormatType] = useState<"richCard" | "carousel">("richCard");
-  const [cardOrientation, setCardOrientation] = useState<"vertical" | "horizontal">("vertical");
-  const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">("medium");
-  const [lockAspectRatio, setLockAspectRatio] = useState<boolean>(false);
-  const [brandLogoUrl, setBrandLogoUrl] = useState<string>("");
-  const [verificationSymbol, setVerificationSymbol] = useState<boolean>(true); // Always enabled
-  const [actions, setActions] = useState<Action[]>([]);
+  // Get all the state values from context - we'll use them directly
+  
+  // Local state variables with their setters
+  const [selectedImages, setSelectedImages] = useState<File[]>(state.selectedImages || []);
+  const [title, setTitle] = useState(state.title || "");
+  const [description, setDescription] = useState(state.description || "");
+  const [formatType, setFormatType] = useState<"richCard" | "carousel">(state.formatType || "richCard");
+  const [cardOrientation, setCardOrientation] = useState<"vertical" | "horizontal">(state.cardOrientation || "vertical");
+  const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">(state.mediaHeight || "medium");
+  const [lockAspectRatio, setLockAspectRatio] = useState(state.lockAspectRatio || false);
+  const [brandLogoUrl, setBrandLogoUrl] = useState(state.brandLogoUrl || "");
+  const [verificationSymbol, setVerificationSymbol] = useState(state.verificationSymbol !== undefined ? state.verificationSymbol : true);
+  const [actions, setActions] = useState<Action[]>(state.actions || []);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(state.selectedCustomerId || "");
+  
+  // Update context when local state changes
+  useEffect(() => {
+    // When updating images, also update the processed URLs
+    const newProcessedUrls = selectedImages.map(file => URL.createObjectURL(file));
+    updateState({ 
+      selectedImages,
+      processedImageUrls: newProcessedUrls,
+      title,
+      description,
+      formatType,
+      cardOrientation,
+      mediaHeight,
+      lockAspectRatio,
+      brandLogoUrl,
+      verificationSymbol,
+      actions,
+      selectedCustomerId
+    });
+  }, [
+    selectedImages, 
+    title, 
+    description, 
+    formatType, 
+    cardOrientation, 
+    mediaHeight, 
+    lockAspectRatio, 
+    brandLogoUrl, 
+    verificationSymbol, 
+    actions, 
+    selectedCustomerId
+  ]);
+  
+  // Local state not stored in context
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   const [exporting, setExporting] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   
   // Fetch campaign data if we're in edit mode
   const { data: campaign, isLoading: isLoadingCampaign } = useQuery<Campaign>({
@@ -116,15 +154,24 @@ export default function RcsFormatter() {
     if (selectedCustomerId && customers) {
       const brand = customers.find(c => c.id.toString() === selectedCustomerId);
       if (brand && brand.brandLogoUrl) {
-        // Update the brand logo URL - making sure it's properly prefixed for server-stored images
-        const logoUrl = brand.brandLogoUrl.startsWith('/') 
-          ? `http://localhost:5000${brand.brandLogoUrl}` 
-          : brand.brandLogoUrl;
-        
-        setBrandLogoUrl(logoUrl);
-        
-        // The brandName is handled directly in the PreviewContainer with a lookup
-        // No need to set a separate state variable for it
+        try {
+          // Update the brand logo URL - making sure it's properly prefixed for server-stored images
+          let logoUrl = brand.brandLogoUrl;
+          
+          // Handle server-side stored images with absolute paths
+          if (logoUrl.startsWith('/')) {
+            logoUrl = `http://localhost:5000${logoUrl}`;
+          }
+          
+          // Set the brand logo URL
+          setBrandLogoUrl(logoUrl);
+          console.log("Set brand logo URL from useEffect:", logoUrl);
+          
+          // The brandName is handled directly in the PreviewContainer with a lookup
+          // No need to set a separate state variable for it
+        } catch (error) {
+          console.error("Error loading brand logo from useEffect:", brand.brandLogoUrl);
+        }
       }
     }
   }, [selectedCustomerId, customers]);
@@ -166,10 +213,21 @@ export default function RcsFormatter() {
       
       // Handle brand logo URL
       if (format.brandLogoUrl) {
-        const logoUrl = format.brandLogoUrl.startsWith('/') 
-          ? `http://localhost:5000${format.brandLogoUrl}` 
-          : format.brandLogoUrl;
-        setBrandLogoUrl(logoUrl);
+        try {
+          // Make sure to properly format the URL for server-stored images
+          let logoUrl = format.brandLogoUrl;
+          
+          // Handle server-side stored images with absolute paths
+          if (logoUrl.startsWith('/')) {
+            logoUrl = `http://localhost:5000${logoUrl}`;
+          }
+          
+          // Set the brand logo URL
+          setBrandLogoUrl(logoUrl);
+          console.log("Set brand logo URL from campaign format:", logoUrl);
+        } catch (error) {
+          console.error("Error loading brand logo from campaign format:", format.brandLogoUrl);
+        }
       }
       
       // Set campaign activation settings
@@ -203,9 +261,6 @@ export default function RcsFormatter() {
     }
   }, [campaign, campaignFormats]);
 
-  // Process images temporarily for preview
-  const processedImageUrls = selectedImages.map(file => URL.createObjectURL(file));
-
   // Toggle sidebar
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -213,7 +268,7 @@ export default function RcsFormatter() {
 
   // Save RCS format mutation
   const saveFormatMutation = useMutation({
-    mutationFn: async (campaignFormatData = {}) => {
+    mutationFn: async (campaignFormatData: Record<string, any> = {}) => {
       // Create FormData for file upload
       const formData = new FormData();
       
@@ -260,10 +315,10 @@ export default function RcsFormatter() {
         campaignId: campaignId ? parseInt(campaignId) : null, // Use the campaign ID from the URL if available
         brandName: selectedBrand?.name || "Business Name", // Store brand name
         campaignName: campaignName || title || "Untitled Campaign", // Use campaign name from dialog
-        processedImageUrls, // Include the already processed image URLs as backup
-        imageUrls: processedImageUrls, // Also include directly to help with validation requirements
+        processedImageUrls: state.processedImageUrls, // Include the already processed image URLs as backup
+        imageUrls: state.processedImageUrls, // Also include directly to help with validation requirements
         // Add campaign activation data if provided
-        ...campaignFormatData
+        ...(campaignFormatData as object)
       };
       
       // Update the formatData state
@@ -496,7 +551,7 @@ export default function RcsFormatter() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   {campaignId 
                     ? `Edit Campaign: ${campaign?.name || "Loading..."}`
-                    : "RCS Message Format"
+                    : "RCS Formatter"
                   }
                 </h1>
                 <div className="mt-3 sm:mt-0 sm:ml-4">
@@ -516,7 +571,7 @@ export default function RcsFormatter() {
                     disabled={saveFormatMutation.isPending}
                   >
                     <Save className="mr-2 h-4 w-4" />
-                    Save Format
+                    Save Campaign
                   </Button>
                   <div className="relative inline-block">
                     <Button 
@@ -558,13 +613,21 @@ export default function RcsFormatter() {
                           // Automatically set the brand logo URL when a brand is selected
                           const selectedBrand = customers?.find(c => c.id.toString() === value);
                           if (selectedBrand?.brandLogoUrl) {
-                            // Make sure to properly format the URL for server-stored images
-                            const logoUrl = selectedBrand.brandLogoUrl.startsWith('/') 
-                              ? `http://localhost:5000${selectedBrand.brandLogoUrl}` 
-                              : selectedBrand.brandLogoUrl;
-                            
-                            setBrandLogoUrl(logoUrl);
-                            console.log("Set brand logo URL to:", logoUrl);
+                            try {
+                              // Make sure to properly format the URL for server-stored images
+                              let logoUrl = selectedBrand.brandLogoUrl;
+                              
+                              // Handle server-side stored images with absolute paths
+                              if (logoUrl.startsWith('/')) {
+                                logoUrl = `http://localhost:5000${logoUrl}`;
+                              }
+                              
+                              // Set the brand logo URL
+                              setBrandLogoUrl(logoUrl);
+                              console.log("Set brand logo URL to:", logoUrl);
+                            } catch (error) {
+                              console.error("Error loading brand logo:", selectedBrand.brandLogoUrl);
+                            }
                           }
                         }}
                       >
@@ -584,9 +647,10 @@ export default function RcsFormatter() {
                                         src={customer.brandLogoUrl && customer.brandLogoUrl.startsWith('/') 
                                           ? `http://localhost:5000${customer.brandLogoUrl}` 
                                           : customer.brandLogoUrl} 
-                                        alt="" 
+                                        alt={`${customer.name} logo`}
                                         className="w-full h-full object-contain"
                                         onError={(e) => {
+                                          console.error("Error loading brand logo in dropdown:", customer.brandLogoUrl);
                                           e.currentTarget.style.display = 'none';
                                         }}
                                       />
@@ -654,7 +718,7 @@ export default function RcsFormatter() {
                         platform="android"
                         title={title}
                         description={description}
-                        imageUrls={processedImageUrls}
+                        imageUrls={state.processedImageUrls}
                         actions={actions}
                         formatType={formatType}
                         cardOrientation={cardOrientation}
@@ -671,7 +735,7 @@ export default function RcsFormatter() {
                         platform="ios"
                         title={title}
                         description={description}
-                        imageUrls={processedImageUrls}
+                        imageUrls={state.processedImageUrls}
                         actions={actions}
                         formatType={formatType}
                         cardOrientation={cardOrientation}

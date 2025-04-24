@@ -15,6 +15,7 @@ import { ThemeProvider } from "next-themes";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { AuthProvider } from "@/hooks/use-auth";
+import { RcsFormatterProvider } from "@/context/rcs-formatter-context";
 
 function Router() {
   // Direct routing without protection for immediate functionality
@@ -40,12 +41,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider attribute="class">
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </ThemeProvider>
+        <RcsFormatterProvider>
+          <ThemeProvider attribute="class">
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </ThemeProvider>
+        </RcsFormatterProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
