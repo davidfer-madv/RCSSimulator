@@ -38,8 +38,8 @@ interface RcsCardJson {
 export async function processImages(
   images: File[], 
   options: FormatOptions, 
-  exportType: 'json' | 'image' | 'both' = 'json', 
-  platform: 'android' | 'ios' = 'android'
+  exportType: 'json' | 'image' | 'both' | 'device-image' | 'raw-image' = 'json', 
+  platform: 'android' | 'ios' | 'both' = 'android'
 ): Promise<void> {
   // This is a simplified version that would normally involve server-side image processing
   // Here we're just triggering downloads of the original files
@@ -81,48 +81,109 @@ export async function processImages(
       }, 100);
     }
     
-    // Handle full image export if requested
-    if (exportType === 'image' || exportType === 'both') {
-      // Find the preview container for the specified platform
-      const previewContainerId = platform === 'android' ? 
-        'android-preview-container' : 'ios-preview-container';
+    // Handle device image export (full UI preview)
+    if (exportType === 'image' || exportType === 'both' || exportType === 'device-image') {
+      const platforms = platform === 'both' ? ['android', 'ios'] : [platform];
       
-      const previewElement = document.getElementById(previewContainerId);
-      
-      if (!previewElement) {
-        throw new Error(`Preview container not found for ${platform} platform`);
+      for (const plat of platforms) {
+        // Find the preview container for the specified platform
+        const previewContainerId = plat === 'android' ? 
+          'android-preview-container' : 'ios-preview-container';
+        
+        const previewElement = document.getElementById(previewContainerId);
+        
+        if (!previewElement) {
+          console.error(`Preview container not found for ${plat} platform`);
+          continue;
+        }
+        
+        // Use html2canvas to capture the preview as an image
+        const html2canvas = await import('html2canvas');
+        
+        const canvas = await html2canvas.default(previewElement, {
+          backgroundColor: null,
+          scale: 2, // Higher quality
+          logging: false,
+          useCORS: true,
+          allowTaint: true
+        });
+        
+        // Convert to image data URL
+        const imageDataUrl = canvas.toDataURL('image/png');
+        
+        // Create download link
+        const link = document.createElement("a");
+        link.href = imageDataUrl;
+        
+        // Use information in filename
+        link.download = `rcs_device_${plat}_${options.formatType}_${options.cardOrientation || 'vertical'}_${new Date().getTime()}.png`;
+        link.style.display = "none";
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
       }
-      
-      // Use html2canvas to capture the preview as an image
-      const html2canvas = await import('html2canvas');
-      
-      const canvas = await html2canvas.default(previewElement, {
-        backgroundColor: null,
-        scale: 2, // Higher quality
-        logging: false,
-        useCORS: true,
-        allowTaint: true
-      });
-      
-      // Convert to image data URL
-      const imageDataUrl = canvas.toDataURL('image/png');
-      
-      // Create download link
-      const link = document.createElement("a");
-      link.href = imageDataUrl;
-      
-      // Use information in filename
-      link.download = `rcs_card_${platform}_${options.formatType}_${options.cardOrientation || 'vertical'}_${options.mediaHeight || 'medium'}_${new Date().getTime()}.png`;
-      link.style.display = "none";
-      
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
-      
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link);
-      }, 100);
+    }
+    
+    // Handle raw image export (just the processed image without device UI)
+    if (exportType === 'raw-image') {
+      for (let i = 0; i < images.length; i++) {
+        const file = images[i];
+        const fileType = document.getElementById('raw-image-format')?.getAttribute('data-format') || 'png';
+        
+        // Create a canvas element to process the image
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create object URL from the file
+        const imageUrl = URL.createObjectURL(file);
+        
+        // Wait for the image to load
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = imageUrl;
+        });
+        
+        // Set canvas dimensions
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Draw the image on the canvas
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+        }
+        
+        // Convert to image data URL with the requested format
+        const mimeType = fileType === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const quality = fileType === 'jpeg' ? 0.92 : undefined;
+        const imageDataUrl = canvas.toDataURL(mimeType, quality);
+        
+        // Create download link
+        const link = document.createElement("a");
+        link.href = imageDataUrl;
+        
+        // Use information in filename
+        const timestamp = new Date().getTime();
+        link.download = `rcs_image_${i}_${timestamp}.${fileType}`;
+        link.style.display = "none";
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          URL.revokeObjectURL(imageUrl);
+          document.body.removeChild(link);
+        }, 100);
+      }
     }
     
     // Download original images if JSON export was requested

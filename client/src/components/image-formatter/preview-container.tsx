@@ -1,7 +1,7 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Action } from "@shared/schema";
 import { Badge, BadgeCheck, Battery, ChevronLeft, Info, Mic, Paperclip, Plus, Signal, SmilePlus, Wifi } from "lucide-react";
-import verificationBadge from "@/assets/verification_badge.svg";
+import verificationBadge from "@/assets/verified.svg";
 import { useEffect } from "react";
 
 interface PreviewContainerProps {
