@@ -231,13 +231,12 @@ export function FormatOptions({
             )}
           </SelectContent>
         </Select>
-        <div className="flex items-center space-x-2 mt-2">
-          <Switch 
-            id="verification-symbol"
-            checked={verificationSymbol}
-            onCheckedChange={setVerificationSymbol}
-          />
-          <Label htmlFor="verification-symbol">Show Verification Badge</Label>
+        <div className="flex items-center mt-2">
+          <Label htmlFor="verification-badge" className="mr-2">Verification Badge</Label>
+          <Badge className="bg-blue-100 text-blue-800 mr-2">
+            <BadgeCheck className="h-3 w-3 mr-1" />
+            Always Shown
+          </Badge>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -246,8 +245,8 @@ export function FormatOptions({
                 </div>
               </TooltipTrigger>
               <TooltipContent className="w-80">
-                <p>When enabled, shows a verification mark next to the business name.</p>
-                <p className="text-xs mt-1">Only use this for officially verified businesses.</p>
+                <p>The verification badge is always shown next to the business name in the preview.</p>
+                <p className="text-xs mt-1">This simulates how officially verified businesses appear in RCS messaging.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
