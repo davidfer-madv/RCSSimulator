@@ -255,28 +255,55 @@ export const AndroidRichCard: React.FC<{
   lockAspectRatio, 
   actions 
 }) => {
-  // Calculate image height based on mediaHeight
-  const getImageHeight = () => {
-    switch (mediaHeight) {
-      case "short": return "h-28"; // 112 DP
-      case "medium": return "h-40"; // 168 DP
-      case "tall": return "h-56"; // 264 DP
-      default: return "h-40";
+  // Calculate image styling based on RCS specifications
+  const getImageStyle = () => {
+    // For vertical cards, follow specific RCS aspect ratios
+    if (cardOrientation === "vertical") {
+      // Height based on the mediaHeight parameter
+      let heightClass = "";
+      
+      switch (mediaHeight) {
+        case "short": 
+          heightClass = "h-28"; // 112 DP
+          break;
+        case "medium": 
+          heightClass = "h-42"; // 168 DP
+          break;
+        case "tall": 
+          heightClass = "h-66"; // 264 DP
+          break;
+        default: 
+          heightClass = "h-42"; // Default to medium
+      }
+      
+      // For vertical cards, use proper aspect ratios per RCS specifications
+      let aspectRatioClass = "";
+      if (lockAspectRatio) {
+        aspectRatioClass = "aspect-[2/1]"; // Default to 2:1 ratio, could also use 16:9 (aspect-video) or 7:3
+      }
+      
+      return `w-full ${heightClass} ${aspectRatioClass} bg-gray-100 ${lockAspectRatio ? 'object-cover' : 'object-contain'}`;
+    } 
+    // For horizontal cards, width is fixed at 128 DP (w-32 in tailwind)
+    else {
+      return "w-32 h-full bg-gray-100 object-cover"; // Height scales with content
     }
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden max-w-[85%] shadow-sm border border-gray-200">
+    <div className="bg-white rounded-xl overflow-hidden max-w-[85%] shadow-sm border border-gray-200">
       {cardOrientation === "horizontal" ? (
         <div className="flex">
           {imageUrl && (
-            <img 
-              src={imageUrl} 
-              alt="Content" 
-              className={`w-1/2 ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
-            />
+            <div className="w-32 overflow-hidden"> {/* Fixed 128 DP width (w-32) */}
+              <img 
+                src={imageUrl} 
+                alt="Content" 
+                className="w-full h-full object-cover bg-gray-100" 
+              />
+            </div>
           )}
-          <div className="p-3 flex-1">
+          <div className="p-4 flex-1">
             <h4 className="font-semibold text-base text-gray-900">{title || "Card Title"}</h4>
             <p className="text-sm text-gray-700 mt-2 line-clamp-3">{description || "Card description text would appear here."}</p>
           </div>
@@ -284,11 +311,17 @@ export const AndroidRichCard: React.FC<{
       ) : (
         <>
           {imageUrl && (
-            <img 
-              src={imageUrl} 
-              alt="Content" 
-              className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
-            />
+            <div className="w-full overflow-hidden">
+              <img 
+                src={imageUrl} 
+                alt="Content" 
+                className={
+                  lockAspectRatio 
+                    ? `w-full ${mediaHeight === "short" ? "h-28" : mediaHeight === "medium" ? "h-42" : "h-66"} aspect-[2/1] object-cover bg-gray-100`
+                    : `w-full ${mediaHeight === "short" ? "h-28" : mediaHeight === "medium" ? "h-42" : "h-66"} object-contain bg-gray-100`
+                }
+              />
+            </div>
           )}
           <div className="p-4">
             <h4 className="font-semibold text-base text-gray-900">{title || "Card Title"}</h4>
@@ -303,10 +336,30 @@ export const AndroidRichCard: React.FC<{
               key={index} 
               className="flex w-full items-center px-4 py-3 text-blue-600 hover:bg-blue-50 border-b border-gray-200 last:border-b-0"
             >
-              {action.type === "text" && <span className="mr-2">💬</span>}
-              {action.type === "url" && <span className="mr-2">🔗</span>}
-              {action.type === "phone" && <span className="mr-2">📞</span>}
-              {action.type === "calendar" && <span className="mr-2">🗓️</span>}
+              {action.type === "text" && <span className="flex-shrink-0 mr-2 text-blue-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.663 3.04094 17.0829 4.73232 18.9121L2.45 21.4424C2.25115 21.6619 2.29644 22 2.56299 22H12Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                </svg>
+              </span>}
+              {action.type === "url" && <span className="flex-shrink-0 mr-2 text-blue-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 13.5C10.8284 14.3284 12.1716 14.3284 13 13.5L17.5 9C18.3284 8.17157 18.3284 6.82843 17.5 6C16.6716 5.17157 15.3284 5.17157 14.5 6L13 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 10.5C13.1716 9.67157 11.8284 9.67157 11 10.5L6.5 15C5.67157 15.8284 5.67157 17.1716 6.5 18C7.32843 18.8284 8.67157 18.8284 9.5 18L11 16.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>}
+              {action.type === "phone" && <span className="flex-shrink-0 mr-2 text-blue-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 2C15 2 18 2 18 5V19C18 19 18 22 15 22H9C9 22 6 22 6 19V5C6 5 6 2 9 2H15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 18.5H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </span>}
+              {action.type === "calendar" && <span className="flex-shrink-0 mr-2 text-blue-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 7V3M16 7V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M21 13V8C21 6.89543 20.1046 6 19 6H5C3.89543 6 3 6.89543 3 8V19C3 20.1046 3.89543 21 5 21H12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M8 16H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </span>}
               <span className="font-medium">{action.text}</span>
             </button>
           ))}
@@ -353,66 +406,107 @@ export const IOSRichCard: React.FC<{
     <div className="max-w-[85%]">
       {cardOrientation === "horizontal" ? (
         <div className="flex flex-col">
-          <div className="flex bg-gray-200 rounded-t-2xl p-3">
+          <div className="flex bg-gray-100 rounded-t-3xl p-3">
             {imageUrl && (
-              <img 
-                src={imageUrl} 
-                alt="Content" 
-                className={`w-1/2 rounded-lg ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
-              />
+              <div className="flex-shrink-0 w-5/12 overflow-hidden">
+                <img 
+                  src={imageUrl} 
+                  alt="Content" 
+                  className={`w-full rounded-xl ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-white`} 
+                />
+              </div>
             )}
-            <div className="ml-2 flex-1">
+            <div className="ml-3 flex-1">
               <h4 className="font-medium text-base text-black">{title || "Card Title"}</h4>
-              <p className="text-xs text-gray-600 mt-1 line-clamp-3">{description || "Card description text would appear here."}</p>
+              <p className="text-sm text-gray-600 mt-1 line-clamp-3">{description || "Card description text would appear here."}</p>
             </div>
           </div>
+          
+          {/* iOS buttons for horizontal layout are inside the card */}
+          {actions.length > 0 && (
+            <div className="bg-gray-100 rounded-b-3xl px-3 pb-3 pt-0.5">
+              <div className="flex flex-wrap gap-2">
+                {/* Text actions */}
+                {textActions.map((action, index) => (
+                  <button 
+                    key={index} 
+                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                  >
+                    {action.text}
+                  </button>
+                ))}
+                
+                {/* Single URL/Phone/Calendar action */}
+                {otherActions.length === 1 && (
+                  <button 
+                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                  >
+                    {otherActions[0].text}
+                  </button>
+                )}
+                
+                {/* Options button for multiple actions */}
+                {showOptionsButton && (
+                  <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center">
+                    <span>Options</span>
+                    <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="bg-gray-200 rounded-2xl overflow-hidden">
+        <>
+          {/* Vertical layout similar to example */}
           {imageUrl && (
             <img 
               src={imageUrl} 
               alt="Content" 
-              className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
+              className={`w-full rounded-2xl ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} mb-2 bg-white`} 
             />
           )}
-          <div className="p-3">
+          <div className="bg-gray-100 rounded-3xl p-3">
             <h4 className="font-medium text-base text-black">{title || "Card Title"}</h4>
-            <p className="text-xs text-gray-600 mt-1">{description || "Card description text would appear here."}</p>
+            <p className="text-sm text-gray-600 mt-1 mb-2">{description || "Card description text would appear here."}</p>
+            
+            {/* Actions for vertical layout */}
+            {actions.length > 0 && (
+              <div className="mt-3 pt-2 border-t border-gray-200 flex flex-wrap gap-2">
+                {/* Text actions */}
+                {textActions.map((action, index) => (
+                  <button 
+                    key={index} 
+                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                  >
+                    {action.text}
+                  </button>
+                ))}
+                
+                {/* Single URL/Phone/Calendar action */}
+                {otherActions.length === 1 && (
+                  <button 
+                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                  >
+                    {otherActions[0].text}
+                  </button>
+                )}
+                
+                {/* Options button for multiple actions */}
+                {showOptionsButton && (
+                  <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center">
+                    <span>Options</span>
+                    <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        </div>
-      )}
-      {/* Text Actions are always shown */}
-      {textActions.length > 0 && (
-        <div className="mt-2 flex flex-col gap-2">
-          {textActions.map((action, index) => (
-            <button 
-              key={index} 
-              className="bg-gray-200 text-blue-500 px-4 py-2 rounded-2xl text-sm font-medium"
-            >
-              {action.text}
-            </button>
-          ))}
-        </div>
-      )}
-      {/* Single non-text action is shown directly */}
-      {otherActions.length === 1 && !showOptionsButton && (
-        <div className="mt-2">
-          <button className="bg-gray-200 text-blue-500 px-4 py-2 rounded-2xl text-sm font-medium">
-            {otherActions[0].text}
-          </button>
-        </div>
-      )}
-      {/* Multiple non-text actions are hidden under an "Options" button */}
-      {showOptionsButton && (
-        <div className="mt-2">
-          <button className="bg-gray-200 text-blue-500 px-4 py-2 rounded-2xl text-sm font-medium flex items-center justify-center">
-            <span>Options</span>
-            <svg className="ml-1 w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
+        </>
       )}
     </div>
   );
@@ -431,14 +525,24 @@ export const AndroidCarousel: React.FC<{
   // If no items, return nothing
   if (!items || items.length === 0) return null;
 
-  // Calculate image height based on mediaHeight
-  const getImageHeight = () => {
+  // Per RCS specs: carousel cards can be either small (120 DP) or medium (232 DP) width
+  // Maximum height is 592 DP but usually matches tallest card content
+  // We'll use w-30 for small (120dp) and w-58 for medium (232dp)
+  // Default to medium width for better visibility
+  const cardWidth = "w-58"; // 232 DP medium width
+  
+  // For carousel items, we use a standard height with some flexibility based on mediaHeight
+  const getCarouselItemStyle = () => {
+    let heightClass = "";
+    
     switch (mediaHeight) {
-      case "short": return "h-28"; // 112 DP
-      case "medium": return "h-40"; // 168 DP
-      case "tall": return "h-56"; // 264 DP
-      default: return "h-40";
+      case "short": heightClass = "h-36"; break; // ~144 DP
+      case "medium": heightClass = "h-64"; break; // ~256 DP
+      case "tall": heightClass = "h-80"; break; // ~320 DP (below max 592 DP)
+      default: heightClass = "h-64"; // Default to medium
     }
+    
+    return heightClass;
   };
 
   return (
@@ -447,14 +551,16 @@ export const AndroidCarousel: React.FC<{
         {items.map((item, index) => (
           <div 
             key={index} 
-            className="flex-shrink-0 w-60 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 snap-start"
+            className={`flex-shrink-0 ${cardWidth} bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 snap-start`}
           >
             {item.imageUrl && (
-              <img 
-                src={item.imageUrl} 
-                alt={`Carousel item ${index + 1}`} 
-                className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
-              />
+              <div className="w-full overflow-hidden">
+                <img 
+                  src={item.imageUrl} 
+                  alt={`Carousel item ${index + 1}`} 
+                  className={`w-full ${getCarouselItemStyle()} ${lockAspectRatio ? 'object-cover' : 'object-contain'} bg-gray-100`}
+                />
+              </div>
             )}
             <div className="p-3">
               <h4 className="font-semibold text-base text-gray-900 line-clamp-1">{item.title}</h4>
@@ -467,10 +573,30 @@ export const AndroidCarousel: React.FC<{
                     key={actionIndex} 
                     className="flex w-full items-center px-4 py-3 text-blue-600 hover:bg-blue-50"
                   >
-                    {action.type === "text" && <span className="mr-2">💬</span>}
-                    {action.type === "url" && <span className="mr-2">🔗</span>}
-                    {action.type === "phone" && <span className="mr-2">📞</span>}
-                    {action.type === "calendar" && <span className="mr-2">🗓️</span>}
+                    {action.type === "text" && <span className="flex-shrink-0 mr-2 text-blue-500">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.663 3.04094 17.0829 4.73232 18.9121L2.45 21.4424C2.25115 21.6619 2.29644 22 2.56299 22H12Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                      </svg>
+                    </span>}
+                    {action.type === "url" && <span className="flex-shrink-0 mr-2 text-blue-500">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 13.5C10.8284 14.3284 12.1716 14.3284 13 13.5L17.5 9C18.3284 8.17157 18.3284 6.82843 17.5 6C16.6716 5.17157 15.3284 5.17157 14.5 6L13 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M14 10.5C13.1716 9.67157 11.8284 9.67157 11 10.5L6.5 15C5.67157 15.8284 5.67157 17.1716 6.5 18C7.32843 18.8284 8.67157 18.8284 9.5 18L11 16.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </span>}
+                    {action.type === "phone" && <span className="flex-shrink-0 mr-2 text-blue-500">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 2C15 2 18 2 18 5V19C18 19 18 22 15 22H9C9 22 6 22 6 19V5C6 5 6 2 9 2H15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 18.5H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </span>}
+                    {action.type === "calendar" && <span className="flex-shrink-0 mr-2 text-blue-500">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 7V3M16 7V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M21 13V8C21 6.89543 20.1046 6 19 6H5C3.89543 6 3 6.89543 3 8V19C3 20.1046 3.89543 21 5 21H12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M8 16H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </span>}
                     <span className="font-medium">{action.text}</span>
                   </button>
                 ))}
@@ -502,13 +628,17 @@ export const IOSCarousel: React.FC<{
   // If no items, return nothing
   if (!items || items.length === 0) return null;
 
-  // Calculate image height based on mediaHeight
-  const getImageHeight = () => {
+  // For iOS carousels, we'll match the specifications while adapting to iOS design principles
+  // We'll use the medium width from Android (232 DP) which translates well for iOS
+  const cardWidth = "w-56"; // Slightly narrower than Android to match iOS style
+  
+  // Determine height based on mediaHeight setting
+  const getIOSCarouselHeight = () => {
     switch (mediaHeight) {
-      case "short": return "h-24"; // iOS uses slightly smaller sizes
-      case "medium": return "h-36";
-      case "tall": return "h-52";
-      default: return "h-36";
+      case "short": return "h-32"; // iOS uses slightly smaller sizes
+      case "medium": return "h-48";
+      case "tall": return "h-64";
+      default: return "h-48";
     }
   };
 
@@ -518,45 +648,69 @@ export const IOSCarousel: React.FC<{
         {items.map((item, index) => {
           // In iOS, only text actions show directly on the card
           const textActions = item.actions.filter(a => a.type === "text");
+          const otherActions = item.actions.filter(a => a.type !== "text");
+          const hasMultipleOtherActions = otherActions.length > 1;
           
           return (
             <div 
               key={index} 
-              className="flex-shrink-0 w-60 snap-start"
+              className={`flex-shrink-0 ${cardWidth} snap-start`}
             >
-              <div className="bg-gray-200 rounded-2xl overflow-hidden">
-                {item.imageUrl && (
-                  <img 
-                    src={item.imageUrl} 
-                    alt={`Carousel item ${index + 1}`} 
-                    className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
-                  />
-                )}
-                <div className="p-3">
-                  <h4 className="font-medium text-base text-black line-clamp-1">{item.title}</h4>
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">{item.description}</p>
-                </div>
-              </div>
-
-              {/* Text Actions */}
-              {textActions.length > 0 && (
-                <div className="mt-2 flex flex-col gap-2">
-                  {textActions.slice(0, 1).map((action, actionIndex) => (
-                    <button 
-                      key={actionIndex} 
-                      className="bg-gray-200 text-blue-500 px-4 py-2 rounded-2xl text-sm font-medium"
-                    >
-                      {action.text}
-                    </button>
-                  ))}
-                </div>
+              {/* Image is displayed separately and above text in iOS */}
+              {item.imageUrl && (
+                <img 
+                  src={item.imageUrl} 
+                  alt={`Carousel item ${index + 1}`} 
+                  className={`w-full rounded-2xl ${getIOSCarouselHeight()} ${lockAspectRatio ? 'object-cover' : 'object-contain'} mb-2 bg-white`} 
+                />
               )}
+              
+              {/* Text content in a rounded rectangle */}
+              <div className="bg-gray-100 rounded-3xl p-3">
+                <h4 className="font-medium text-base text-black line-clamp-1">{item.title}</h4>
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{item.description}</p>
+                
+                {/* Actions */}
+                {item.actions.length > 0 && (
+                  <div className="mt-3 pt-2 border-t border-gray-200 flex flex-wrap gap-2">
+                    {/* Text actions */}
+                    {textActions.map((action, actionIndex) => (
+                      <button 
+                        key={actionIndex} 
+                        className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                      >
+                        {action.text}
+                      </button>
+                    ))}
+                    
+                    {/* Single URL/Phone/Calendar action */}
+                    {otherActions.length === 1 && (
+                      <button 
+                        className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                      >
+                        {otherActions[0].text}
+                      </button>
+                    )}
+                    
+                    {/* Options button for multiple actions */}
+                    {hasMultipleOtherActions && (
+                      <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center">
+                        <span>Options</span>
+                        <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
-      {/* Carousel indicators */}
-      <div className="flex justify-center mt-1 space-x-1">
+      
+      {/* Carousel indicators (iOS style) */}
+      <div className="flex justify-center mt-2 space-x-1">
         {items.map((_, index) => (
           <div key={index} className={`h-1.5 rounded-full ${index === 0 ? 'w-3 bg-blue-500' : 'w-1.5 bg-gray-300'}`}></div>
         ))}
