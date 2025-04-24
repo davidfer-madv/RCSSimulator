@@ -204,7 +204,7 @@ export default function RcsFormatter() {
           
           // Handle server-side stored images with absolute paths
           if (logoUrl.startsWith('/')) {
-            logoUrl = `http://localhost:5000${logoUrl}`;
+            logoUrl = `${window.location.origin}${logoUrl}`;
           }
           
           // Set the brand logo URL
@@ -263,7 +263,7 @@ export default function RcsFormatter() {
           
           // Handle server-side stored images with absolute paths
           if (logoUrl.startsWith('/')) {
-            logoUrl = `http://localhost:5000${logoUrl}`;
+            logoUrl = `${window.location.origin}${logoUrl}`;
           }
           
           // Set the brand logo URL
@@ -765,7 +765,7 @@ export default function RcsFormatter() {
                               
                               // Handle server-side stored images with absolute paths
                               if (logoUrl.startsWith('/')) {
-                                logoUrl = `http://localhost:5000${logoUrl}`;
+                                logoUrl = `${window.location.origin}${logoUrl}`;
                               }
                               
                               // Set the brand logo URL
@@ -791,7 +791,7 @@ export default function RcsFormatter() {
                                     <div className="w-5 h-5 mr-2">
                                       <img 
                                         src={customer.brandLogoUrl && customer.brandLogoUrl.startsWith('/') 
-                                          ? `http://localhost:5000${customer.brandLogoUrl}` 
+                                          ? `${window.location.origin}${customer.brandLogoUrl}` 
                                           : customer.brandLogoUrl} 
                                         alt={`${customer.name} logo`}
                                         className="w-full h-full object-contain"
