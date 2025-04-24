@@ -97,6 +97,28 @@ export default function RcsFormatter() {
   // Local state not stored in context
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   const [exporting, setExporting] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  
+  // Add click outside handler for export menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Close export menu when clicking outside
+      if (exportMenuOpen) {
+        const target = event.target as HTMLElement;
+        const exportButton = document.querySelector('[data-export-menu-button]');
+        const exportMenu = document.querySelector('[data-export-menu]');
+        
+        if (!exportButton?.contains(target) && !exportMenu?.contains(target)) {
+          setExportMenuOpen(false);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [exportMenuOpen]);
   
   // Fetch campaign data if we're in edit mode
   const { data: campaign, isLoading: isLoadingCampaign } = useQuery<Campaign>({
@@ -372,7 +394,7 @@ export default function RcsFormatter() {
   });
 
   // Export format
-  const handleExport = async (exportType: 'json' | 'image' | 'both' = 'json') => {
+  const handleExport = async (exportType: 'json' | 'image' | 'both' | 'device-image' | 'raw-image' = 'json', platform: 'android' | 'ios' | 'both' = 'android') => {
     if (selectedImages.length === 0) {
       toast({
         title: "No images selected",
@@ -408,12 +430,14 @@ export default function RcsFormatter() {
           campaignName: campaignName || title || "Untitled Campaign" // Include campaign name
         },
         exportType,
-        activePlatform
+        platform
       );
       
       const exportTypeText = 
         exportType === 'json' ? 'JSON configuration' : 
         exportType === 'image' ? 'preview image' : 
+        exportType === 'device-image' ? 'device preview image' :
+        exportType === 'raw-image' ? 'reformatted image' :
         'JSON configuration and preview image';
       
       toast({
@@ -582,14 +606,114 @@ export default function RcsFormatter() {
                       <Download className="mr-2 h-4 w-4" />
                       Export JSON
                     </Button>
-                    <Button 
-                      onClick={() => handleExport('image')}
-                      disabled={saveFormatMutation.isPending || exporting}
-                      variant="outline"
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Export Image
-                    </Button>
+                    
+                    {/* Export Image Dropdown */}
+                    <div className="relative inline-block">
+                      <Button 
+                        onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                        disabled={saveFormatMutation.isPending || exporting}
+                        variant="outline"
+                        className="relative"
+                        data-export-menu-button
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Export Image
+                      </Button>
+                      
+                      {exportMenuOpen && (
+                        <div className="absolute right-0 z-50 mt-2 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" 
+                             role="menu" aria-orientation="vertical"
+                             data-export-menu>
+                          <div className="py-1" role="none">
+                            {/* Device Image Export */}
+                            <div className="px-4 py-2 border-b">
+                              <h3 className="text-sm font-medium text-gray-900">Export Device Image</h3>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Export full device preview with message bubble, rich card, etc.
+                              </p>
+                              <div className="flex mt-2 space-x-2">
+                                <Button
+                                  onClick={() => {
+                                    handleExport('device-image', 'android');
+                                    setExportMenuOpen(false);
+                                  }}
+                                  disabled={saveFormatMutation.isPending || exporting}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="text-xs"
+                                >
+                                  Android
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    handleExport('device-image', 'ios');
+                                    setExportMenuOpen(false);
+                                  }}
+                                  disabled={saveFormatMutation.isPending || exporting}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="text-xs"
+                                >
+                                  iOS
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    handleExport('device-image', 'both');
+                                    setExportMenuOpen(false);
+                                  }}
+                                  disabled={saveFormatMutation.isPending || exporting}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="text-xs"
+                                >
+                                  Both
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            {/* Raw Image Export */}
+                            <div className="px-4 py-2">
+                              <h3 className="text-sm font-medium text-gray-900">Export Reformatted Image</h3>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Export just the processed image for use in real RCS campaigns
+                              </p>
+                              <div className="flex items-center mt-2 space-x-2">
+                                <Button
+                                  onClick={() => {
+                                    const formatEl = document.getElementById('raw-image-format');
+                                    if (formatEl) formatEl.setAttribute('data-format', 'jpeg');
+                                    handleExport('raw-image');
+                                    setExportMenuOpen(false);
+                                  }}
+                                  disabled={saveFormatMutation.isPending || exporting}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="text-xs"
+                                >
+                                  JPEG
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    const formatEl = document.getElementById('raw-image-format');
+                                    if (formatEl) formatEl.setAttribute('data-format', 'png');
+                                    handleExport('raw-image');
+                                    setExportMenuOpen(false);
+                                  }}
+                                  disabled={saveFormatMutation.isPending || exporting}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="text-xs"
+                                >
+                                  PNG
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {/* Hidden element to store the raw image format */}
+                      <div id="raw-image-format" data-format="png" className="hidden"></div>
+                    </div>
                   </div>
                 </div>
               </div>
