@@ -43,36 +43,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 
 export default function RcsFormatter() {
-  const { user, isLoading } = useAuth();
+  // Auth states must be declared first
+  const { user, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isLoading && !user) {
-      setLocation("/auth");
-    }
-  }, [user, isLoading, setLocation]);
-
-  // Show loading while checking auth
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-border" />
-      </div>
-    );
-  }
-
-  // Only render content if user is authenticated
-  if (!user) return null;
+  const params = useParams();
+  const campaignId = params.campaignId;
   const { toast } = useToast();
   const { state, updateState, resetState } = useRcsFormatter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const params = useParams();
-  const campaignId = params?.campaignId;
   
-  // Get all the state values from context - we'll use them directly
-  
-  // Local state variables with their setters
+  // Local state variables
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedImages, setSelectedImages] = useState<File[]>(state.selectedImages || []);
   const [title, setTitle] = useState(state.title || "");
   const [description, setDescription] = useState(state.description || "");
@@ -84,7 +64,187 @@ export default function RcsFormatter() {
   const [verificationSymbol, setVerificationSymbol] = useState(state.verificationSymbol !== undefined ? state.verificationSymbol : true);
   const [actions, setActions] = useState<Action[]>(state.actions || []);
   const [selectedCustomerId, setSelectedCustomerId] = useState(state.selectedCustomerId || "");
+  const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
+  const [exporting, setExporting] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [processingStage, setProcessingStage] = useState<ProcessingStage | undefined>(undefined);
+  const [processingProgress, setProcessingProgress] = useState<number>(0);
+  const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
+  const [campaignName, setCampaignName] = useState("");
+  const [isActiveCampaign, setIsActiveCampaign] = useState(false);
+  const [targetPhoneNumbers, setTargetPhoneNumbers] = useState("");
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>();
+  const [formatData, setFormatData] = useState<any>({});
+
+  // API data fetching
+  const { data: campaign, isLoading: isLoadingCampaign } = useQuery<Campaign>({
+    queryKey: ["/api/campaigns", campaignId],
+    queryFn: async () => {
+      const res = await fetch(`/api/campaigns/${campaignId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch campaign");
+      return res.json();
+    },
+    enabled: !!campaignId && !!user,
+  });
   
+  const { data: campaignFormats = [], isLoading: isLoadingFormats } = useQuery<RcsFormat[]>({
+    queryKey: ["/api/campaign", campaignId, "formats"],
+    queryFn: async () => {
+      const res = await fetch(`/api/campaign/${campaignId}/formats`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch campaign formats");
+      return res.json();
+    },
+    enabled: !!campaignId && !!user,
+  });
+  
+  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<Customer[]>({
+    queryKey: ["/api/customers"],
+    queryFn: async ({ queryKey }) => {
+      try {
+        const res = await fetch(queryKey[0] as string, {
+          credentials: "include",
+        });
+        
+        if (res.status === 401) {
+          return []; // Return empty array on unauthorized
+        }
+        
+        if (!res.ok) {
+          throw new Error(res.statusText);
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+        return []; // Return empty array on any error
+      }
+    },
+    enabled: !!user,
+  });
+
+  // Save RCS format mutation
+  const saveFormatMutation = useMutation({
+    mutationFn: async (campaignFormatData: Record<string, any> = {}) => {
+      // Create FormData for file upload
+      const formData = new FormData();
+      
+      // Append each image
+      selectedImages.forEach((file, index) => {
+        formData.append('images', file);
+      });
+      
+      // Find selected brand information
+      const selectedBrand = customers?.find(c => c.id.toString() === selectedCustomerId);
+      
+      // Handle brand logo - if it's a blob URL, we need to upload it with the images
+      let finalBrandLogoUrl = brandLogoUrl;
+      if (brandLogoUrl && brandLogoUrl.startsWith('blob:')) {
+        // For blob URLs, we need to retrieve the actual file from the browser
+        try {
+          const response = await fetch(brandLogoUrl);
+          const blob = await response.blob();
+          const brandLogoFile = new File([blob], 'brand_logo.jpg', { type: blob.type });
+          formData.append('brandLogo', brandLogoFile);
+          finalBrandLogoUrl = 'PENDING_UPLOAD'; // Will be replaced by the server
+        } catch (error) {
+          console.error('Error retrieving brand logo blob:', error);
+          // Fall back to the actual URL or empty string
+          finalBrandLogoUrl = selectedBrand?.brandLogoUrl || '';
+        }
+      } else if (selectedBrand?.brandLogoUrl && !brandLogoUrl) {
+        // If no logo is set but the brand has one, use the brand's logo
+        finalBrandLogoUrl = selectedBrand.brandLogoUrl;
+      }
+      
+      // In case we have issues with file upload, also include the processedImageUrls as a backup
+      const newFormatData = {
+        formatType,
+        cardOrientation,
+        mediaHeight,
+        lockAspectRatio,
+        brandLogoUrl: finalBrandLogoUrl,
+        verificationSymbol,
+        title,
+        description,
+        actions,
+        customerId: selectedCustomerId || null,
+        campaignId: campaignId ? parseInt(campaignId) : null, // Use the campaign ID from the URL if available
+        brandName: selectedBrand?.name || "Business Name", // Store brand name
+        campaignName: campaignName || title || "Untitled Campaign", // Use campaign name from dialog
+        processedImageUrls: state.processedImageUrls, // Include the already processed image URLs as backup
+        imageUrls: state.processedImageUrls, // Also include directly to help with validation requirements
+        // Add campaign activation data if provided
+        ...(campaignFormatData as object)
+      };
+      
+      // Update the formatData state
+      setFormatData(newFormatData);
+      
+      formData.append('formatData', JSON.stringify(newFormatData));
+      
+      // Log the data being sent to help with debugging
+      console.log("Saving RCS format with data:", newFormatData);
+      
+      // Make API request
+      const res = await fetch('/api/rcs-formats', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        const errorText = errorData ? JSON.stringify(errorData) : await res.text();
+        throw new Error(errorText || res.statusText);
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: campaignId ? "Format updated successfully" : "Format saved successfully",
+        description: campaignId 
+          ? "Your RCS format has been updated."
+          : "Your RCS format has been saved.",
+      });
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["/api/rcs-formats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
+      
+      // If we're editing a campaign, also invalidate the campaign formats query
+      if (campaignId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/campaign", campaignId, "formats"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to save format",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Helper functions
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Effects
+  
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setLocation("/auth");
+    }
+  }, [user, authLoading, setLocation]);
+
   // Update context when local state changes
   useEffect(() => {
     // When updating images, also update the processed URLs
@@ -114,15 +274,148 @@ export default function RcsFormatter() {
     brandLogoUrl, 
     verificationSymbol, 
     actions, 
-    selectedCustomerId
+    selectedCustomerId,
+    updateState
   ]);
+
+  // Add click outside handler for export menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Close export menu when clicking outside
+      if (exportMenuOpen) {
+        const target = event.target as HTMLElement;
+        const exportButton = document.querySelector('[data-export-menu-button]');
+        const exportMenu = document.querySelector('[data-export-menu]');
+        
+        if (!exportButton?.contains(target) && !exportMenu?.contains(target)) {
+          setExportMenuOpen(false);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [exportMenuOpen]);
+
+  // Set brand logo URL from selected brand
+  useEffect(() => {
+    if (selectedCustomerId && customers) {
+      const brand = customers.find(c => c.id.toString() === selectedCustomerId);
+      if (brand && brand.brandLogoUrl) {
+        try {
+          // Update the brand logo URL - making sure it's properly prefixed for server-stored images
+          let logoUrl = brand.brandLogoUrl;
+          
+          // Handle server-side stored images with absolute paths
+          if (logoUrl.startsWith('/')) {
+            logoUrl = `${window.location.origin}${logoUrl}`;
+          }
+          
+          // Set the brand logo URL
+          setBrandLogoUrl(logoUrl);
+          console.log("Set brand logo URL from useEffect:", logoUrl);
+        } catch (error) {
+          console.error("Error loading brand logo from useEffect:", brand.brandLogoUrl);
+        }
+      }
+    }
+  }, [selectedCustomerId, customers]);
   
-  // Local state not stored in context
-  const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
-  const [exporting, setExporting] = useState(false);
-  const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  const [processingStage, setProcessingStage] = useState<ProcessingStage | undefined>(undefined);
-  const [processingProgress, setProcessingProgress] = useState<number>(0);
+  // Load campaign data when in edit mode
+  useEffect(() => {
+    if (campaign && campaignFormats?.length > 0) {
+      // We have campaign data and at least one format, use the first format to populate the form
+      const format = campaignFormats[0];
+      
+      // Set campaign name
+      setCampaignName(campaign.name);
+      
+      // Set form fields from format
+      if (format.title) setTitle(format.title);
+      if (format.description) setDescription(format.description);
+      if (format.formatType) setFormatType(format.formatType as "richCard" | "carousel");
+      if (format.cardOrientation) setCardOrientation(format.cardOrientation as "vertical" | "horizontal");
+      if (format.mediaHeight) setMediaHeight(format.mediaHeight as "short" | "medium" | "tall");
+      if (format.lockAspectRatio !== null) setLockAspectRatio(!!format.lockAspectRatio);
+      if (format.verificationSymbol !== null) setVerificationSymbol(!!format.verificationSymbol);
+      
+      // Set selected customer ID if available
+      if (campaign.customerId) {
+        setSelectedCustomerId(campaign.customerId.toString());
+      }
+      
+      // Set actions if available
+      if (format.actions) {
+        try {
+          const parsedActions = Array.isArray(format.actions) 
+            ? format.actions 
+            : (typeof format.actions === 'string' ? JSON.parse(format.actions) : []);
+          setActions(parsedActions);
+        } catch (e) {
+          console.error("Error parsing actions:", e);
+        }
+      }
+      
+      // Handle brand logo URL
+      if (format.brandLogoUrl) {
+        try {
+          // Make sure to properly format the URL for server-stored images
+          let logoUrl = format.brandLogoUrl;
+          
+          // Handle server-side stored images with absolute paths
+          if (logoUrl.startsWith('/')) {
+            logoUrl = `${window.location.origin}${logoUrl}`;
+          }
+          
+          // Set the brand logo URL
+          setBrandLogoUrl(logoUrl);
+          console.log("Set brand logo URL from campaign format:", logoUrl);
+        } catch (error) {
+          console.error("Error loading brand logo from campaign format:", format.brandLogoUrl);
+        }
+      }
+      
+      // Set campaign activation settings
+      if (campaign.isActive) {
+        setIsActiveCampaign(true);
+        
+        // Set target phone numbers if available
+        if (campaign.targetPhoneNumbers) {
+          try {
+            const phoneNumbers = Array.isArray(campaign.targetPhoneNumbers) 
+              ? campaign.targetPhoneNumbers
+              : (typeof campaign.targetPhoneNumbers === 'string' ? JSON.parse(campaign.targetPhoneNumbers) : []);
+              
+            setTargetPhoneNumbers(phoneNumbers.join(', '));
+          } catch (e) {
+            console.error("Error parsing target phone numbers:", e);
+          }
+        }
+        
+        // Set scheduled date if available
+        if (campaign.scheduledDate) {
+          setScheduledDate(new Date(campaign.scheduledDate));
+        }
+      }
+      
+      // Set page title to indicate edit mode
+      document.title = `Edit Campaign: ${campaign.name}`;
+    }
+  }, [campaign, campaignFormats]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
+  }
+
+  // Only render content if user is authenticated
+  if (!user) return null;
   
   // Add click outside handler for export menu
   useEffect(() => {

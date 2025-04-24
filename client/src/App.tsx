@@ -5,7 +5,7 @@ import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import SimpleRegister from "@/pages/simple-register";
-import RcsFormatter from "@/pages/rcs-formatter";
+import RcsFormatter from "@/pages/rcs-formatter-new";
 import Campaigns from "@/pages/campaigns";
 import Customers from "@/pages/customers";
 import SettingsPage from "@/pages/settings";
