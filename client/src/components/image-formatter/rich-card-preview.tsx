@@ -42,7 +42,7 @@ export function RichCardPreview({
           <div className="flex">
             {imageUrl && (
               <img 
-                src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
+                src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `${window.location.origin}${imageUrl}` : imageUrl} 
                 alt="Content" 
                 className={`w-1/2 ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
               />
@@ -56,7 +56,7 @@ export function RichCardPreview({
           <>
             {imageUrl && (
               <img 
-                src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
+                src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `${window.location.origin}${imageUrl}` : imageUrl} 
                 alt="Content" 
                 className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
               />
@@ -94,7 +94,7 @@ export function RichCardPreview({
             <div className="flex bg-gray-200 rounded-t-2xl p-3">
               {imageUrl && (
                 <img 
-                  src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
+                  src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `${window.location.origin}${imageUrl}` : imageUrl} 
                   alt="Content" 
                   className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-gray-100`} 
                 />
@@ -168,7 +168,7 @@ export function RichCardPreview({
           <>
             {imageUrl && (
               <img 
-                src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `http://localhost:5000${imageUrl}` : imageUrl} 
+                src={typeof imageUrl === 'string' && imageUrl.startsWith('/') ? `${window.location.origin}${imageUrl}` : imageUrl} 
                 alt="Content" 
                 className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} rounded-lg mb-1 bg-gray-100`} 
               />

@@ -109,7 +109,7 @@ export function PreviewContainerFigma({
                 {brandLogoUrl ? (
                   <div className="h-8 w-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200">
                     <img 
-                      src={brandLogoUrl.startsWith('/') ? `http://localhost:5000${brandLogoUrl}` : brandLogoUrl} 
+                      src={brandLogoUrl.startsWith('/') ? `${window.location.origin}${brandLogoUrl}` : brandLogoUrl} 
                       alt="Brand logo" 
                       className="h-full w-full object-contain"
                       onError={(e) => {
@@ -169,7 +169,7 @@ export function PreviewContainerFigma({
                     {cardOrientation === "horizontal" ? (
                       <div className="flex">
                         <img 
-                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `http://localhost:5000${previewImage}` : previewImage} 
+                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `${window.location.origin}${previewImage}` : previewImage} 
                           alt="Product" 
                           className={`w-1/2 ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                         />
@@ -181,7 +181,7 @@ export function PreviewContainerFigma({
                     ) : (
                       <>
                         <img 
-                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `http://localhost:5000${previewImage}` : previewImage} 
+                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `${window.location.origin}${previewImage}` : previewImage} 
                           alt="Product" 
                           className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                         />
@@ -214,7 +214,7 @@ export function PreviewContainerFigma({
                       <div className="flex flex-col">
                         <div className="flex bg-gray-200 rounded-t-2xl p-3">
                           <img 
-                            src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `http://localhost:5000${previewImage}` : previewImage} 
+                            src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `${window.location.origin}${previewImage}` : previewImage} 
                             alt="Product" 
                             className={`w-1/2 rounded-lg ${getImageHeight().replace('h-', 'max-h-')} ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                           />
@@ -286,7 +286,7 @@ export function PreviewContainerFigma({
                     ) : (
                       <>
                         <img 
-                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `http://localhost:5000${previewImage}` : previewImage} 
+                          src={typeof previewImage === 'string' && previewImage.startsWith('/') ? `${window.location.origin}${previewImage}` : previewImage} 
                           alt="Product" 
                           className={`w-full ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} rounded-lg mb-1`} 
                         />
