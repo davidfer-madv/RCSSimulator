@@ -747,20 +747,6 @@ export default function RcsFormatter() {
                       />
                     </TabsContent>
                   </Tabs>
-                  
-                  <div className="mt-4 text-sm text-gray-500">
-                    <p className="mb-2"><strong>RCS Format Requirements:</strong></p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>Rich Cards: Single image with vertical or horizontal layout</li>
-                      <li>Carousels: Up to 10 images with shared title and actions</li>
-                      <li>Title: Maximum 200 characters</li>
-                      <li>Description: Maximum 2000 characters (iOS may truncate to ~144 chars)</li>
-                      <li>Media Height: Short (112 DP), Medium (168 DP), Tall (264 DP)</li>
-                      <li>Image Requirements: Max 1500x1000 pixels, under 1.8MB, JPEG/PNG only</li>
-                      <li>Actions: Maximum 4 actions (URL links, phone numbers, or calendar events)</li>
-                      <li>iOS Compatibility: No GIF support, JPEG recommended</li>
-                    </ul>
-                  </div>
                 </div>
               </div>
             </div>
