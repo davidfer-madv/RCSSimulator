@@ -396,15 +396,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
-          // Create a new campaign
-          const campaign = await storage.createCampaign({
+          // Create a new campaign with active/scheduled settings
+          const campaignData: any = {
             name: formatData.campaignName,
             userId: req.user!.id,
             formatType: formatData.formatType,
             customerId: customerId,
-            status: 'active',
             description: formatData.description || null,
-          });
+          };
+
+          // Set active campaign status if specified
+          if (formatData.isActive) {
+            campaignData.isActive = true;
+            
+            // If there are target phone numbers, store them
+            if (formatData.targetPhoneNumbers && Array.isArray(formatData.targetPhoneNumbers)) {
+              campaignData.targetPhoneNumbers = formatData.targetPhoneNumbers;
+            }
+            
+            // Handle scheduled date
+            if (formatData.scheduledDate) {
+              campaignData.scheduledDate = new Date(formatData.scheduledDate);
+              campaignData.status = 'scheduled';
+            } else {
+              campaignData.status = 'active';
+              campaignData.activatedAt = new Date();
+            }
+          } else {
+            campaignData.status = 'draft';
+            campaignData.isActive = false;
+          }
+          
+          const campaign = await storage.createCampaign(campaignData);
           
           console.log("Created new campaign:", campaign);
           campaignId = campaign.id;

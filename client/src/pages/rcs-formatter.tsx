@@ -10,7 +10,7 @@ import { Action, Customer, Campaign, RcsFormat } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Download, RotateCcw, Save } from "lucide-react";
+import { Download, RotateCcw, Save, CalendarIcon } from "lucide-react";
 import { processImages } from "@/lib/image-processing";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +32,11 @@ import {
 import { useParams } from "wouter";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 
 export default function RcsFormatter() {
   const { user } = useAuth();
@@ -167,6 +172,29 @@ export default function RcsFormatter() {
         setBrandLogoUrl(logoUrl);
       }
       
+      // Set campaign activation settings
+      if (campaign.isActive) {
+        setIsActiveCampaign(true);
+        
+        // Set target phone numbers if available
+        if (campaign.targetPhoneNumbers) {
+          try {
+            const phoneNumbers = Array.isArray(campaign.targetPhoneNumbers) 
+              ? campaign.targetPhoneNumbers
+              : (typeof campaign.targetPhoneNumbers === 'string' ? JSON.parse(campaign.targetPhoneNumbers) : []);
+              
+            setTargetPhoneNumbers(phoneNumbers.join(', '));
+          } catch (e) {
+            console.error("Error parsing target phone numbers:", e);
+          }
+        }
+        
+        // Set scheduled date if available
+        if (campaign.scheduledDate) {
+          setScheduledDate(new Date(campaign.scheduledDate));
+        }
+      }
+      
       // Fetch images from imageUrls if available - this is a bit tricky since we need to load files
       // Could add image preview from saved URLs as a future enhancement
       
@@ -185,7 +213,7 @@ export default function RcsFormatter() {
 
   // Save RCS format mutation
   const saveFormatMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (campaignFormatData = {}) => {
       // Create FormData for file upload
       const formData = new FormData();
       
@@ -218,7 +246,7 @@ export default function RcsFormatter() {
       }
       
       // In case we have issues with file upload, also include the processedImageUrls as a backup
-      const formatData = {
+      const newFormatData = {
         formatType,
         cardOrientation,
         mediaHeight,
@@ -234,12 +262,17 @@ export default function RcsFormatter() {
         campaignName: campaignName || title || "Untitled Campaign", // Use campaign name from dialog
         processedImageUrls, // Include the already processed image URLs as backup
         imageUrls: processedImageUrls, // Also include directly to help with validation requirements
+        // Add campaign activation data if provided
+        ...campaignFormatData
       };
       
-      formData.append('formatData', JSON.stringify(formatData));
+      // Update the formatData state
+      setFormatData(newFormatData);
+      
+      formData.append('formatData', JSON.stringify(newFormatData));
       
       // Log the data being sent to help with debugging
-      console.log("Saving RCS format with data:", formatData);
+      console.log("Saving RCS format with data:", newFormatData);
       
       // Make API request
       const res = await fetch('/api/rcs-formats', {
@@ -366,6 +399,9 @@ export default function RcsFormatter() {
   // State for campaign dialog
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
   const [campaignName, setCampaignName] = useState("");
+  const [isActiveCampaign, setIsActiveCampaign] = useState(false);
+  const [targetPhoneNumbers, setTargetPhoneNumbers] = useState("");
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>();
   
   // Handle save
   const handleSave = () => {
@@ -389,10 +425,35 @@ export default function RcsFormatter() {
     }
   };
   
+  // Create a shared formatData state to use in save and campaign confirmation
+  const [formatData, setFormatData] = useState<any>({});
+  
   // Handle campaign name confirmation
   const handleCampaignNameConfirm = () => {
     setIsCampaignDialogOpen(false);
-    saveFormatMutation.mutate();
+    
+    // Create a copy of the current formatData
+    const updatedFormatData = {...formatData};
+    
+    // Update format data with campaign activation settings
+    if (isActiveCampaign) {
+      updatedFormatData.isActive = true;
+      updatedFormatData.targetPhoneNumbers = targetPhoneNumbers.split(',').map(num => num.trim());
+      
+      if (scheduledDate) {
+        updatedFormatData.scheduledDate = scheduledDate;
+        updatedFormatData.status = "scheduled";
+      } else {
+        updatedFormatData.status = "active";
+        updatedFormatData.activatedAt = new Date();
+      }
+    }
+    
+    // Update the formatData state
+    setFormatData(updatedFormatData);
+    
+    // Call the save mutation
+    saveFormatMutation.mutate(updatedFormatData);
   };
 
   return (
@@ -642,6 +703,70 @@ export default function RcsFormatter() {
                 className="col-span-3"
               />
             </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">
+                Active Campaign
+              </Label>
+              <div className="col-span-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="active-campaign" 
+                    checked={isActiveCampaign}
+                    onCheckedChange={(checked) => {
+                      setIsActiveCampaign(checked === true);
+                    }}
+                  />
+                  <Label htmlFor="active-campaign" className="font-normal">
+                    Activate this campaign for RCS messaging
+                  </Label>
+                </div>
+              </div>
+            </div>
+            
+            {isActiveCampaign && (
+              <>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="target-numbers" className="text-right pt-2">
+                    Target Numbers
+                  </Label>
+                  <Textarea
+                    id="target-numbers"
+                    value={targetPhoneNumbers}
+                    onChange={(e) => setTargetPhoneNumbers(e.target.value)}
+                    placeholder="Enter phone numbers separated by commas"
+                    className="col-span-3 h-24"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="scheduled-date" className="text-right">
+                    Schedule Date
+                  </Label>
+                  <div className="col-span-3">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {scheduledDate ? format(scheduledDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={scheduledDate}
+                          onSelect={setScheduledDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button 
