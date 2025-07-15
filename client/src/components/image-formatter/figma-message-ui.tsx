@@ -396,11 +396,21 @@ export const IOSRichCard: React.FC<{
     }
   };
 
-  // In iOS, only text actions show directly on the card
-  // Other actions are hidden under an "Options" button if there's more than one action
+  // iOS action display rules:
+  // 1. If there's only one URL action, show its text directly
+  // 2. If there are multiple URL actions, show "Options" button with dropdown
+  // 3. Text actions show as individual buttons (like Android)
   const textActions = actions.filter(a => a.type === "text");
-  const otherActions = actions.filter(a => a.type !== "text");
-  const showOptionsButton = otherActions.length > 1;
+  const urlActions = actions.filter(a => a.type === "url");
+  const otherActions = actions.filter(a => a.type !== "text" && a.type !== "url");
+  
+  // For URL actions: single URL shows directly, multiple URLs show as "Options"
+  const showSingleUrlButton = urlActions.length === 1;
+  const showUrlOptionsButton = urlActions.length > 1;
+  
+  // For other actions (phone, calendar): single shows directly, multiple show as "Options"
+  const showSingleOtherButton = otherActions.length === 1;
+  const showOtherOptionsButton = otherActions.length > 1;
 
   return (
     <div className="max-w-[85%]">
@@ -426,18 +436,56 @@ export const IOSRichCard: React.FC<{
           {actions.length > 0 && (
             <div className="bg-gray-100 rounded-b-3xl px-3 pb-3 pt-0.5">
               <div className="flex flex-wrap gap-2">
-                {/* Text actions */}
+                {/* Text actions - always show individually */}
                 {textActions.map((action, index) => (
                   <button 
-                    key={index} 
+                    key={`text-${index}`} 
                     className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
                   >
                     {action.text}
                   </button>
                 ))}
                 
-                {/* Single URL/Phone/Calendar action */}
-                {otherActions.length === 1 && (
+                {/* Single URL action - show directly */}
+                {showSingleUrlButton && (
+                  <button 
+                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                  >
+                    {urlActions[0].text}
+                  </button>
+                )}
+                
+                {/* Multiple URL actions - show Options button */}
+                {showUrlOptionsButton && (
+                  <div className="relative">
+                    <button 
+                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center options-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const dropdown = e.currentTarget.nextElementSibling;
+                        dropdown?.classList.toggle('hidden');
+                      }}
+                    >
+                      <span>Options</span>
+                      <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <div className="options-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                      {urlActions.map((action, index) => (
+                        <button 
+                          key={`url-${index}`}
+                          className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
+                        >
+                          {action.text}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Single other action (phone, calendar) - show directly */}
+                {showSingleOtherButton && (
                   <button 
                     className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
                   >
@@ -445,14 +493,33 @@ export const IOSRichCard: React.FC<{
                   </button>
                 )}
                 
-                {/* Options button for multiple actions */}
-                {showOptionsButton && (
-                  <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center">
-                    <span>Options</span>
-                    <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                {/* Multiple other actions - show Options button */}
+                {showOtherOptionsButton && (
+                  <div className="relative">
+                    <button 
+                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center options-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const dropdown = e.currentTarget.nextElementSibling;
+                        dropdown?.classList.toggle('hidden');
+                      }}
+                    >
+                      <span>Options</span>
+                      <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <div className="options-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                      {otherActions.map((action, index) => (
+                        <button 
+                          key={`other-${index}`}
+                          className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
+                        >
+                          {action.text}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -475,18 +542,56 @@ export const IOSRichCard: React.FC<{
             {/* Actions for vertical layout */}
             {actions.length > 0 && (
               <div className="mt-3 pt-2 border-t border-gray-200 flex flex-wrap gap-2">
-                {/* Text actions */}
+                {/* Text actions - always show individually */}
                 {textActions.map((action, index) => (
                   <button 
-                    key={index} 
+                    key={`text-${index}`} 
                     className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
                   >
                     {action.text}
                   </button>
                 ))}
                 
-                {/* Single URL/Phone/Calendar action */}
-                {otherActions.length === 1 && (
+                {/* Single URL action - show directly */}
+                {showSingleUrlButton && (
+                  <button 
+                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                  >
+                    {urlActions[0].text}
+                  </button>
+                )}
+                
+                {/* Multiple URL actions - show Options button */}
+                {showUrlOptionsButton && (
+                  <div className="relative">
+                    <button 
+                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center options-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const dropdown = e.currentTarget.nextElementSibling;
+                        dropdown?.classList.toggle('hidden');
+                      }}
+                    >
+                      <span>Options</span>
+                      <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <div className="options-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                      {urlActions.map((action, index) => (
+                        <button 
+                          key={`url-${index}`}
+                          className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
+                        >
+                          {action.text}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Single other action (phone, calendar) - show directly */}
+                {showSingleOtherButton && (
                   <button 
                     className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
                   >
@@ -494,14 +599,33 @@ export const IOSRichCard: React.FC<{
                   </button>
                 )}
                 
-                {/* Options button for multiple actions */}
-                {showOptionsButton && (
-                  <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center">
-                    <span>Options</span>
-                    <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                {/* Multiple other actions - show Options button */}
+                {showOtherOptionsButton && (
+                  <div className="relative">
+                    <button 
+                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center options-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const dropdown = e.currentTarget.nextElementSibling;
+                        dropdown?.classList.toggle('hidden');
+                      }}
+                    >
+                      <span>Options</span>
+                      <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <div className="options-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                      {otherActions.map((action, index) => (
+                        <button 
+                          key={`other-${index}`}
+                          className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
+                        >
+                          {action.text}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -646,10 +770,18 @@ export const IOSCarousel: React.FC<{
     <div className="max-w-[85%] relative mb-2">
       <div className="flex overflow-x-auto pb-2 scrollbar-hide gap-3 snap-x snap-mandatory">
         {items.map((item, index) => {
-          // In iOS, only text actions show directly on the card
+          // iOS action display rules (same as rich card)
           const textActions = item.actions.filter(a => a.type === "text");
-          const otherActions = item.actions.filter(a => a.type !== "text");
-          const hasMultipleOtherActions = otherActions.length > 1;
+          const urlActions = item.actions.filter(a => a.type === "url");
+          const otherActions = item.actions.filter(a => a.type !== "text" && a.type !== "url");
+          
+          // For URL actions: single URL shows directly, multiple URLs show as "Options"
+          const showSingleUrlButton = urlActions.length === 1;
+          const showUrlOptionsButton = urlActions.length > 1;
+          
+          // For other actions (phone, calendar): single shows directly, multiple show as "Options"
+          const showSingleOtherButton = otherActions.length === 1;
+          const showOtherOptionsButton = otherActions.length > 1;
           
           return (
             <div 
@@ -673,18 +805,56 @@ export const IOSCarousel: React.FC<{
                 {/* Actions */}
                 {item.actions.length > 0 && (
                   <div className="mt-3 pt-2 border-t border-gray-200 flex flex-wrap gap-2">
-                    {/* Text actions */}
+                    {/* Text actions - always show individually */}
                     {textActions.map((action, actionIndex) => (
                       <button 
-                        key={actionIndex} 
+                        key={`text-${actionIndex}`} 
                         className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
                       >
                         {action.text}
                       </button>
                     ))}
                     
-                    {/* Single URL/Phone/Calendar action */}
-                    {otherActions.length === 1 && (
+                    {/* Single URL action - show directly */}
+                    {showSingleUrlButton && (
+                      <button 
+                        className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
+                      >
+                        {urlActions[0].text}
+                      </button>
+                    )}
+                    
+                    {/* Multiple URL actions - show Options button */}
+                    {showUrlOptionsButton && (
+                      <div className="relative">
+                        <button 
+                          className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center options-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const dropdown = e.currentTarget.nextElementSibling;
+                            dropdown?.classList.toggle('hidden');
+                          }}
+                        >
+                          <span>Options</span>
+                          <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <div className="options-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                          {urlActions.map((action, actionIndex) => (
+                            <button 
+                              key={`url-${actionIndex}`}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
+                            >
+                              {action.text}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Single other action (phone, calendar) - show directly */}
+                    {showSingleOtherButton && (
                       <button 
                         className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
                       >
@@ -692,14 +862,33 @@ export const IOSCarousel: React.FC<{
                       </button>
                     )}
                     
-                    {/* Options button for multiple actions */}
-                    {hasMultipleOtherActions && (
-                      <button className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center">
-                        <span>Options</span>
-                        <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                    {/* Multiple other actions - show Options button */}
+                    {showOtherOptionsButton && (
+                      <div className="relative">
+                        <button 
+                          className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center options-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const dropdown = e.currentTarget.nextElementSibling;
+                            dropdown?.classList.toggle('hidden');
+                          }}
+                        >
+                          <span>Options</span>
+                          <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <div className="options-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                          {otherActions.map((action, actionIndex) => (
+                            <button 
+                              key={`other-${actionIndex}`}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
+                            >
+                              {action.text}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}
