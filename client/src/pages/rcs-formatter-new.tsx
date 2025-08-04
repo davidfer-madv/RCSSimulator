@@ -10,21 +10,6 @@ import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
 import { EnhancedPreviewContainer } from "@/components/image-formatter/enhanced-preview-container";
-import { RcsDevicePreview } from "@/components/rcs-device-preview";
-import { 
-  AndroidStatusBar, 
-  AndroidHeader, 
-  AndroidMessageBubble, 
-  AndroidInputBar, 
-  AndroidRichCard,
-  iOSStatusBar, 
-  iOSHeader, 
-  iOSMessageBubble, 
-  iOSInputBar 
-} from "@/components/image-formatter/figma-message-ui";
-import { RcsExportEnhanced } from "@/components/rcs-export-enhanced";
-import { RcsComplianceChecker } from "@/components/rcs-compliance-checker";
-import { DragDropCards } from "@/components/drag-drop-cards";
 import { Action, Customer, Campaign, RcsFormat } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -89,14 +74,6 @@ export default function RcsFormatter() {
   const [isActiveCampaign, setIsActiveCampaign] = useState(false);
   const [targetPhoneNumbers, setTargetPhoneNumbers] = useState("");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>();
-
-  // Helper function to safely extract action payload
-  const getActionPayload = (action: Action): string => {
-    if ('value' in action && action.value) {
-      return action.value;
-    }
-    return action.text;
-  };
   const [formatData, setFormatData] = useState<any>({});
 
   // API data fetching
@@ -731,174 +708,52 @@ export default function RcsFormatter() {
                     />
                   </CardContent>
                 </Card>
-
-                {/* Carousel Card Management */}
-                {formatType === "carousel" && (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <DragDropCards
-                        cards={selectedImages.map((_, index) => ({
-                          id: `card-${index}`,
-                          title: `${title} ${index + 1}` || `Card ${index + 1}`,
-                          description: index === 0 ? description || "" : "",
-                          imageUrl: state.processedImageUrls?.[index],
-                          actions: actions.map(action => ({
-                            text: action.text,
-                            type: action.type as "url" | "phone" | "postback",
-                            payload: getActionPayload(action)
-                          }))
-                        }))}
-                        onCardsChange={(cards) => {
-                          // Update the order of selected images based on card reordering
-                          const reorderedImages = cards.map((card) => {
-                            const index = parseInt(card.id.split('-')[1]);
-                            return selectedImages[index];
-                          }).filter(Boolean);
-                          setSelectedImages(reorderedImages);
-                          
-                          // Update processed image URLs if they exist
-                          if (state.processedImageUrls) {
-                            const reorderedUrls = cards.map((card) => {
-                              const index = parseInt(card.id.split('-')[1]);
-                              return state.processedImageUrls?.[index];
-                            }).filter(Boolean);
-                            updateState({ processedImageUrls: reorderedUrls });
-                          }
-                        }}
-                        onCardEdit={(card) => {
-                          // Handle card editing - could open a modal or expand inline editing
-                          console.log("Edit card:", card);
-                        }}
-                        onCardRemove={(cardId) => {
-                          const index = parseInt(cardId.split('-')[1]);
-                          const newImages = selectedImages.filter((_, i) => i !== index);
-                          setSelectedImages(newImages);
-                          
-                          if (state.processedImageUrls) {
-                            const newUrls = state.processedImageUrls.filter((_, i) => i !== index);
-                            updateState({ processedImageUrls: newUrls });
-                          }
-                        }}
-                        onAddCard={() => {
-                          // Trigger image upload dialog or add placeholder
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = 'image/*';
-                          input.multiple = true;
-                          input.onchange = (e) => {
-                            const files = Array.from((e.target as HTMLInputElement).files || []);
-                            setSelectedImages([...selectedImages, ...files]);
-                          };
-                          input.click();
-                        }}
-                        maxCards={10}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
               </div>
               
               {/* Right side - Preview */}
-              <div className="space-y-6">
-                {/* Device Preview */}
+              <div>
                 <Card>
                   <CardContent className="pt-6">
                     <Tabs defaultValue="android" value={activePreviewTab} onValueChange={setActivePreviewTab}>
                       <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="android">Android Messages</TabsTrigger>
-                        <TabsTrigger value="ios">iOS Messages</TabsTrigger>
+                        <TabsTrigger value="android">Android Preview</TabsTrigger>
+                        <TabsTrigger value="ios">iOS Preview</TabsTrigger>
                       </TabsList>
                       <TabsContent value="android" className="mt-4">
-                        <RcsDevicePreview
+                        <EnhancedPreviewContainer
                           platform="android"
-                          format={{
-                            title,
-                            description,
-                            imageUrls: state.processedImageUrls || [],
-                            actions: actions.map(action => ({
-                              text: action.text,
-                              type: action.type as "url" | "phone" | "postback",
-                              payload: getActionPayload(action)
-                            })),
-                            formatType: formatType === "richCard" ? "rich_card" : "carousel",
-                            orientation: cardOrientation,
-                            mediaHeight
-                          }}
-                          customer={{
-                            name: customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name",
-                            brandLogoUrl,
-                            primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.brandColor,
-                            verified: verificationSymbol
-                          }}
+                          formatType={formatType}
+                          cardOrientation={cardOrientation}
+                          mediaHeight={mediaHeight}
+                          lockAspectRatio={lockAspectRatio}
+                          title={title}
+                          description={description}
+                          imageUrls={state.processedImageUrls || []}
+                          brandLogoUrl={brandLogoUrl}
+                          verificationSymbol={verificationSymbol}
+                          brandName={customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name"}
+                          actions={actions}
                         />
                       </TabsContent>
                       <TabsContent value="ios" className="mt-4">
-                        <RcsDevicePreview
+                        <EnhancedPreviewContainer
                           platform="ios"
-                          format={{
-                            title,
-                            description,
-                            imageUrls: state.processedImageUrls || [],
-                            actions: actions.map(action => ({
-                              text: action.text,
-                              type: action.type as "url" | "phone" | "postback",
-                              payload: getActionPayload(action)
-                            })),
-                            formatType: formatType === "richCard" ? "rich_card" : "carousel",
-                            orientation: cardOrientation,
-                            mediaHeight
-                          }}
-                          customer={{
-                            name: customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name",
-                            brandLogoUrl,
-                            primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.brandColor,
-                            verified: verificationSymbol
-                          }}
+                          formatType={formatType}
+                          cardOrientation={cardOrientation}
+                          mediaHeight={mediaHeight}
+                          lockAspectRatio={lockAspectRatio}
+                          title={title}
+                          description={description}
+                          imageUrls={state.processedImageUrls || []}
+                          brandLogoUrl={brandLogoUrl}
+                          verificationSymbol={verificationSymbol}
+                          brandName={customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name"}
+                          actions={actions}
                         />
                       </TabsContent>
                     </Tabs>
                   </CardContent>
                 </Card>
-
-                {/* RCS Compliance Checker */}
-                <RcsComplianceChecker
-                  format={{
-                    title,
-                    description,
-                    imageUrls: state.processedImageUrls || [],
-                    actions: actions.map(action => ({
-                      text: action.text,
-                      type: action.type as "url" | "phone" | "postback",
-                      payload: getActionPayload(action)
-                    })),
-                    formatType: formatType === "richCard" ? "rich_card" : "carousel",
-                    orientation: cardOrientation,
-                    mediaHeight
-                  }}
-                />
-
-                {/* Enhanced Export Options */}
-                <RcsExportEnhanced
-                  format={{
-                    title,
-                    description,
-                    imageUrls: state.processedImageUrls || [],
-                    actions: actions.map(action => ({
-                      text: action.text,
-                      type: action.type as "url" | "phone" | "postback",
-                      payload: getActionPayload(action)
-                    })),
-                    formatType: formatType === "richCard" ? "rich_card" : "carousel",
-                    orientation: cardOrientation,
-                    mediaHeight
-                  }}
-                  customer={{
-                    name: customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name",
-                    brandLogoUrl,
-                    primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.brandColor,
-                    verified: verificationSymbol
-                  }}
-                />
               </div>
             </div>
           </div>
