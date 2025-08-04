@@ -16,7 +16,7 @@ import {
   IOSRichCard,
   AndroidCarousel,
   IOSCarousel
-} from "./figma-message-ui";
+} from "./rcs-authentic-ui";
 
 interface FigmaPreviewContainerProps {
   platform: "android" | "ios";

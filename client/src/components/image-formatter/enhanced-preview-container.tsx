@@ -10,11 +10,14 @@ import {
   AndroidMessageBubble, 
   AndroidInputBar, 
   AndroidRichCard,
+  AndroidCarousel,
   iOSStatusBar, 
   iOSHeader, 
   iOSMessageBubble, 
-  iOSInputBar 
-} from "./figma-message-ui";
+  iOSInputBar,
+  IOSRichCard,
+  IOSCarousel
+} from "./rcs-authentic-ui";
 
 interface EnhancedPreviewContainerProps {
   platform: "android" | "ios";
@@ -119,38 +122,67 @@ export function EnhancedPreviewContainer(props: EnhancedPreviewContainerProps) {
           {/* RCS Card */}
           <div className="mb-4">
             {props.formatType === "carousel" && props.imageUrls?.length > 1 ? (
-              <div className="space-y-3">
-                {props.imageUrls.slice(0, 3).map((imageUrl, index) => (
-                  <AndroidRichCard
-                    key={index}
-                    title={`${props.title} ${index + 1}` || `Card ${index + 1}`}
-                    description={index === 0 ? props.description : ""}
-                    imageUrl={imageUrl}
-                    cardOrientation={props.cardOrientation || "vertical"}
-                    mediaHeight={props.mediaHeight || "medium"}
-                    lockAspectRatio={props.lockAspectRatio || false}
-                    actions={props.actions.map(action => ({
-                      type: action.type,
+              props.platform === "android" ? (
+                <AndroidCarousel
+                  items={props.imageUrls.map((imageUrl, index) => ({
+                    title: index === 0 ? props.title : `${props.title} ${index + 1}`,
+                    description: index === 0 ? props.description : "",
+                    imageUrl,
+                    actions: props.actions.map(action => ({
+                      type: action.type as "url" | "phone" | "postback",
                       text: action.text,
-                      value: 'value' in action ? action.value : action.text
-                    }))}
-                  />
-                ))}
-              </div>
+                      payload: 'value' in action ? action.value || action.text : action.text
+                    }))
+                  }))}
+                  mediaHeight={props.mediaHeight || "medium"}
+                  lockAspectRatio={props.lockAspectRatio !== false}
+                />
+              ) : (
+                <IOSCarousel
+                  items={props.imageUrls.map((imageUrl, index) => ({
+                    title: index === 0 ? props.title : `${props.title} ${index + 1}`,
+                    description: index === 0 ? props.description : "",
+                    imageUrl,
+                    actions: props.actions.map(action => ({
+                      type: action.type as "url" | "phone" | "postback",
+                      text: action.text,
+                      payload: 'value' in action ? action.value || action.text : action.text
+                    }))
+                  }))}
+                  mediaHeight={props.mediaHeight || "medium"}
+                  lockAspectRatio={props.lockAspectRatio !== false}
+                />
+              )
             ) : (
-              <AndroidRichCard
-                title={props.title || "Card Title"}
-                description={props.description || "Card description"}
-                imageUrl={props.imageUrls?.[0]}
-                cardOrientation={props.cardOrientation || "vertical"}
-                mediaHeight={props.mediaHeight || "medium"}
-                lockAspectRatio={props.lockAspectRatio || false}
-                actions={props.actions.map(action => ({
-                  type: action.type,
-                  text: action.text,
-                  value: 'value' in action ? action.value : action.text
-                }))}
-              />
+              props.platform === "android" ? (
+                <AndroidRichCard
+                  title={props.title || "Card Title"}
+                  description={props.description || "Card description"}
+                  imageUrl={props.imageUrls?.[0]}
+                  cardOrientation={props.cardOrientation || "vertical"}
+                  mediaHeight={props.mediaHeight || "medium"}
+                  lockAspectRatio={props.lockAspectRatio !== false}
+                  actions={props.actions.map(action => ({
+                    type: action.type as "url" | "phone" | "postback",
+                    text: action.text,
+                    payload: 'value' in action ? action.value || action.text : action.text
+                  }))}
+                />
+              ) : (
+                <IOSRichCard
+                  title={props.title || "Card Title"}
+                  description={props.description || "Card description"}
+                  imageUrl={props.imageUrls?.[0]}
+                  cardOrientation={props.cardOrientation || "vertical"}
+                  mediaHeight={props.mediaHeight || "medium"}
+                  lockAspectRatio={props.lockAspectRatio !== false}
+                  actions={props.actions.map(action => ({
+                    type: action.type as "url" | "phone" | "postback",
+                    text: action.text,
+                    payload: 'value' in action ? action.value || action.text : action.text
+                  }))}
+                />
+              )
             )}
           </div>
         </div>
