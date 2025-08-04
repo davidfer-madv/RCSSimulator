@@ -119,6 +119,58 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24 hours
     });
+    
+    // Initialize with a default test user for development
+    this.initializeTestUsers();
+  }
+
+  // Initialize test users for development
+  private async initializeTestUsers() {
+    try {
+      // Create a test user with hashed password
+      const scrypt = (await import("crypto")).scrypt;
+      const randomBytes = (await import("crypto")).randomBytes;
+      const { promisify } = await import("util");
+      
+      const scryptAsync = promisify(scrypt);
+      
+      // Hash password "test" for test user
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync("test", salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      
+      // Create test user
+      const testUser: User = {
+        id: this.userIdCounter++,
+        username: "test",
+        password: hashedPassword,
+        email: "test@example.com",
+        fullName: "Test User",
+        createdAt: new Date()
+      };
+      
+      this.users.set(testUser.id, testUser);
+      
+      // Create another test user "David"
+      const salt2 = randomBytes(16).toString("hex");
+      const buf2 = (await scryptAsync("password", salt2, 64)) as Buffer;
+      const hashedPassword2 = `${buf2.toString("hex")}.${salt2}`;
+      
+      const davidUser: User = {
+        id: this.userIdCounter++,
+        username: "David",
+        password: hashedPassword2,
+        email: "david@example.com",
+        fullName: "David Johnson",
+        createdAt: new Date()
+      };
+      
+      this.users.set(davidUser.id, davidUser);
+      
+      console.log("✓ Initialized test users: 'test' (password: test), 'David' (password: password)");
+    } catch (error) {
+      console.error("Failed to initialize test users:", error);
+    }
   }
   
   // User methods

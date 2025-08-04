@@ -78,6 +78,14 @@ export default function RcsFormatter() {
   const [isActiveCampaign, setIsActiveCampaign] = useState(false);
   const [targetPhoneNumbers, setTargetPhoneNumbers] = useState("");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>();
+
+  // Helper function to safely extract action payload
+  const getActionPayload = (action: Action): string => {
+    if ('value' in action && action.value) {
+      return action.value;
+    }
+    return action.text;
+  };
   const [formatData, setFormatData] = useState<any>({});
 
   // API data fetching
@@ -726,7 +734,7 @@ export default function RcsFormatter() {
                           actions: actions.map(action => ({
                             text: action.text,
                             type: action.type as "url" | "phone" | "postback",
-                            payload: action.payload
+                            payload: 'value' in action ? action.value : action.text
                           }))
                         }))}
                         onCardsChange={(cards) => {
