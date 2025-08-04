@@ -21,10 +21,30 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  console.log(`Comparing passwords - stored format: ${stored ? stored.substring(0, 20) + '...' : 'undefined'}`);
+  
+  if (!stored || !stored.includes('.')) {
+    console.log('Invalid stored password format - missing salt');
+    return false;
+  }
+  
   const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  
+  if (!hashed || !salt) {
+    console.log('Invalid stored password format - missing hash or salt components');
+    return false;
+  }
+  
+  try {
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    const result = timingSafeEqual(hashedBuf, suppliedBuf);
+    console.log(`Password comparison result: ${result}`);
+    return result;
+  } catch (error) {
+    console.error('Error during password comparison:', error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -56,6 +76,7 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Invalid username or password" });
         }
         
+        console.log(`User found: ${user.username}, password stored: ${user.password ? 'YES' : 'NO'}`);
         const isPasswordValid = await comparePasswords(password, user.password);
         if (!isPasswordValid) {
           console.log(`Invalid password for user ${username}`);

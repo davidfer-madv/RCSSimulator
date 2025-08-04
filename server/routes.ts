@@ -45,6 +45,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
+  // Test endpoint to see users (remove in production)
+  app.get("/api/test/users", async (req, res) => {
+    try {
+      // Get all users (for debugging only)
+      const allUsers = Array.from((storage as any).users.values()).map((user: any) => ({
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        hasPassword: !!user.password
+      }));
+      res.json(allUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   // Customers API
   app.get("/api/customers", isAuthenticated, async (req, res) => {
     try {
