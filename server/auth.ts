@@ -21,7 +21,18 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  // Check if stored password contains a salt (formatted as "hash.salt")
+  if (!stored.includes(".")) {
+    // Plain text password for development - direct comparison
+    return supplied === stored;
+  }
+  
   const [hashed, salt] = stored.split(".");
+  if (!salt) {
+    // No salt found, treat as plain text
+    return supplied === stored;
+  }
+  
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
@@ -56,20 +67,11 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Invalid username or password" });
         }
         
-        // Temporary: allow plain text passwords for testing
-        let isPasswordValid = false;
-        if (user.password === password) {
-          // Plain text match for development
-          isPasswordValid = true;
-          console.log(`Plain text password match for user ${username}`);
-        } else {
-          // Try hashed password comparison
-          isPasswordValid = await comparePasswords(password, user.password);
-          console.log(`Hashed password comparison result for ${username}: ${isPasswordValid}`);
-        }
+        const isPasswordValid = await comparePasswords(password, user.password);
+        console.log(`Password comparison result for ${username}: ${isPasswordValid}`);
         
         if (!isPasswordValid) {
-          console.log(`Invalid password for user ${username}. Stored: '${user.password}', Provided: '${password}'`);
+          console.log(`Invalid password for user ${username}`);
           return done(null, false, { message: "Invalid username or password" });
         }
         
