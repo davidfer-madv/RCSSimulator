@@ -11,6 +11,17 @@ import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
 import { EnhancedPreviewContainer } from "@/components/image-formatter/enhanced-preview-container";
 import { RcsDevicePreview } from "@/components/rcs-device-preview";
+import { 
+  AndroidStatusBar, 
+  AndroidHeader, 
+  AndroidMessageBubble, 
+  AndroidInputBar, 
+  AndroidRichCard,
+  iOSStatusBar, 
+  iOSHeader, 
+  iOSMessageBubble, 
+  iOSInputBar 
+} from "@/components/image-formatter/figma-message-ui";
 import { RcsExportEnhanced } from "@/components/rcs-export-enhanced";
 import { RcsComplianceChecker } from "@/components/rcs-compliance-checker";
 import { DragDropCards } from "@/components/drag-drop-cards";
@@ -734,7 +745,7 @@ export default function RcsFormatter() {
                           actions: actions.map(action => ({
                             text: action.text,
                             type: action.type as "url" | "phone" | "postback",
-                            payload: 'value' in action ? action.value : action.text
+                            payload: getActionPayload(action)
                           }))
                         }))}
                         onCardsChange={(cards) => {
@@ -807,7 +818,7 @@ export default function RcsFormatter() {
                             actions: actions.map(action => ({
                               text: action.text,
                               type: action.type as "url" | "phone" | "postback",
-                              payload: action.payload
+                              payload: getActionPayload(action)
                             })),
                             formatType: formatType === "richCard" ? "rich_card" : "carousel",
                             orientation: cardOrientation,
@@ -816,7 +827,7 @@ export default function RcsFormatter() {
                           customer={{
                             name: customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name",
                             brandLogoUrl,
-                            primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.primaryColor,
+                            primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.brandColor,
                             verified: verificationSymbol
                           }}
                         />
@@ -831,7 +842,7 @@ export default function RcsFormatter() {
                             actions: actions.map(action => ({
                               text: action.text,
                               type: action.type as "url" | "phone" | "postback",
-                              payload: action.payload
+                              payload: getActionPayload(action)
                             })),
                             formatType: formatType === "richCard" ? "rich_card" : "carousel",
                             orientation: cardOrientation,
@@ -840,7 +851,7 @@ export default function RcsFormatter() {
                           customer={{
                             name: customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name",
                             brandLogoUrl,
-                            primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.primaryColor,
+                            primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.brandColor,
                             verified: verificationSymbol
                           }}
                         />
@@ -858,7 +869,7 @@ export default function RcsFormatter() {
                     actions: actions.map(action => ({
                       text: action.text,
                       type: action.type as "url" | "phone" | "postback",
-                      payload: action.payload
+                      payload: getActionPayload(action)
                     })),
                     formatType: formatType === "richCard" ? "rich_card" : "carousel",
                     orientation: cardOrientation,
@@ -875,7 +886,7 @@ export default function RcsFormatter() {
                     actions: actions.map(action => ({
                       text: action.text,
                       type: action.type as "url" | "phone" | "postback",
-                      payload: action.payload
+                      payload: getActionPayload(action)
                     })),
                     formatType: formatType === "richCard" ? "rich_card" : "carousel",
                     orientation: cardOrientation,
@@ -884,7 +895,7 @@ export default function RcsFormatter() {
                   customer={{
                     name: customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name",
                     brandLogoUrl,
-                    primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.primaryColor,
+                    primaryColor: customers?.find(c => c.id.toString() === selectedCustomerId)?.brandColor,
                     verified: verificationSymbol
                   }}
                 />
