@@ -71,6 +71,11 @@ export function FormatOptions({
   const addAction = () => {
     if (!newActionText) return;
     
+    // Check character limit for action text
+    if (newActionText.length > actionTextLimit) {
+      return; // Don't add if exceeds limit
+    }
+    
     // For text type actions, value is optional
     if (newActionType !== 'text' && !newActionValue) return;
 
@@ -94,10 +99,13 @@ export function FormatOptions({
   // Calculate character count and limit warnings
   const titleCharCount = title?.length || 0;
   const descriptionCharCount = description?.length || 0;
+  const actionTextCharCount = newActionText?.length || 0;
   const titleLimit = 200;
-  const descriptionLimit = 2000;
+  const descriptionLimit = 115; // RCS recommended limit
+  const actionTextLimit = 25; // RCS recommended limit for action buttons
   const titleExceeded = titleCharCount > titleLimit;
   const descriptionExceeded = descriptionCharCount > descriptionLimit;
+  const actionTextExceeded = actionTextCharCount > actionTextLimit;
 
   return (
     <div className="space-y-6">
@@ -289,13 +297,14 @@ export function FormatOptions({
           placeholder="Brief description..."
           className={`mt-1 ${descriptionExceeded ? 'border-red-500' : ''}`}
           rows={3}
-          maxLength={descriptionLimit}
         />
         {descriptionExceeded && (
-          <p className="text-xs text-red-500 mt-1">Description exceeds the maximum of {descriptionLimit} characters</p>
+          <p className="text-xs text-red-500 mt-1">
+            Card description exceeds recommended limit (recommended no more than {descriptionLimit} characters)
+          </p>
         )}
         <p className="text-xs text-gray-500 mt-1">
-          Note: While the limit is 2000 characters, iOS might truncate to around 144 characters (3 lines).
+          Recommended: Keep descriptions under {descriptionLimit} characters for optimal display across all devices.
         </p>
       </div>
 
@@ -326,27 +335,42 @@ export function FormatOptions({
 
           {actions.length < 4 && (
             <>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={newActionText}
-                  onChange={(e) => setNewActionText(e.target.value)}
-                  placeholder="Action button text"
-                  className="flex-1"
-                />
-                <Select
-                  value={newActionType}
-                  onValueChange={(value) => setNewActionType(value as "url" | "phone" | "calendar" | "text")}
-                >
-                  <SelectTrigger className="w-24">
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="url">URL</SelectItem>
-                    <SelectItem value="phone">Phone</SelectItem>
-                    <SelectItem value="calendar">Calendar</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-gray-600">Action button text</span>
+                      <span className={`text-xs ${actionTextExceeded ? 'text-red-500' : 'text-gray-500'}`}>
+                        {actionTextCharCount}/{actionTextLimit}
+                      </span>
+                    </div>
+                    <Input
+                      value={newActionText}
+                      onChange={(e) => setNewActionText(e.target.value)}
+                      placeholder="Action button text"
+                      className={`${actionTextExceeded ? 'border-red-500' : ''}`}
+                    />
+                  </div>
+                  <Select
+                    value={newActionType}
+                    onValueChange={(value) => setNewActionType(value as "url" | "phone" | "calendar" | "text")}
+                  >
+                    <SelectTrigger className="w-24">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="text">Text</SelectItem>
+                      <SelectItem value="url">URL</SelectItem>
+                      <SelectItem value="phone">Phone</SelectItem>
+                      <SelectItem value="calendar">Calendar</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {actionTextExceeded && (
+                  <p className="text-xs text-red-500">
+                    Action button text exceeds recommended limit (recommended no more than {actionTextLimit} characters)
+                  </p>
+                )}
               </div>
               
               <div className="flex items-center gap-2">
@@ -371,6 +395,7 @@ export function FormatOptions({
                   className="inline-flex items-center text-xs"
                   disabled={
                     !newActionText || 
+                    actionTextExceeded ||
                     (newActionType !== 'text' && !newActionValue)
                   }
                 >
