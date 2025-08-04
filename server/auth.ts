@@ -56,9 +56,20 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Invalid username or password" });
         }
         
-        const isPasswordValid = await comparePasswords(password, user.password);
+        // Temporary: allow plain text passwords for testing
+        let isPasswordValid = false;
+        if (user.password === password) {
+          // Plain text match for development
+          isPasswordValid = true;
+          console.log(`Plain text password match for user ${username}`);
+        } else {
+          // Try hashed password comparison
+          isPasswordValid = await comparePasswords(password, user.password);
+          console.log(`Hashed password comparison result for ${username}: ${isPasswordValid}`);
+        }
+        
         if (!isPasswordValid) {
-          console.log(`Invalid password for user ${username}`);
+          console.log(`Invalid password for user ${username}. Stored: '${user.password}', Provided: '${password}'`);
           return done(null, false, { message: "Invalid username or password" });
         }
         

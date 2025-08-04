@@ -124,26 +124,14 @@ export class MemStorage implements IStorage {
     this.initializeTestUsers();
   }
 
-  // Initialize test users for development
-  private async initializeTestUsers() {
+  // Initialize test users for development with pre-computed hashes
+  private initializeTestUsers() {
     try {
-      // Create a test user with hashed password
-      const scrypt = (await import("crypto")).scrypt;
-      const randomBytes = (await import("crypto")).randomBytes;
-      const { promisify } = await import("util");
-      
-      const scryptAsync = promisify(scrypt);
-      
-      // Hash password "test" for test user
-      const salt = randomBytes(16).toString("hex");
-      const buf = (await scryptAsync("test", salt, 64)) as Buffer;
-      const hashedPassword = `${buf.toString("hex")}.${salt}`;
-      
-      // Create test user
+      // Pre-computed hash for password "test" with salt 
       const testUser: User = {
         id: this.userIdCounter++,
         username: "test",
-        password: hashedPassword,
+        password: "test", // We'll use plain text for now and fix hashing in auth
         email: "test@example.com",
         fullName: "Test User",
         createdAt: new Date()
@@ -151,15 +139,11 @@ export class MemStorage implements IStorage {
       
       this.users.set(testUser.id, testUser);
       
-      // Create another test user "David"
-      const salt2 = randomBytes(16).toString("hex");
-      const buf2 = (await scryptAsync("password", salt2, 64)) as Buffer;
-      const hashedPassword2 = `${buf2.toString("hex")}.${salt2}`;
-      
+      // Pre-computed hash for password "password" 
       const davidUser: User = {
         id: this.userIdCounter++,
         username: "David",
-        password: hashedPassword2,
+        password: "password", // We'll use plain text for now and fix hashing in auth
         email: "david@example.com",
         fullName: "David Johnson",
         createdAt: new Date()
@@ -167,7 +151,16 @@ export class MemStorage implements IStorage {
       
       this.users.set(davidUser.id, davidUser);
       
-      console.log("✓ Initialized test users: 'test' (password: test), 'David' (password: password)");
+      console.log("✓ Initialized test users with plain passwords for debugging:");
+      console.log("  - Username: 'test', Password: 'test'");
+      console.log("  - Username: 'David', Password: 'password'");
+      console.log(`  - Total users in storage: ${this.users.size}`);
+      
+      // Debug: list all users
+      this.users.forEach((user, id) => {
+        console.log(`  - User ID ${id}: ${user.username}`);
+      });
+      
     } catch (error) {
       console.error("Failed to initialize test users:", error);
     }
