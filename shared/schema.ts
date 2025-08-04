@@ -111,9 +111,124 @@ export const webhookLogs = pgTable("webhook_logs", {
   campaignId: integer("campaign_id").references(() => campaigns.id),
   formatId: integer("format_id").references(() => rcsFormats.id),
   phoneNumber: text("phone_number"),
-  status: text("status").notNull(), // success, failed
+  status: text("status").notNull(), // pending, delivered, read, failed, clicked
   response: text("response"),
+  deliveredAt: timestamp("delivered_at"),
+  readAt: timestamp("read_at"),
+  clickedAt: timestamp("clicked_at"),
   sentAt: timestamp("sent_at").defaultNow(),
+});
+
+// Template schema for reusable message templates
+export const templates = pgTable("templates", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(), // promotional, announcement, customer_service, retail, hospitality, healthcare
+  formatType: text("format_type").notNull(), // richCard, carousel
+  cardOrientation: text("card_orientation").default("vertical"),
+  mediaHeight: text("media_height").default("medium"),
+  lockAspectRatio: boolean("lock_aspect_ratio").default(true),
+  title: text("title"),
+  description: text("template_description"),
+  actions: json("actions").default([]),
+  imageUrls: json("image_urls").default([]),
+  isPublic: boolean("is_public").default(false), // Whether template is available to all users
+  usageCount: integer("usage_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTemplateSchema = createInsertSchema(templates).omit({
+  id: true,
+  createdAt: true,
+  usageCount: true,
+});
+
+// Analytics schema for tracking campaign performance
+export const analytics = pgTable("analytics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  campaignId: integer("campaign_id").references(() => campaigns.id),
+  formatId: integer("format_id").references(() => rcsFormats.id),
+  date: timestamp("date").defaultNow(),
+  messagesSent: integer("messages_sent").default(0),
+  messagesDelivered: integer("messages_delivered").default(0),
+  messagesRead: integer("messages_read").default(0),
+  messagesClicked: integer("messages_clicked").default(0),
+  messagesFailed: integer("messages_failed").default(0),
+  engagementRate: integer("engagement_rate").default(0), // Percentage * 100
+  clickThroughRate: integer("click_through_rate").default(0), // Percentage * 100
+});
+
+// A/B Testing schema for comparing different message variants
+export const abTests = pgTable("ab_tests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  campaignId: integer("campaign_id").references(() => campaigns.id),
+  name: text("name").notNull(),
+  status: text("status").notNull().default("draft"), // draft, running, completed
+  variantA: json("variant_a").notNull(), // RCS format configuration
+  variantB: json("variant_b").notNull(), // RCS format configuration
+  trafficSplit: integer("traffic_split").default(50), // Percentage for variant A (0-100)
+  winnerVariant: text("winner_variant"), // A or B
+  confidenceLevel: integer("confidence_level").default(95),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAbTestSchema = createInsertSchema(abTests).omit({
+  id: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+// Team workspace schema for collaboration
+export const workspaces = pgTable("workspaces", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  ownerId: integer("owner_id").notNull().references(() => users.id),
+  brandGuidelinesUrl: text("brand_guidelines_url"),
+  approvalRequired: boolean("approval_required").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWorkspaceSchema = createInsertSchema(workspaces).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Workspace members schema
+export const workspaceMembers = pgTable("workspace_members", {
+  id: serial("id").primaryKey(),
+  workspaceId: integer("workspace_id").notNull().references(() => workspaces.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: text("role").notNull().default("member"), // owner, admin, editor, viewer
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Brand guidelines schema for enforcing consistency
+export const brandGuidelines = pgTable("brand_guidelines", {
+  id: serial("id").primaryKey(),
+  workspaceId: integer("workspace_id").references(() => workspaces.id),
+  customerId: integer("customer_id").references(() => customers.id),
+  primaryColor: text("primary_color").notNull(),
+  secondaryColor: text("secondary_color"),
+  fontFamily: text("font_family"),
+  logoUsageRules: text("logo_usage_rules"),
+  toneOfVoice: text("tone_of_voice"),
+  messagingGuidelines: text("messaging_guidelines"),
+  prohibitedWords: json("prohibited_words").default([]),
+  requiredDisclaimer: text("required_disclaimer"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBrandGuidelinesSchema = createInsertSchema(brandGuidelines).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Export types
@@ -133,6 +248,22 @@ export type InsertWebhookConfig = z.infer<typeof insertWebhookConfigSchema>;
 export type WebhookConfig = typeof webhookConfigs.$inferSelect;
 
 export type WebhookLog = typeof webhookLogs.$inferSelect;
+
+export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
+export type Template = typeof templates.$inferSelect;
+
+export type Analytics = typeof analytics.$inferSelect;
+
+export type InsertAbTest = z.infer<typeof insertAbTestSchema>;
+export type AbTest = typeof abTests.$inferSelect;
+
+export type InsertWorkspace = z.infer<typeof insertWorkspaceSchema>;
+export type Workspace = typeof workspaces.$inferSelect;
+
+export type WorkspaceMember = typeof workspaceMembers.$inferSelect;
+
+export type InsertBrandGuidelines = z.infer<typeof insertBrandGuidelinesSchema>;
+export type BrandGuidelines = typeof brandGuidelines.$inferSelect;
 
 // Action type schemas
 const actionTextSchema = z.object({

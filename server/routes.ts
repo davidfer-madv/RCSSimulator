@@ -879,5 +879,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Templates API
+  app.get("/api/templates", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const userTemplates = await storage.getTemplatesByUserId(req.user!.id);
+      const publicTemplates = await storage.getPublicTemplates();
+      const allTemplates = [...userTemplates, ...publicTemplates];
+      res.json(allTemplates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  app.post("/api/templates", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const template = await storage.createTemplate({
+        ...req.body,
+        userId: req.user!.id
+      });
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("Error creating template:", error);
+      res.status(500).json({ error: "Failed to create template" });
+    }
+  });
+
+  app.delete("/api/templates/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const template = await storage.getTemplate(parseInt(req.params.id));
+      if (!template || template.userId !== req.user!.id) {
+        return res.sendStatus(404);
+      }
+      
+      await storage.deleteTemplate(parseInt(req.params.id));
+      res.sendStatus(204);
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
+  // Analytics API
+  app.get("/api/analytics", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const analytics = await storage.getAnalyticsByUserId(req.user!.id);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  // Webhook Logs API
+  app.get("/api/webhook-logs", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const logs = await storage.getWebhookLogsByUserId(req.user!.id);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching webhook logs:", error);
+      res.status(500).json({ error: "Failed to fetch webhook logs" });
+    }
+  });
+
+  // Webhook simulation endpoint
+  app.post("/api/webhook/simulate", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { campaignId, phoneNumber } = req.body;
+      
+      // Create a webhook log entry
+      const log = await storage.createWebhookLog({
+        webhookId: null,
+        campaignId: parseInt(campaignId),
+        formatId: null,
+        phoneNumber,
+        status: "pending",
+        response: null,
+        deliveredAt: null,
+        readAt: null,
+        clickedAt: null,
+        sentAt: new Date()
+      });
+      
+      res.json({ logId: log.id, status: "started" });
+    } catch (error) {
+      console.error("Error simulating webhook:", error);
+      res.status(500).json({ error: "Failed to simulate webhook" });
+    }
+  });
+
+  app.put("/api/webhook-logs/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { status, timestamp } = req.body;
+      const updates: Partial<any> = { status };
+      
+      // Set timestamp fields based on status
+      if (status === "delivered") updates.deliveredAt = new Date(timestamp);
+      if (status === "read") updates.readAt = new Date(timestamp);
+      if (status === "clicked") updates.clickedAt = new Date(timestamp);
+      
+      const log = await storage.updateWebhookLog(parseInt(req.params.id), updates);
+      res.json(log);
+    } catch (error) {
+      console.error("Error updating webhook log:", error);
+      res.status(500).json({ error: "Failed to update webhook log" });
+    }
+  });
+
   return httpServer;
 }

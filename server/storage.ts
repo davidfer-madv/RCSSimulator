@@ -3,7 +3,10 @@ import {
   Customer, InsertCustomer, 
   Campaign, InsertCampaign, 
   RcsFormat, InsertRcsFormat,
-  WebhookConfig, InsertWebhookConfig
+  WebhookConfig, InsertWebhookConfig,
+  WebhookLog,
+  Template, InsertTemplate,
+  Analytics
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -50,6 +53,23 @@ export interface IStorage {
   updateWebhookConfig(id: number, webhookConfig: Partial<WebhookConfig>): Promise<WebhookConfig>;
   deleteWebhookConfig(id: number): Promise<boolean>;
   
+  // Webhook Logs
+  getWebhookLogsByUserId(userId: number): Promise<WebhookLog[]>;
+  createWebhookLog(log: Omit<WebhookLog, 'id'>): Promise<WebhookLog>;
+  updateWebhookLog(id: number, log: Partial<WebhookLog>): Promise<WebhookLog>;
+  
+  // Templates
+  getTemplate(id: number): Promise<Template | undefined>;
+  getTemplatesByUserId(userId: number): Promise<Template[]>;
+  getPublicTemplates(): Promise<Template[]>;
+  createTemplate(template: InsertTemplate): Promise<Template>;
+  updateTemplate(id: number, template: Partial<Template>): Promise<Template>;
+  deleteTemplate(id: number): Promise<boolean>;
+  
+  // Analytics
+  getAnalyticsByUserId(userId: number): Promise<Analytics[]>;
+  createAnalytics(analytics: Omit<Analytics, 'id'>): Promise<Analytics>;
+  
   // Session store
   sessionStore: session.Store;
 }
@@ -60,6 +80,9 @@ export class MemStorage implements IStorage {
   private campaigns: Map<number, Campaign>;
   private rcsFormats: Map<number, RcsFormat>;
   private webhookConfigs: Map<number, WebhookConfig>;
+  private webhookLogs: Map<number, WebhookLog>;
+  private templates: Map<number, Template>;
+  private analytics: Map<number, Analytics>;
   
   // Counters for IDs
   private userIdCounter: number;
@@ -67,6 +90,9 @@ export class MemStorage implements IStorage {
   private campaignIdCounter: number;
   private rcsFormatIdCounter: number;
   private webhookConfigIdCounter: number;
+  private webhookLogIdCounter: number;
+  private templateIdCounter: number;
+  private analyticsIdCounter: number;
   
   // Session store
   sessionStore: session.Store;
@@ -77,12 +103,18 @@ export class MemStorage implements IStorage {
     this.campaigns = new Map();
     this.rcsFormats = new Map();
     this.webhookConfigs = new Map();
+    this.webhookLogs = new Map();
+    this.templates = new Map();
+    this.analytics = new Map();
     
     this.userIdCounter = 1;
     this.customerIdCounter = 1;
     this.campaignIdCounter = 1;
     this.rcsFormatIdCounter = 1;
     this.webhookConfigIdCounter = 1;
+    this.webhookLogIdCounter = 1;
+    this.templateIdCounter = 1;
+    this.analyticsIdCounter = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24 hours
@@ -298,10 +330,98 @@ export class MemStorage implements IStorage {
   async deleteWebhookConfig(id: number): Promise<boolean> {
     return this.webhookConfigs.delete(id);
   }
+
+  // Webhook Logs
+  async getWebhookLogsByUserId(userId: number): Promise<WebhookLog[]> {
+    return Array.from(this.webhookLogs.values()).filter(log => {
+      // Find campaign for this log and check if it belongs to the user
+      const campaign = this.campaigns.get(log.campaignId || 0);
+      return campaign?.userId === userId;
+    });
+  }
+
+  async createWebhookLog(log: Omit<WebhookLog, 'id'>): Promise<WebhookLog> {
+    const id = this.webhookLogIdCounter++;
+    const newLog: WebhookLog = {
+      id,
+      webhookId: log.webhookId,
+      campaignId: log.campaignId,
+      formatId: log.formatId,
+      phoneNumber: log.phoneNumber,
+      status: log.status,
+      response: log.response,
+      deliveredAt: log.deliveredAt || null,
+      readAt: log.readAt || null,
+      clickedAt: log.clickedAt || null,
+      sentAt: log.sentAt || new Date()
+    };
+    this.webhookLogs.set(id, newLog);
+    return newLog;
+  }
+
+  async updateWebhookLog(id: number, log: Partial<WebhookLog>): Promise<WebhookLog> {
+    const existing = this.webhookLogs.get(id);
+    if (!existing) throw new Error("Webhook log not found");
+    
+    const updated = { ...existing, ...log };
+    this.webhookLogs.set(id, updated);
+    return updated;
+  }
+
+  // Templates
+  async getTemplate(id: number): Promise<Template | undefined> {
+    return this.templates.get(id);
+  }
+
+  async getTemplatesByUserId(userId: number): Promise<Template[]> {
+    return Array.from(this.templates.values()).filter(template => template.userId === userId);
+  }
+
+  async getPublicTemplates(): Promise<Template[]> {
+    return Array.from(this.templates.values()).filter(template => template.isPublic);
+  }
+
+  async createTemplate(template: InsertTemplate): Promise<Template> {
+    const id = this.templateIdCounter++;
+    const newTemplate: Template = {
+      id,
+      ...template,
+      usageCount: 0,
+      createdAt: new Date()
+    };
+    this.templates.set(id, newTemplate);
+    return newTemplate;
+  }
+
+  async updateTemplate(id: number, template: Partial<Template>): Promise<Template> {
+    const existing = this.templates.get(id);
+    if (!existing) throw new Error("Template not found");
+    
+    const updated = { ...existing, ...template };
+    this.templates.set(id, updated);
+    return updated;
+  }
+
+  async deleteTemplate(id: number): Promise<boolean> {
+    return this.templates.delete(id);
+  }
+
+  // Analytics
+  async getAnalyticsByUserId(userId: number): Promise<Analytics[]> {
+    return Array.from(this.analytics.values()).filter(analytics => analytics.userId === userId);
+  }
+
+  async createAnalytics(analytics: Omit<Analytics, 'id'>): Promise<Analytics> {
+    const id = this.analyticsIdCounter++;
+    const newAnalytics: Analytics = {
+      id,
+      ...analytics,
+      date: analytics.date || new Date()
+    };
+    this.analytics.set(id, newAnalytics);
+    return newAnalytics;
+  }
 }
 
-import { DatabaseStorage } from "./database-storage";
-
-// Choose either MemStorage or DatabaseStorage based on environment
-// For this project, we're using DatabaseStorage
-export const storage = new DatabaseStorage();
+// For this project, we're using MemStorage for development
+export const storage = new MemStorage();
