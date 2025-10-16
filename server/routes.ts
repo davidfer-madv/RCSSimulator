@@ -62,6 +62,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Statistics API
+  app.get("/api/statistics", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get counts for the current user
+      const customers = await storage.getCustomersByUserId(userId);
+      const campaigns = await storage.getCampaignsByUserId(userId);
+      const formats = await storage.getRcsFormatsByUserId(userId);
+      
+      res.json({
+        totalCustomers: customers.length,
+        totalCampaigns: campaigns.length,
+        totalFormats: formats.length,
+        activeCampaigns: campaigns.filter((c: Campaign) => c.status === 'active').length,
+      });
+    } catch (error) {
+      console.error("Failed to fetch statistics:", error);
+      res.status(500).json({ message: "Failed to fetch statistics" });
+    }
+  });
+
   // Customers API
   app.get("/api/customers", isAuthenticated, async (req, res) => {
     try {

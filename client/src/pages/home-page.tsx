@@ -21,27 +21,10 @@ export default function HomePage() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // For demo purposes, we'll use hardcoded stats until the API endpoint is implemented
-  const mockStats = {
-    totalFormats: 5,
-    totalCustomers: 10
-  };
-  
-  // In a real implementation, we would fetch from the server:
-  // const { data: stats, isLoading: isLoadingStats } = useQuery<Stats>({
-  //   queryKey: ["/api/statistics"],
-  //   queryFn: async ({ queryKey }) => {
-  //     const res = await fetch(queryKey[0] as string);
-  //     if (!res.ok) {
-  //       throw new Error("Failed to fetch statistics");
-  //     }
-  //     return res.json();
-  //   }
-  // });
-  
-  // Using mock data for now
-  const stats = mockStats;
-  const isLoadingStats = false;
+  // Fetch real statistics from the server
+  const { data: stats, isLoading: isLoadingStats } = useQuery<Stats>({
+    queryKey: ["/api/statistics"],
+  });
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
