@@ -4,7 +4,8 @@ import { generateRichCardJson, generateCarouselJson } from "./rcs-json-template"
 interface FormatOptions {
   title: string;
   description: string;
-  formatType: "richCard" | "carousel";
+  messageText?: string;
+  formatType: "message" | "richCard" | "carousel";
   cardOrientation?: "vertical" | "horizontal";
   mediaHeight?: "short" | "medium" | "tall";
   lockAspectRatio?: boolean;
@@ -32,14 +33,12 @@ interface RcsCardJson {
   formatType: string;
   orientation?: string;
   mediaHeight?: string;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
+  messageText?: string;
   imagePaths?: string[];
-  actions: {
-    text: string;
-    type: string;
-    value?: string;
-  }[];
+  actions: Action[];
+  replies?: any[];
 }
 
 /**
@@ -98,19 +97,17 @@ export async function processImages(
       });
     }
     
-    // Also create backward-compatible format for existing code
-    const backwardCompatibleJson: RcsCardJson = {
+    // Create comprehensive export format with all data preserved
+    const comprehensiveJson: RcsCardJson = {
       formatType: options.formatType,
       orientation: options.cardOrientation || "vertical",
       mediaHeight: options.mediaHeight || "medium",
       title: options.title,
       description: options.description,
+      messageText: options.messageText,
       imagePaths: images.map(file => file.name),
-      actions: options.actions.map(action => ({
-        text: action.text,
-        type: action.type,
-        value: action.value
-      }))
+      actions: options.actions, // Preserve full action objects with all fields
+      replies: [] // TODO: Add replies support when available in options
     };
 
     // Report analyzing stage
@@ -118,8 +115,8 @@ export async function processImages(
     
     // Handle JSON export if requested
     if (exportType === 'json' || exportType === 'both') {
-      // Export JSON file
-      const jsonBlob = new Blob([JSON.stringify(rcsJson, null, 2)], { type: 'application/json' });
+      // Export comprehensive JSON with all data preserved
+      const jsonBlob = new Blob([JSON.stringify(comprehensiveJson, null, 2)], { type: 'application/json' });
       const jsonUrl = URL.createObjectURL(jsonBlob);
       
       // Download the JSON file

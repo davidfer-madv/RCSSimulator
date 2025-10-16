@@ -740,6 +740,7 @@ export default function RcsFormatter() {
                           lockAspectRatio={lockAspectRatio}
                           title={title}
                           description={description}
+                          messageText={messageText}
                           imageUrls={state.processedImageUrls || []}
                           brandLogoUrl={brandLogoUrl}
                           verificationSymbol={verificationSymbol}
@@ -756,6 +757,7 @@ export default function RcsFormatter() {
                           lockAspectRatio={lockAspectRatio}
                           title={title}
                           description={description}
+                          messageText={messageText}
                           imageUrls={state.processedImageUrls || []}
                           brandLogoUrl={brandLogoUrl}
                           verificationSymbol={verificationSymbol}

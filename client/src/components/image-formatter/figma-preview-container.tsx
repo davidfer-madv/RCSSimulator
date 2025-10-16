@@ -22,11 +22,12 @@ interface FigmaPreviewContainerProps {
   platform: "android" | "ios";
   title: string;
   description: string;
+  messageText?: string;
   imageUrls: string[];
   actions: Action[];
   cardOrientation?: "vertical" | "horizontal";
   mediaHeight?: "short" | "medium" | "tall";
-  formatType?: "richCard" | "carousel";
+  formatType?: "message" | "richCard" | "carousel";
   lockAspectRatio?: boolean;
   brandLogoUrl?: string;
   verificationSymbol?: boolean;
@@ -37,6 +38,7 @@ export function FigmaPreviewContainer({
   platform,
   title,
   description,
+  messageText = "",
   imageUrls,
   actions,
   cardOrientation = "vertical",
