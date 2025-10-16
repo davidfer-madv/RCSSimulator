@@ -264,8 +264,8 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
               </Link>
             )}
             
-            <Link href={`/campaigns/${campaign.id}`}>
-              <Button variant="ghost" className="text-sm font-medium text-primary hover:text-blue-700">
+            <Link href={`/rcs-formatter/campaign/${campaign.id}`}>
+              <Button variant="ghost" className="text-sm font-medium text-primary hover:text-blue-700" data-testid="button-view-details">
                 View Details
               </Button>
             </Link>

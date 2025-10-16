@@ -453,24 +453,36 @@ export default function RcsFormatter() {
 
   // Handle form submission
   const handleSaveRcsFormat = async () => {
-    // Check if we have at least one image (required for RCS format)
-    if (selectedImages.length === 0) {
-      toast({
-        title: "Missing images",
-        description: "Please select at least one image for your RCS format.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check if title is provided (required for RCS format)
-    if (!title.trim()) {
-      toast({
-        title: "Missing title",
-        description: "Please provide a title for your RCS format.",
-        variant: "destructive",
-      });
-      return;
+    // Format-specific validation
+    if (formatType === "message") {
+      // Message format: Only messageText is required
+      if (!messageText.trim()) {
+        toast({
+          title: "Missing message text",
+          description: "Please provide message text for your RCS message format.",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // Rich Card and Carousel formats: Images and title are required
+      if (selectedImages.length === 0) {
+        toast({
+          title: "Missing images",
+          description: "Please select at least one image for your RCS format.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!title.trim()) {
+        toast({
+          title: "Missing title",
+          description: "Please provide a title for your RCS format.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
     
     // Save the format

@@ -197,7 +197,7 @@ export type Action = z.infer<typeof actionSchema>;
 
 // Extended schema for RCS format with validations
 export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
-  title: z.string().min(1, "Title is required").max(200, "Title cannot exceed 200 characters").optional().nullable(),
+  title: z.string().max(200, "Title cannot exceed 200 characters").optional().nullable(),
   description: z.string().max(2000, "Description cannot exceed 2000 characters").optional().nullable(),
   messageText: z.string().max(2000, "Message text cannot exceed 2000 characters").optional().nullable(),
   formatType: z.enum(["message", "richCard", "carousel"], {
@@ -220,4 +220,18 @@ export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
     .default([]),
   brandName: z.string().optional().nullable(),
   campaignName: z.string().optional().nullable(),
-});
+}).refine((data) => {
+  // Format-specific validation
+  if (data.formatType === "message") {
+    // Message format: messageText is required
+    return data.messageText && data.messageText.trim().length > 0;
+  } else {
+    // Rich Card and Carousel formats: title is required
+    return data.title && data.title.trim().length > 0;
+  }
+}, (data) => ({
+  message: data.formatType === "message" 
+    ? "Message text is required for message format" 
+    : "Title is required for richCard and carousel formats",
+  path: data.formatType === "message" ? ["messageText"] : ["title"],
+}));
