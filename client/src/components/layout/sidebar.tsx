@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import {
   BarChart3,
@@ -41,6 +48,33 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         <Link href="/home">
           <button className="text-xl font-bold text-white">RCS Format</button>
         </Link>
+        <div className="hidden md:block">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm" className="text-white">
+                New Format
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <Link href="/rcs-formatter?type=message">
+                <DropdownMenuItem asChild>
+                  <button className="w-full text-left">Message</button>
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/rcs-formatter?type=richCard">
+                <DropdownMenuItem asChild>
+                  <button className="w-full text-left">Rich Card</button>
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/rcs-formatter?type=carousel">
+                <DropdownMenuItem asChild>
+                  <button className="w-full text-left">Carousel</button>
+                </DropdownMenuItem>
+              </Link>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <Button
           variant="ghost"
           size="icon"
