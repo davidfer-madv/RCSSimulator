@@ -1,18 +1,20 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
-import { Action, Customer } from "@shared/schema";
+import { Action, SuggestedReply } from "@shared/schema";
 
 // Define the shape of our RCS formatter context
 type RcsFormatterState = {
   selectedImages: File[];
   title: string;
   description: string;
-  formatType: "richCard" | "carousel";
+  messageText: string;
+  formatType: "message" | "richCard" | "carousel";
   cardOrientation: "vertical" | "horizontal";
   mediaHeight: "short" | "medium" | "tall";
   lockAspectRatio: boolean;
   brandLogoUrl: string;
   verificationSymbol: boolean;
   actions: Action[];
+  replies: SuggestedReply[];
   selectedCustomerId: string;
   processedImageUrls: string[];
 };
@@ -28,6 +30,7 @@ const defaultState: RcsFormatterState = {
   selectedImages: [],
   title: "",
   description: "",
+  messageText: "",
   formatType: "richCard",
   cardOrientation: "vertical", 
   mediaHeight: "medium",
@@ -35,6 +38,7 @@ const defaultState: RcsFormatterState = {
   brandLogoUrl: "",
   verificationSymbol: true,
   actions: [],
+  replies: [],
   selectedCustomerId: "",
   processedImageUrls: [],
 };
