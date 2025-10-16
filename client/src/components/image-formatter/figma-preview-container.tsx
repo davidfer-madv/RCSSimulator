@@ -107,7 +107,15 @@ export function FigmaPreviewContainer({
             )}
             
             {/* RCS Content */}
-            {formatType === "richCard" && imageUrls.length > 0 ? (
+            {formatType === "message" ? (
+              <div className="mb-3 flex justify-start">
+                {platform === "android" ? (
+                  <AndroidMessageBubble message={messageText || "Your message will appear here..."} />
+                ) : (
+                  <>{iOSMessageBubble({ message: messageText || "Your message will appear here..." })}</>
+                )}
+              </div>
+            ) : formatType === "richCard" && imageUrls.length > 0 ? (
               <div className="mb-3 flex justify-start">
                 {platform === "android" ? (
                   <AndroidRichCard
