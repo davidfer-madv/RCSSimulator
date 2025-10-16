@@ -46,7 +46,7 @@ export const campaigns = pgTable("campaigns", {
   name: text("name").notNull(),
   description: text("description"),
   status: text("status").notNull().default("draft"), // draft, active, scheduled, completed
-  formatType: text("format_type").notNull(), // richCard, carousel
+  formatType: text("format_type").notNull(), // message, richCard, carousel
   provider: text("provider"),
   scheduledDate: timestamp("scheduled_date"),
   isActive: boolean("is_active").default(false), // Whether campaign is currently active
@@ -65,7 +65,7 @@ export const rcsFormats = pgTable("rcs_formats", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   campaignId: integer("campaign_id").references(() => campaigns.id),
-  formatType: text("format_type").notNull(), // richCard, carousel
+  formatType: text("format_type").notNull(), // message, richCard, carousel
   cardOrientation: text("card_orientation").default("vertical"), // vertical, horizontal
   mediaHeight: text("media_height").default("medium"), // short, medium, tall
   lockAspectRatio: boolean("lock_aspect_ratio").default(true),
@@ -73,7 +73,9 @@ export const rcsFormats = pgTable("rcs_formats", {
   verificationSymbol: boolean("verification_symbol").default(false),
   title: text("title"),
   description: text("description"),
-  actions: json("actions").default([]),
+  messageText: text("message_text"), // For simple text messages
+  actions: json("actions").default([]), // Suggested actions (URL, Dial, Calendar, Location)
+  replies: json("replies").default([]), // Suggested replies (quick text responses)
   imageUrls: json("image_urls").default([]),
   brandName: text("brand_name"), // Added to store brand name
   campaignName: text("campaign_name"), // Added to store campaign name 
@@ -134,33 +136,72 @@ export type WebhookConfig = typeof webhookConfigs.$inferSelect;
 
 export type WebhookLog = typeof webhookLogs.$inferSelect;
 
-// Action type schemas
-const actionTextSchema = z.object({
-  text: z.string().min(1, "Action text is required"),
-  type: z.literal("text"),
-  value: z.string().optional(),
+// Suggested Reply schema (quick text responses)
+export const suggestedReplySchema = z.object({
+  text: z.string().min(1, "Reply text is required").max(25, "Reply text cannot exceed 25 characters"),
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
 });
 
+export type SuggestedReply = z.infer<typeof suggestedReplySchema>;
+
+// Action type schemas for Suggested Actions
 const actionUrlSchema = z.object({
-  text: z.string().min(1, "Action text is required"),
-  type: z.enum(["url", "phone", "calendar"]),
-  value: z.string().min(1, "Action value is required"),
+  text: z.string().min(1, "Action text is required").max(25, "Action text cannot exceed 25 characters"),
+  type: z.literal("url"),
+  url: z.string().url("Must be a valid URL"),
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
 });
 
-// Schema for action items
+const actionDialSchema = z.object({
+  text: z.string().min(1, "Action text is required").max(25, "Action text cannot exceed 25 characters"),
+  type: z.literal("dial"),
+  phoneNumber: z.string().min(1, "Phone number is required"),
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
+});
+
+const actionCalendarSchema = z.object({
+  text: z.string().min(1, "Action text is required").max(25, "Action text cannot exceed 25 characters"),
+  type: z.literal("calendar"),
+  title: z.string().min(1, "Event title is required"),
+  description: z.string().optional(),
+  startTime: z.string().min(1, "Start time is required"), // ISO 8601 format
+  endTime: z.string().min(1, "End time is required"), // ISO 8601 format
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
+});
+
+const actionViewLocationSchema = z.object({
+  text: z.string().min(1, "Action text is required").max(25, "Action text cannot exceed 25 characters"),
+  type: z.literal("viewLocation"),
+  latitude: z.number(),
+  longitude: z.number(),
+  label: z.string().optional(),
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
+});
+
+const actionShareLocationSchema = z.object({
+  text: z.string().min(1, "Action text is required").max(25, "Action text cannot exceed 25 characters"),
+  type: z.literal("shareLocation"),
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
+});
+
+// Schema for action items (Suggested Actions)
 export const actionSchema = z.discriminatedUnion("type", [
-  actionTextSchema,
-  actionUrlSchema
+  actionUrlSchema,
+  actionDialSchema,
+  actionCalendarSchema,
+  actionViewLocationSchema,
+  actionShareLocationSchema,
 ]);
 
 export type Action = z.infer<typeof actionSchema>;
 
 // Extended schema for RCS format with validations
 export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
-  title: z.string().min(1, "Title is required").max(200, "Title cannot exceed 200 characters"),
+  title: z.string().min(1, "Title is required").max(200, "Title cannot exceed 200 characters").optional().nullable(),
   description: z.string().max(2000, "Description cannot exceed 2000 characters").optional().nullable(),
-  formatType: z.enum(["richCard", "carousel"], {
-    errorMap: () => ({ message: "Format type must be either Rich Card or Carousel" }),
+  messageText: z.string().max(2000, "Message text cannot exceed 2000 characters").optional().nullable(),
+  formatType: z.enum(["message", "richCard", "carousel"], {
+    errorMap: () => ({ message: "Format type must be Message, Rich Card, or Carousel" }),
   }),
   cardOrientation: z.enum(["vertical", "horizontal"], {
     errorMap: () => ({ message: "Card orientation must be either Vertical or Horizontal" }),
@@ -169,12 +210,14 @@ export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
     errorMap: () => ({ message: "Media height must be Short, Medium, or Tall" }),
   }).optional().default("medium").nullable(),
   lockAspectRatio: z.boolean().optional().default(true).nullable(),
-  brandLogoUrl: z.string().optional().nullable(), // Allow any string value for now
+  brandLogoUrl: z.string().optional().nullable(),
   verificationSymbol: z.boolean().optional().default(false).nullable(),
-  actions: z.array(actionSchema).max(4, "Maximum of 4 actions allowed").optional().default([]),
+  actions: z.array(actionSchema).max(4, "Maximum of 4 suggested actions allowed per card").optional().default([]),
+  replies: z.array(suggestedReplySchema).max(11, "Maximum of 11 suggested replies allowed").optional().default([]),
   imageUrls: z.array(z.string())
-    .min(1, "At least one image is required")
-    .max(10, "Maximum of 10 images for carousel"),
-  brandName: z.string().optional().nullable(),    // Added for storing brand name
-  campaignName: z.string().optional().nullable(), // Added for storing campaign name
+    .max(10, "Maximum of 10 images for carousel")
+    .optional()
+    .default([]),
+  brandName: z.string().optional().nullable(),
+  campaignName: z.string().optional().nullable(),
 });
