@@ -12,6 +12,7 @@ interface FormatOptions {
   brandLogoUrl?: string;
   verificationSymbol?: boolean;
   actions: Action[];
+  replies?: any[];
   brandName?: string;
   campaignName?: string;
 }
@@ -65,8 +66,21 @@ export async function processImages(
     // Create JSON representation of the RCS format using new template format
     let rcsJson: any;
     
+    // Create comprehensive export format based on format type
+    let comprehensiveJson: RcsCardJson;
+    
     // Generate the appropriate JSON format based on format type
-    if (options.formatType === "richCard") {
+    if (options.formatType === "message") {
+      // Simple message format - no card fields
+      comprehensiveJson = {
+        formatType: "message",
+        messageText: options.messageText || "",
+        imagePaths: images.map(file => file.name),
+        actions: options.actions,
+        replies: options.replies || []
+      };
+      rcsJson = comprehensiveJson;
+    } else if (options.formatType === "richCard") {
       // Single rich card
       rcsJson = generateRichCardJson({
         title: options.title,
@@ -78,6 +92,18 @@ export async function processImages(
         brandDisplayName: options.brandName || "Business",
         verificationStatus: options.verificationSymbol || true
       });
+      
+      comprehensiveJson = {
+        formatType: "richCard",
+        orientation: options.cardOrientation || "vertical",
+        mediaHeight: options.mediaHeight || "medium",
+        title: options.title,
+        description: options.description,
+        messageText: options.messageText,
+        imagePaths: images.map(file => file.name),
+        actions: options.actions,
+        replies: options.replies || []
+      };
     } else {
       // Carousel of cards
       const cards = images.map((image, index) => ({
@@ -95,20 +121,19 @@ export async function processImages(
         brandDisplayName: options.brandName || "Business",
         verificationStatus: options.verificationSymbol || true
       });
+      
+      comprehensiveJson = {
+        formatType: "carousel",
+        orientation: options.cardOrientation || "vertical",
+        mediaHeight: options.mediaHeight || "medium",
+        title: options.title,
+        description: options.description,
+        messageText: options.messageText,
+        imagePaths: images.map(file => file.name),
+        actions: options.actions,
+        replies: options.replies || []
+      };
     }
-    
-    // Create comprehensive export format with all data preserved
-    const comprehensiveJson: RcsCardJson = {
-      formatType: options.formatType,
-      orientation: options.cardOrientation || "vertical",
-      mediaHeight: options.mediaHeight || "medium",
-      title: options.title,
-      description: options.description,
-      messageText: options.messageText,
-      imagePaths: images.map(file => file.name),
-      actions: options.actions, // Preserve full action objects with all fields
-      replies: [] // TODO: Add replies support when available in options
-    };
 
     // Report analyzing stage
     progressCallback?.(ProcessingStage.ANALYZING, 20);
