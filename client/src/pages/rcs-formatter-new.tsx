@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
 import { EnhancedPreviewContainer } from "@/components/image-formatter/enhanced-preview-container";
-import { Action, Customer, Campaign, RcsFormat } from "@shared/schema";
+import { Action, SuggestedReply, Customer, Campaign, RcsFormat } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -56,13 +56,15 @@ export default function RcsFormatter() {
   const [selectedImages, setSelectedImages] = useState<File[]>(state.selectedImages || []);
   const [title, setTitle] = useState(state.title || "");
   const [description, setDescription] = useState(state.description || "");
-  const [formatType, setFormatType] = useState<"richCard" | "carousel">(state.formatType || "richCard");
+  const [messageText, setMessageText] = useState(state.messageText || "");
+  const [formatType, setFormatType] = useState<"message" | "richCard" | "carousel">(state.formatType || "richCard");
   const [cardOrientation, setCardOrientation] = useState<"vertical" | "horizontal">(state.cardOrientation || "vertical");
   const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">(state.mediaHeight || "medium");
   const [lockAspectRatio, setLockAspectRatio] = useState(state.lockAspectRatio || false);
   const [brandLogoUrl, setBrandLogoUrl] = useState(state.brandLogoUrl || "");
   const [verificationSymbol, setVerificationSymbol] = useState(state.verificationSymbol !== undefined ? state.verificationSymbol : true);
   const [actions, setActions] = useState<Action[]>(state.actions || []);
+  const [replies, setReplies] = useState<SuggestedReply[]>(state.replies || []);
   const [selectedCustomerId, setSelectedCustomerId] = useState(state.selectedCustomerId || "");
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   const [exporting, setExporting] = useState(false);
@@ -170,7 +172,9 @@ export default function RcsFormatter() {
         verificationSymbol,
         title,
         description,
+        messageText,
         actions,
+        replies,
         customerId: selectedCustomerId || null,
         campaignId: campaignId ? parseInt(campaignId) : null, // Use the campaign ID from the URL if available
         brandName: selectedBrand?.name || "Business Name", // Store brand name
@@ -270,6 +274,7 @@ export default function RcsFormatter() {
       updateState({
         title,
         description,
+        messageText,
         formatType,
         cardOrientation,
         mediaHeight,
@@ -277,12 +282,14 @@ export default function RcsFormatter() {
         brandLogoUrl,
         verificationSymbol,
         actions,
+        replies,
         selectedCustomerId
       });
     }, 500), 
     [
       title, 
       description, 
+      messageText,
       formatType, 
       cardOrientation, 
       mediaHeight, 
@@ -290,6 +297,7 @@ export default function RcsFormatter() {
       brandLogoUrl, 
       verificationSymbol, 
       actions, 
+      replies,
       selectedCustomerId
     ]
   );
@@ -695,6 +703,8 @@ export default function RcsFormatter() {
                       setTitle={setTitle}
                       description={description}
                       setDescription={setDescription}
+                      messageText={messageText}
+                      setMessageText={setMessageText}
                       brandLogoUrl={brandLogoUrl}
                       setBrandLogoUrl={setBrandLogoUrl}
                       verificationSymbol={verificationSymbol}
@@ -704,6 +714,8 @@ export default function RcsFormatter() {
                       setSelectedCustomerId={setSelectedCustomerId}
                       actions={actions}
                       setActions={setActions}
+                      replies={replies}
+                      setReplies={setReplies}
                       isLoadingCustomers={isLoadingCustomers}
                     />
                   </CardContent>
