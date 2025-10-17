@@ -142,11 +142,11 @@ function toRbmSuggestions(actions: Action[] = [], replies: SuggestedReply[] = []
       };
     }
 
-    // Fallback
+    // Fallback for any unhandled action types
     return {
       action: {
-        text: action.text,
-        postbackData: action.postbackData ?? `action_${action.text}`,
+        text: (action as any).text || action.type,
+        postbackData: (action as any).postbackData ?? `action_${(action as any).text || action.type}`,
       },
     };
   });

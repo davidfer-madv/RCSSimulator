@@ -203,10 +203,9 @@ export function setupAuth(app: Express) {
           console.error("Login session error:", loginErr);
           return next(loginErr);
         }
-        if (process.env.NODE_ENV !== 'production') {
-          // @ts-expect-error username exists on user shape
-          console.log("Login successful for user:", (user as any).username);
-        }
+         if (process.env.NODE_ENV !== 'production') {
+           console.log("Login successful for user:", (user as any).username);
+         }
         return res.status(200).json(user);
       });
     })(req, res, next);
