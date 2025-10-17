@@ -255,112 +255,92 @@ export const AndroidRichCard: React.FC<{
   lockAspectRatio, 
   actions 
 }) => {
-  // Calculate image styling based on RCS specifications
-  const getImageStyle = () => {
-    // For vertical cards, follow specific RCS aspect ratios
-    if (cardOrientation === "vertical") {
-      // Height based on the mediaHeight parameter
-      let heightClass = "";
-      
-      switch (mediaHeight) {
-        case "short": 
-          heightClass = "h-28"; // 112 DP
-          break;
-        case "medium": 
-          heightClass = "h-42"; // 168 DP
-          break;
-        case "tall": 
-          heightClass = "h-66"; // 264 DP
-          break;
-        default: 
-          heightClass = "h-42"; // Default to medium
-      }
-      
-      // For vertical cards, use proper aspect ratios per RCS specifications
-      let aspectRatioClass = "";
-      if (lockAspectRatio) {
-        aspectRatioClass = "aspect-[2/1]"; // Default to 2:1 ratio, could also use 16:9 (aspect-video) or 7:3
-      }
-      
-      return `w-full ${heightClass} ${aspectRatioClass} bg-gray-100 ${lockAspectRatio ? 'object-cover' : 'object-contain'}`;
-    } 
-    // For horizontal cards, width is fixed at 128 DP (w-32 in tailwind)
-    else {
-      return "w-32 h-full bg-gray-100 object-cover"; // Height scales with content
+  // Calculate image height based on RCS specifications (DP values)
+  const getImageHeight = () => {
+    switch (mediaHeight) {
+      case "short": return "h-28";  // 112 DP
+      case "medium": return "h-42"; // 168 DP
+      case "tall": return "h-64";   // 264 DP
+      default: return "h-42";
     }
   };
 
+  const hasActions = actions && actions.length > 0;
+
   return (
-    <div className="bg-white rounded-xl overflow-hidden max-w-[85%] shadow-sm border border-gray-200">
+    <div className="bg-white rounded-2xl overflow-hidden max-w-[85%] shadow-md">
       {cardOrientation === "horizontal" ? (
+        // Horizontal Layout - Image on left, content on right
         <div className="flex">
           {imageUrl && (
-            <div className="w-32 overflow-hidden"> {/* Fixed 128 DP width (w-32) */}
+            <div className="w-32 h-32 flex-shrink-0 bg-gray-100">
               <img 
                 src={imageUrl} 
                 alt="Content" 
-                className="w-full h-full object-cover bg-gray-100" 
+                className={`w-full h-full ${lockAspectRatio ? 'object-contain' : 'object-cover'}`}
               />
             </div>
           )}
-          <div className="p-4 flex-1">
-            <h4 className="font-semibold text-base text-gray-900">{title || "Card Title"}</h4>
-            <p className="text-sm text-gray-700 mt-2 line-clamp-3">{description || "Card description text would appear here."}</p>
+          <div className="p-4 flex-1 min-w-0">
+            <h4 className="font-medium text-[16px] text-gray-900 leading-tight line-clamp-2">{title || "Card Title"}</h4>
+            <p className="text-[14px] text-gray-700 mt-2 leading-snug line-clamp-2">{description || "Card description"}</p>
           </div>
         </div>
       ) : (
+        // Vertical Layout - Image on top, content below (Standard Android RCS format)
         <>
           {imageUrl && (
-            <div className="w-full overflow-hidden">
+            <div className={`w-full ${getImageHeight()} bg-gray-100`}>
               <img 
                 src={imageUrl} 
                 alt="Content" 
-                className={
-                  lockAspectRatio 
-                    ? `w-full ${mediaHeight === "short" ? "h-28" : mediaHeight === "medium" ? "h-42" : "h-66"} aspect-[2/1] object-contain bg-gray-100`
-                    : `w-full ${mediaHeight === "short" ? "h-28" : mediaHeight === "medium" ? "h-42" : "h-66"} object-cover bg-gray-100`
-                }
+                className={`w-full h-full ${lockAspectRatio ? 'object-contain' : 'object-cover'}`}
               />
             </div>
           )}
           <div className="p-4">
-            <h4 className="font-semibold text-base text-gray-900">{title || "Card Title"}</h4>
-            <p className="text-sm text-gray-700 mt-2">{description || "Card description text would appear here."}</p>
+            <h4 className="font-medium text-[16px] text-gray-900 leading-tight">{title || "Card Title"}</h4>
+            <p className="text-[14px] text-gray-700 mt-2 leading-relaxed">{description || "Card description text would appear here with more details."}</p>
           </div>
         </>
       )}
-      {actions.length > 0 && (
-        <div className="border-t border-gray-200">
-          {actions.map((action, index) => (
-            <button 
-              key={index} 
-              className="flex w-full items-center px-4 py-3 text-blue-600 hover:bg-blue-50 border-b border-gray-200 last:border-b-0"
+      
+      {/* Action Buttons - Material Design 3 style chips */}
+      {hasActions && (
+        <div className="px-4 pb-4 flex flex-wrap gap-2">
+          {actions.slice(0, 4).map((action, index) => (
+            <button
+              key={`action-${index}`}
+              className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-[14px] font-medium hover:bg-blue-100 transition-colors border border-blue-200"
             >
-              {action.type === "text" && <span className="flex-shrink-0 mr-2 text-blue-500">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.663 3.04094 17.0829 4.73232 18.9121L2.45 21.4424C2.25115 21.6619 2.29644 22 2.56299 22H12Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+              {/* Action type icons */}
+              {action.type === "url" && (
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
-              </span>}
-              {action.type === "url" && <span className="flex-shrink-0 mr-2 text-blue-500">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10 13.5C10.8284 14.3284 12.1716 14.3284 13 13.5L17.5 9C18.3284 8.17157 18.3284 6.82843 17.5 6C16.6716 5.17157 15.3284 5.17157 14.5 6L13 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M14 10.5C13.1716 9.67157 11.8284 9.67157 11 10.5L6.5 15C5.67157 15.8284 5.67157 17.1716 6.5 18C7.32843 18.8284 8.67157 18.8284 9.5 18L11 16.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              )}
+              {action.type === "dial" && (
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-              </span>}
-              {action.type === "phone" && <span className="flex-shrink-0 mr-2 text-blue-500">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 2C15 2 18 2 18 5V19C18 19 18 22 15 22H9C9 22 6 22 6 19V5C6 5 6 2 9 2H15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 18.5H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              )}
+              {action.type === "calendar" && (
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-              </span>}
-              {action.type === "calendar" && <span className="flex-shrink-0 mr-2 text-blue-500">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 7V3M16 7V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M21 13V8C21 6.89543 20.1046 6 19 6H5C3.89543 6 3 6.89543 3 8V19C3 20.1046 3.89543 21 5 21H12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M8 16H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              )}
+              {action.type === "viewLocation" && (
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-              </span>}
-              <span className="font-medium">{action.text}</span>
+              )}
+              {action.type === "shareLocation" && (
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              )}
+              <span>{action.text}</span>
             </button>
           ))}
         </div>
@@ -386,170 +366,103 @@ export const IOSRichCard: React.FC<{
   lockAspectRatio, 
   actions 
 }) => {
-  // Calculate image height based on mediaHeight (iOS uses slightly smaller sizes)
+  // Calculate image height based on mediaHeight (iOS uses specific heights)
   const getImageHeight = () => {
     switch (mediaHeight) {
-      case "short": return "h-24"; 
-      case "medium": return "h-36";
-      case "tall": return "h-52";
-      default: return "h-36";
+      case "short": return "h-28";  // ~112px 
+      case "medium": return "h-42"; // ~168px
+      case "tall": return "h-64";   // ~264px
+      default: return "h-42";
     }
   };
 
-  // iOS action display rules:
-  // 1. Text actions show as individual buttons (like Android)
-  // 2. All other actions (URL, phone, calendar) are grouped together
-  // 3. Single non-text action shows directly, multiple show as "Options"
-  const textActions = actions.filter(a => a.type === "text");
-  const nonTextActions = actions.filter(a => a.type !== "text");
-  
-  // For non-text actions: single shows directly, multiple show as "Options"
-  const showSingleNonTextButton = nonTextActions.length === 1;
-  const showNonTextOptionsButton = nonTextActions.length > 1;
+  // iOS renders actions as list items in a tap-to-expand menu for rich cards
+  // Following iOS Business Chat / Messages for Business patterns
+  const hasActions = actions && actions.length > 0;
 
   return (
     <div className="max-w-[85%]">
       {cardOrientation === "horizontal" ? (
-        <div className="flex flex-col">
-          <div className="flex bg-gray-100 rounded-t-3xl p-3">
+        // Horizontal Layout - Image on left, content on right
+        <div className="flex flex-col bg-white rounded-[20px] overflow-hidden shadow-sm border border-gray-200">
+          <div className="flex p-3 gap-3">
             {imageUrl && (
-              <div className="flex-shrink-0 w-5/12 overflow-hidden">
+              <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
                 <img 
                   src={imageUrl} 
                   alt="Content" 
-                  className={`w-full rounded-xl ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} bg-white`} 
+                  className={`w-full h-full ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
                 />
               </div>
             )}
-            <div className="ml-3 flex-1">
-              <h4 className="font-medium text-base text-black">{title || "Card Title"}</h4>
-              <p className="text-sm text-gray-600 mt-1 line-clamp-3">{description || "Card description text would appear here."}</p>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-[15px] text-black leading-tight line-clamp-2">{title || "Card Title"}</h4>
+              <p className="text-[13px] text-gray-600 mt-1 line-clamp-2 leading-tight">{description || "Card description"}</p>
             </div>
           </div>
           
-          {/* iOS buttons for horizontal layout are inside the card */}
-          {actions.length > 0 && (
-            <div className="bg-gray-100 rounded-b-3xl px-3 pb-3 pt-0.5">
-              <div className="flex flex-wrap gap-2">
-                {/* Text actions - always show individually */}
-                {textActions.map((action, index) => (
-                  <button 
-                    key={`text-${index}`} 
-                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                  >
-                    {action.text}
-                  </button>
-                ))}
-                
-                {/* Single non-text action - show directly */}
-                {showSingleNonTextButton && (
-                  <button 
-                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                  >
-                    {nonTextActions[0].text}
-                  </button>
-                )}
-                
-                {/* Multiple non-text actions - show Options button */}
-                {showNonTextOptionsButton && (
-                  <div className="relative">
-                    <button 
-                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center options-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const dropdown = e.currentTarget.nextElementSibling;
-                        dropdown?.classList.toggle('hidden');
-                      }}
-                    >
-                      <span>Options</span>
-                      <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    <div className="options-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
-                      {nonTextActions.map((action, index) => (
-                        <button 
-                          key={`nontext-${index}`}
-                          className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
-                        >
-                          {action.text}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+          {/* Action buttons for horizontal layout */}
+          {hasActions && (
+            <div className="border-t border-gray-200 px-3 py-2.5 flex flex-col gap-1">
+              {actions.slice(0, 3).map((action, index) => (
+                <button 
+                  key={`action-${index}`}
+                  className="w-full text-left py-2 px-2 text-[15px] text-blue-500 font-medium hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between"
+                >
+                  <span>{action.text}</span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              ))}
+              {actions.length > 3 && (
+                <button className="w-full text-left py-2 px-2 text-[15px] text-gray-500 font-medium hover:bg-gray-50 rounded-lg transition-colors">
+                  See {actions.length - 3} more...
+                </button>
+              )}
             </div>
           )}
         </div>
       ) : (
-        <>
-          {/* Vertical layout similar to example */}
+        // Vertical Layout - Image on top, content below (Standard iOS RCS format)
+        <div className="flex flex-col bg-white rounded-[20px] overflow-hidden shadow-sm border border-gray-200">
           {imageUrl && (
-            <img 
-              src={imageUrl} 
-              alt="Content" 
-              className={`w-full rounded-2xl ${getImageHeight()} ${lockAspectRatio ? 'object-contain' : 'object-cover'} mb-2 bg-white`} 
-            />
+            <div className={`w-full ${getImageHeight()} bg-gray-100`}>
+              <img 
+                src={imageUrl} 
+                alt="Content" 
+                className={`w-full h-full ${lockAspectRatio ? 'object-contain' : 'object-cover'}`} 
+              />
+            </div>
           )}
-          <div className="bg-gray-100 rounded-3xl p-3">
-            <h4 className="font-medium text-base text-black">{title || "Card Title"}</h4>
-            <p className="text-sm text-gray-600 mt-1 mb-2">{description || "Card description text would appear here."}</p>
-            
-            {/* Actions for vertical layout */}
-            {actions.length > 0 && (
-              <div className="mt-3 pt-2 border-t border-gray-200 flex flex-wrap gap-2">
-                {/* Text actions - always show individually */}
-                {textActions.map((action, index) => (
-                  <button 
-                    key={`text-${index}`} 
-                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                  >
-                    {action.text}
-                  </button>
-                ))}
-                
-                {/* Single non-text action - show directly */}
-                {showSingleNonTextButton && (
-                  <button 
-                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium"
-                  >
-                    {nonTextActions[0].text}
-                  </button>
-                )}
-                
-                {/* Multiple non-text actions - show Options button */}
-                {showNonTextOptionsButton && (
-                  <div className="relative">
-                    <button 
-                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-full font-medium flex items-center options-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const dropdown = e.currentTarget.nextElementSibling;
-                        dropdown?.classList.toggle('hidden');
-                      }}
-                    >
-                      <span>Options</span>
-                      <svg className="ml-1 w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    <div className="options-dropdown hidden absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
-                      {nonTextActions.map((action, index) => (
-                        <button 
-                          key={`nontext-${index}`}
-                          className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
-                        >
-                          {action.text}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+          
+          <div className="p-3">
+            <h4 className="font-semibold text-[15px] text-black leading-tight">{title || "Card Title"}</h4>
+            <p className="text-[13px] text-gray-600 mt-1.5 leading-snug line-clamp-3">{description || "Card description text would appear here with more details about the content."}</p>
           </div>
-        </>
+          
+          {/* Action buttons for vertical layout - iOS style list */}
+          {hasActions && (
+            <div className="border-t border-gray-200 px-3 py-2 flex flex-col gap-0.5">
+              {actions.slice(0, 3).map((action, index) => (
+                <button 
+                  key={`action-${index}`}
+                  className="w-full text-left py-2.5 px-2 text-[15px] text-blue-500 font-medium hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between"
+                >
+                  <span>{action.text}</span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              ))}
+              {actions.length > 3 && (
+                <button className="w-full text-left py-2.5 px-2 text-[15px] text-gray-500 font-medium hover:bg-gray-50 rounded-lg transition-colors">
+                  See {actions.length - 3} more options...
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

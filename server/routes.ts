@@ -29,15 +29,13 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // Check if user is authenticated
 function isAuthenticated(req: any, res: any, next: any) {
-  console.log("Auth check - isAuthenticated:", req.isAuthenticated());
-  console.log("Auth check - session:", req.session?.id);
-  console.log("Auth check - user:", req.user?.id);
-  
-  if (req.isAuthenticated()) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log("Auth check - isAuthenticated:", !!req.isAuthenticated?.());
+    console.log("Auth check - user present:", !!req.user?.id);
+  }
+  if (req.isAuthenticated && req.isAuthenticated()) {
     return next();
   }
-  
-  console.log("Auth check failed - sending 401");
   res.status(401).json({ message: "Unauthorized" });
 }
 

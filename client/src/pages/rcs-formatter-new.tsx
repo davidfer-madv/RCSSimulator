@@ -19,6 +19,12 @@ import { processImages, ProcessingStage, ProcessingEventHandler } from "@/lib/im
 import { ImageProcessingLoader } from "@/components/image-formatter/image-processing-loader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Select, 
   SelectContent, 
@@ -68,7 +74,7 @@ export default function RcsFormatter() {
   const [selectedCustomerId, setSelectedCustomerId] = useState(state.selectedCustomerId || "");
   const [activePreviewTab, setActivePreviewTab] = useState<string>("android");
   const [exporting, setExporting] = useState(false);
-  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  // Removed custom export menu state in favor of accessible dropdown
   const [processingStage, setProcessingStage] = useState<ProcessingStage | undefined>(undefined);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
@@ -312,26 +318,21 @@ export default function RcsFormatter() {
     };
   }, [debouncedStateUpdate]);
 
-  // Add click outside handler for export menu
+  // Initialize format type from URL query param (?type=message|richCard|carousel)
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Close export menu when clicking outside
-      if (exportMenuOpen) {
-        const target = event.target as HTMLElement;
-        const exportButton = document.querySelector('[data-export-menu-button]');
-        const exportMenu = document.querySelector('[data-export-menu]');
-        
-        if (!exportButton?.contains(target) && !exportMenu?.contains(target)) {
-          setExportMenuOpen(false);
+    if (!campaignId) {
+      try {
+        const search = typeof window !== 'undefined' ? window.location.search : '';
+        const params = new URLSearchParams(search);
+        const type = params.get('type');
+        if (type === 'message' || type === 'richCard' || type === 'carousel') {
+          setFormatType(type);
         }
+      } catch (e) {
+        // ignore
       }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [exportMenuOpen]);
+    }
+  }, [campaignId]);
 
   // Set brand logo URL from selected brand
   useEffect(() => {
@@ -489,17 +490,8 @@ export default function RcsFormatter() {
     saveFormatMutation.mutate({});
   };
 
-  // Handle image export
-  const handleExportImages = async () => {
-    if (selectedImages.length === 0) {
-      toast({
-        title: "No images to export",
-        description: "Please select at least one image to export.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  // Export JSON (always allowed; for message formats, images are optional)
+  const handleExportJson = async () => {
     setExporting(true);
     setProcessingStage(ProcessingStage.PREPARING);
     setProcessingProgress(0);
@@ -536,7 +528,7 @@ export default function RcsFormatter() {
       // Success!
       toast({
         title: "Export successful",
-        description: "Your images have been exported successfully.",
+        description: "Your JSON export has been downloaded.",
       });
       
       console.log("Export result:", result);
@@ -545,6 +537,71 @@ export default function RcsFormatter() {
       toast({
         title: "Export failed",
         description: error instanceof Error ? error.message : "Failed to export images",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+      setProcessingStage(undefined);
+      setProcessingProgress(0);
+    }
+  };
+
+  // Export device preview image for current platform tab
+  const handleExportDeviceImage = async () => {
+    // For device image exports, we can allow zero images for message format
+    if (formatType !== 'message' && selectedImages.length === 0) {
+      toast({
+        title: "No images selected",
+        description: "Please select at least one image for rich card or carousel.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setExporting(true);
+    setProcessingStage(ProcessingStage.PREPARING);
+    setProcessingProgress(0);
+
+    try {
+      const handleProcessingProgress: ProcessingEventHandler = (stage, progress) => {
+        setProcessingStage(stage);
+        if (progress !== undefined) {
+          setProcessingProgress(progress);
+        }
+      };
+
+      const currentPlatform = activePreviewTab === 'ios' ? 'ios' : 'android';
+
+      await processImages(
+        selectedImages,
+        {
+          formatType,
+          cardOrientation,
+          mediaHeight,
+          lockAspectRatio,
+          title,
+          description,
+          messageText,
+          brandLogoUrl,
+          actions,
+          replies,
+          verificationSymbol,
+          brandName: customers?.find(c => c.id.toString() === selectedCustomerId)?.name,
+        },
+        'image',
+        currentPlatform as 'android' | 'ios',
+        handleProcessingProgress
+      );
+
+      toast({
+        title: "Export successful",
+        description: `Device preview image exported for ${currentPlatform.toUpperCase()}.`,
+      });
+    } catch (error) {
+      console.error("Error exporting device image:", error);
+      toast({
+        title: "Export failed",
+        description: error instanceof Error ? error.message : "Failed to export device image",
         variant: "destructive",
       });
     } finally {
@@ -637,42 +694,29 @@ export default function RcsFormatter() {
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
               </Button>
-              <div className="relative">
-                <Button 
-                  data-export-menu-button
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setExportMenuOpen(!exportMenuOpen)}
-                  title="Export options"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-                {exportMenuOpen && (
-                  <div 
-                    data-export-menu
-                    className="absolute right-0 mt-2 w-48 bg-background shadow-lg rounded-md border p-1 z-10"
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title="Export options"
                   >
-                    <button
-                      className="flex w-full items-center px-3 py-2 text-sm rounded-sm hover:bg-accent"
-                      onClick={handleExportImages}
-                    >
-                      Export as Images
-                    </button>
-                    <button
-                      className="flex w-full items-center px-3 py-2 text-sm rounded-sm hover:bg-accent"
-                      onClick={() => {
-                        // Toggle menu closed
-                        setExportMenuOpen(false);
-                        // Open campaign dialog
-                        handleOpenCampaignDialog();
-                      }}
-                    >
-                      Save as Campaign
-                    </button>
-                  </div>
-                )}
-              </div>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleExportJson(); }}>
+                    Export JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleExportDeviceImage(); }}>
+                    Export Device Image ({activePreviewTab.toUpperCase()})
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenCampaignDialog(); }}>
+                    Save as Campaign
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button 
                 size="sm" 
                 onClick={handleSaveRcsFormat}

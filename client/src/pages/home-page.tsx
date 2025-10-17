@@ -4,8 +4,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { StatsCard } from "@/components/dashboard/stats-card";
-import { Loader2, FileImage, FolderOpen, Building } from "lucide-react";
+import { Loader2, FileImage, FolderOpen, Building, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Interface for statistics from the server
 interface Stats {
@@ -40,15 +46,35 @@ export default function HomePage() {
               <div className="pb-5 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
                 <div className="mt-3 sm:mt-0 sm:ml-4">
-                  <Link href="/rcs-formatter">
-                    <button
-                      type="button"
-                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                    >
-                      <FileImage className="mr-2 -ml-1 h-5 w-5" />
-                      New RCS Format
-                    </button>
-                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                      >
+                        <FileImage className="mr-2 -ml-1 h-5 w-5" />
+                        New RCS Format
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <Link href="/rcs-formatter?type=message">
+                        <DropdownMenuItem asChild>
+                          <button className="w-full text-left">Message</button>
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/rcs-formatter?type=richCard">
+                        <DropdownMenuItem asChild>
+                          <button className="w-full text-left">Rich Card</button>
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/rcs-formatter?type=carousel">
+                        <DropdownMenuItem asChild>
+                          <button className="w-full text-left">Carousel</button>
+                        </DropdownMenuItem>
+                      </Link>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>

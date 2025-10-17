@@ -5,11 +5,19 @@ import {
   HelpCircle,
   Menu,
   Search,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import companyLogo from "../../assets/company-logo.png";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Link } from "wouter";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -75,6 +83,33 @@ export function Navbar({ toggleSidebar }: NavbarProps) {
         </div>
         
         <div className="ml-4 flex items-center md:ml-6">
+          <div className="hidden md:block mr-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  New Format
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <Link href="/rcs-formatter?type=message">
+                  <DropdownMenuItem asChild>
+                    <button className="w-full text-left">Message</button>
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/rcs-formatter?type=richCard">
+                  <DropdownMenuItem asChild>
+                    <button className="w-full text-left">Rich Card</button>
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/rcs-formatter?type=carousel">
+                  <DropdownMenuItem asChild>
+                    <button className="w-full text-left">Carousel</button>
+                  </DropdownMenuItem>
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-500">
             <Bell className="h-5 w-5" />
             <span className="sr-only">Notifications</span>

@@ -48,15 +48,17 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  const isProd = process.env.NODE_ENV === 'production';
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "rcs-formatter-secret-key",
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: false, // Set to false for development
-      httpOnly: true
+      secure: isProd,
+      httpOnly: true,
+      sameSite: isProd ? "lax" : "lax",
     }
   };
 
@@ -68,22 +70,32 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        console.log(`Login attempt for username: ${username}`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`Login attempt for username: ${username}`);
+        }
         const user = await storage.getUserByUsername(username);
         
         if (!user) {
-          console.log(`User ${username} not found`);
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`User ${username} not found`);
+          }
           return done(null, false, { message: "Invalid username or password" });
         }
         
-        console.log(`User found: ${user.username}, password stored: ${user.password ? 'YES' : 'NO'}`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`User found: ${user.username}, password stored: ${user.password ? 'YES' : 'NO'}`);
+        }
         const isPasswordValid = await comparePasswords(password, user.password);
         if (!isPasswordValid) {
-          console.log(`Invalid password for user ${username}`);
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`Invalid password for user ${username}`);
+          }
           return done(null, false, { message: "Invalid username or password" });
         }
         
-        console.log(`User ${username} authenticated successfully`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`User ${username} authenticated successfully`);
+        }
         return done(null, user);
       } catch (error) {
         console.error("Login error:", error);
@@ -93,19 +105,27 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user: any, done) => {
-    console.log("Serializing user:", user.id);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Serializing user:", user.id);
+    }
     done(null, user.id);
   });
   
   passport.deserializeUser(async (id: number, done) => {
     try {
-      console.log("Deserializing user:", id);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Deserializing user:", id);
+      }
       const user = await storage.getUser(id);
       if (!user) {
-        console.log("User not found during deserialization:", id);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("User not found during deserialization:", id);
+        }
         return done(null, false);
       }
-      console.log("User deserialized successfully:", user.id);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("User deserialized successfully:", user.id);
+      }
       done(null, user);
     } catch (error) {
       console.error("Error deserializing user:", error);
@@ -115,33 +135,43 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      console.log("Registration request received:", { ...req.body, password: "***" });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Registration request received:", { ...req.body, password: "***" });
+      }
       
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
-        console.log("Username already exists:", req.body.username);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("Username already exists:", req.body.username);
+        }
         return res.status(400).json({ message: "Username already exists" });
       }
 
-      console.log("Creating user with data:", { 
-        username: req.body.username,
-        name: req.body.name,
-        email: req.body.email
-      });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Creating user with data:", { 
+          username: req.body.username,
+          name: req.body.name,
+          email: req.body.email
+        });
+      }
       
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
       });
       
-      console.log("User created successfully:", { id: user.id, username: user.username });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("User created successfully:", { id: user.id, username: user.username });
+      }
 
       req.login(user, (err) => {
         if (err) {
           console.error("Login error after registration:", err);
           return next(err);
         }
-        console.log("User logged in successfully after registration");
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("User logged in successfully after registration");
+        }
         res.status(201).json(user);
       });
     } catch (error) {
@@ -151,7 +181,9 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    console.log("Login request received:", { username: req.body.username, password: "***" });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Login request received:", { username: req.body.username, password: "***" });
+    }
     
     passport.authenticate("local", (err: any, user: Express.User | false, info: { message?: string } | undefined) => {
       if (err) {
@@ -160,7 +192,9 @@ export function setupAuth(app: Express) {
       }
       
       if (!user) {
-        console.log("Login failed:", info?.message || "Authentication failed");
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("Login failed:", info?.message || "Authentication failed");
+        }
         return res.status(401).json({ message: info?.message || "Invalid username or password" });
       }
       
@@ -169,8 +203,10 @@ export function setupAuth(app: Express) {
           console.error("Login session error:", loginErr);
           return next(loginErr);
         }
-        
-        console.log("Login successful for user:", user.username);
+        if (process.env.NODE_ENV !== 'production') {
+          // @ts-expect-error username exists on user shape
+          console.log("Login successful for user:", (user as any).username);
+        }
         return res.status(200).json(user);
       });
     })(req, res, next);

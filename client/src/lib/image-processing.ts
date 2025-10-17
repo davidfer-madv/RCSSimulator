@@ -88,9 +88,10 @@ export async function processImages(
         imageUrl: images.length > 0 ? URL.createObjectURL(images[0]) : '',
         mediaHeight: options.mediaHeight || "medium",
         orientation: options.cardOrientation || "vertical",
-        suggestions: options.actions,
+        actions: options.actions,
+        replies: options.replies || [],
         brandDisplayName: options.brandName || "Business",
-        verificationStatus: options.verificationSymbol || true
+        verificationStatus: options.verificationSymbol !== undefined ? options.verificationSymbol : true,
       });
       
       comprehensiveJson = {
@@ -117,9 +118,10 @@ export async function processImages(
       rcsJson = generateCarouselJson({
         cards,
         cardWidth: options.cardOrientation === "horizontal" ? "MEDIUM" : "TALL",
-        suggestions: options.actions,
+        actions: options.actions,
+        replies: options.replies || [],
         brandDisplayName: options.brandName || "Business",
-        verificationStatus: options.verificationSymbol || true
+        verificationStatus: options.verificationSymbol !== undefined ? options.verificationSymbol : true,
       });
       
       comprehensiveJson = {
