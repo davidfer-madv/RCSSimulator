@@ -103,6 +103,45 @@ function toRbmSuggestions(actions: Action[] = [], replies: SuggestedReply[] = []
       };
     }
 
+    if (action.type === "openApp") {
+      return {
+        action: {
+          text: action.text,
+          postbackData: action.postbackData ?? `action_open_app_${action.text}`,
+          openAppAction: {
+            packageName: action.packageName,
+            data: action.appData ?? undefined,
+          },
+        },
+      };
+    }
+
+    if (action.type === "wallet") {
+      return {
+        action: {
+          text: action.text,
+          postbackData: action.postbackData ?? `action_wallet_${action.text}`,
+          openUrlAction: {
+            url: action.walletPassUrl, // Wallet passes are opened via URL
+          },
+        },
+      };
+    }
+
+    if (action.type === "maps") {
+      return {
+        action: {
+          text: action.text,
+          postbackData: action.postbackData ?? `action_maps_${action.text}`,
+          viewLocationAction: {
+            query: action.query,
+            latitude: action.latitude ?? undefined,
+            longitude: action.longitude ?? undefined,
+          },
+        },
+      };
+    }
+
     // Fallback
     return {
       action: {

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
 import { EnhancedPreviewContainer } from "@/components/image-formatter/enhanced-preview-container";
+import { PlatformComparisonGuide } from "@/components/image-formatter/platform-comparison-guide";
 import { Action, SuggestedReply, Customer, Campaign, RcsFormat } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -63,7 +64,7 @@ export default function RcsFormatter() {
   const [title, setTitle] = useState(state.title || "");
   const [description, setDescription] = useState(state.description || "");
   const [messageText, setMessageText] = useState(state.messageText || "");
-  const [formatType, setFormatType] = useState<"message" | "richCard" | "carousel">(state.formatType || "richCard");
+  const [formatType, setFormatType] = useState<"message" | "richCard" | "carousel" | "chip">(state.formatType || "richCard");
   const [cardOrientation, setCardOrientation] = useState<"vertical" | "horizontal">(state.cardOrientation || "vertical");
   const [mediaHeight, setMediaHeight] = useState<"short" | "medium" | "tall">(state.mediaHeight || "medium");
   const [lockAspectRatio, setLockAspectRatio] = useState(state.lockAspectRatio || false);
@@ -320,19 +321,19 @@ export default function RcsFormatter() {
 
   // Initialize format type from URL query param (?type=message|richCard|carousel)
   useEffect(() => {
-    if (!campaignId) {
-      try {
-        const search = typeof window !== 'undefined' ? window.location.search : '';
-        const params = new URLSearchParams(search);
-        const type = params.get('type');
-        if (type === 'message' || type === 'richCard' || type === 'carousel') {
-          setFormatType(type);
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-  }, [campaignId]);
+     if (!campaignId) {
+       try {
+         const search = typeof window !== 'undefined' ? window.location.search : '';
+         const params = new URLSearchParams(search);
+         const type = params.get('type');
+         if (type === 'message' || type === 'richCard' || type === 'carousel' || type === 'chip') {
+           setFormatType(type as "message" | "richCard" | "carousel" | "chip");
+         }
+       } catch (e) {
+         // ignore
+       }
+     }
+   }, [campaignId]);
 
   // Set brand logo URL from selected brand
   useEffect(() => {
@@ -455,12 +456,12 @@ export default function RcsFormatter() {
   // Handle form submission
   const handleSaveRcsFormat = async () => {
     // Format-specific validation
-    if (formatType === "message") {
-      // Message format: Only messageText is required
+    if (formatType === "message" || formatType === "chip") {
+      // Message and Chip formats: Only messageText is required
       if (!messageText.trim()) {
         toast({
           title: "Missing message text",
-          description: "Please provide message text for your RCS message format.",
+          description: "Please provide message text for your RCS format.",
           variant: "destructive",
         });
         return;
@@ -546,17 +547,17 @@ export default function RcsFormatter() {
     }
   };
 
-  // Export device preview image for current platform tab
-  const handleExportDeviceImage = async () => {
-    // For device image exports, we can allow zero images for message format
-    if (formatType !== 'message' && selectedImages.length === 0) {
-      toast({
-        title: "No images selected",
-        description: "Please select at least one image for rich card or carousel.",
-        variant: "destructive",
-      });
-      return;
-    }
+   // Export device preview image for current platform tab
+   const handleExportDeviceImage = async () => {
+     // For device image exports, we can allow zero images for message and chip formats
+     if (formatType !== 'message' && formatType !== 'chip' && selectedImages.length === 0) {
+       toast({
+         title: "No images selected",
+         description: "Please select at least one image for rich card or carousel.",
+         variant: "destructive",
+       });
+       return;
+     }
 
     setExporting(true);
     setProcessingStage(ProcessingStage.PREPARING);
@@ -804,6 +805,7 @@ export default function RcsFormatter() {
                           verificationSymbol={verificationSymbol}
                           brandName={customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name"}
                           actions={actions}
+                          replies={replies}
                         />
                       </TabsContent>
                       <TabsContent value="ios" className="mt-4">
@@ -821,12 +823,18 @@ export default function RcsFormatter() {
                           verificationSymbol={verificationSymbol}
                           brandName={customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name"}
                           actions={actions}
+                          replies={replies}
                         />
                       </TabsContent>
                     </Tabs>
                   </CardContent>
                 </Card>
               </div>
+            </div>
+            
+            {/* Platform Comparison Guide - Full Width */}
+            <div className="mt-6">
+              <PlatformComparisonGuide />
             </div>
           </div>
         </div>

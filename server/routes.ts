@@ -25,7 +25,7 @@ const upload = multer({
 });
 
 // Whitelist of allowed image file types
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
 // Check if user is authenticated
 function isAuthenticated(req: any, res: any, next: any) {

@@ -12,9 +12,10 @@ interface EnhancedPreviewContainerProps {
   messageText?: string;
   imageUrls: string[];
   actions: Action[];
+  replies?: { text: string; postbackData?: string }[];
   cardOrientation?: "vertical" | "horizontal";
   mediaHeight?: "short" | "medium" | "tall";
-  formatType?: "message" | "richCard" | "carousel";
+  formatType?: "message" | "richCard" | "carousel" | "chip";
   lockAspectRatio?: boolean;
   brandLogoUrl?: string;
   verificationSymbol?: boolean;

@@ -36,13 +36,14 @@ export function ImageUploader({
     const invalidFiles: { file: File; reason: string }[] = [];
 
     for (const file of files) {
-      // Check file type
-      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-        invalidFiles.push({ file, reason: "Invalid file type. Only JPG, PNG, and WebP are supported." });
+      // Check file type - Support JPEG, PNG, GIF, WebP
+      // Note: GIF is supported on Android but not iOS (non-animated only)
+      if (!["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"].includes(file.type)) {
+        invalidFiles.push({ file, reason: "Invalid file type. Only JPG, PNG, GIF, and WebP are supported." });
         continue;
       }
 
-      // Check file size (10MB limit)
+      // Check file size (10MB limit for RCS)
       if (file.size > 10 * 1024 * 1024) {
         invalidFiles.push({ file, reason: "File too large. Maximum size is 10MB." });
         continue;
@@ -153,14 +154,15 @@ export function ImageUploader({
                 type="file"
                 className="sr-only"
                 multiple
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 ref={fileInputRef}
                 onChange={handleChange}
               />
             </label>
             <p className="pl-1">or drag and drop</p>
           </div>
-          <p className="text-xs text-gray-500">PNG, JPG, WebP up to 10MB</p>
+          <p className="text-xs text-gray-500">PNG, JPG, GIF, WebP up to 10MB</p>
+          <p className="text-xs text-amber-600 mt-1">⚠️ Note: Animated GIFs supported on Android only</p>
         </div>
       </div>
 

@@ -57,23 +57,28 @@ export default function HomePage() {
                         <ChevronDown className="ml-2 h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <Link href="/rcs-formatter?type=message">
-                        <DropdownMenuItem asChild>
-                          <button className="w-full text-left">Message</button>
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/rcs-formatter?type=richCard">
-                        <DropdownMenuItem asChild>
-                          <button className="w-full text-left">Rich Card</button>
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/rcs-formatter?type=carousel">
-                        <DropdownMenuItem asChild>
-                          <button className="w-full text-left">Carousel</button>
-                        </DropdownMenuItem>
-                      </Link>
-                    </DropdownMenuContent>
+                     <DropdownMenuContent align="end" className="w-56">
+                       <Link href="/rcs-formatter?type=message">
+                         <DropdownMenuItem asChild>
+                           <button className="w-full text-left">Message</button>
+                         </DropdownMenuItem>
+                       </Link>
+                       <Link href="/rcs-formatter?type=richCard">
+                         <DropdownMenuItem asChild>
+                           <button className="w-full text-left">Rich Card</button>
+                         </DropdownMenuItem>
+                       </Link>
+                       <Link href="/rcs-formatter?type=carousel">
+                         <DropdownMenuItem asChild>
+                           <button className="w-full text-left">Carousel</button>
+                         </DropdownMenuItem>
+                       </Link>
+                       <Link href="/rcs-formatter?type=chip">
+                         <DropdownMenuItem asChild>
+                           <button className="w-full text-left">Chip List</button>
+                         </DropdownMenuItem>
+                       </Link>
+                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
               </div>

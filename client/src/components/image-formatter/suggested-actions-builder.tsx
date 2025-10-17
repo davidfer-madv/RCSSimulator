@@ -31,6 +31,12 @@ export function SuggestedActionsBuilder({
   const [longitude, setLongitude] = useState("");
   const [locationLabel, setLocationLabel] = useState("");
   const [postbackData, setPostbackData] = useState("");
+  const [packageName, setPackageName] = useState("");
+  const [appData, setAppData] = useState("");
+  const [walletPassUrl, setWalletPassUrl] = useState("");
+  const [mapsQuery, setMapsQuery] = useState("");
+  const [mapsLatitude, setMapsLatitude] = useState("");
+  const [mapsLongitude, setMapsLongitude] = useState("");
 
   const resetForm = () => {
     setActionText("");
@@ -44,6 +50,12 @@ export function SuggestedActionsBuilder({
     setLongitude("");
     setLocationLabel("");
     setPostbackData("");
+    setPackageName("");
+    setAppData("");
+    setWalletPassUrl("");
+    setMapsQuery("");
+    setMapsLatitude("");
+    setMapsLongitude("");
   };
 
   const addAction = () => {
@@ -100,6 +112,36 @@ export function SuggestedActionsBuilder({
           postbackData: postbackData || undefined,
         };
         break;
+      case "openApp":
+        if (!packageName) return;
+        newAction = {
+          type: "openApp",
+          text: actionText,
+          packageName,
+          appData: appData || undefined,
+          postbackData: postbackData || undefined,
+        };
+        break;
+      case "wallet":
+        if (!walletPassUrl) return;
+        newAction = {
+          type: "wallet",
+          text: actionText,
+          walletPassUrl,
+          postbackData: postbackData || undefined,
+        };
+        break;
+      case "maps":
+        if (!mapsQuery) return;
+        newAction = {
+          type: "maps",
+          text: actionText,
+          query: mapsQuery,
+          latitude: mapsLatitude ? parseFloat(mapsLatitude) : undefined,
+          longitude: mapsLongitude ? parseFloat(mapsLongitude) : undefined,
+          postbackData: postbackData || undefined,
+        };
+        break;
     }
 
     if (newAction) {
@@ -137,6 +179,9 @@ export function SuggestedActionsBuilder({
                 {action.type === "calendar" && `Calendar: ${action.title}`}
                 {action.type === "viewLocation" && `Location: ${action.latitude}, ${action.longitude}`}
                 {action.type === "shareLocation" && "Share Location"}
+                {action.type === "openApp" && `App: ${action.packageName}`}
+                {action.type === "wallet" && `Wallet: ${action.walletPassUrl}`}
+                {action.type === "maps" && `Maps: ${action.query}`}
               </div>
             </div>
             <Badge variant="secondary" className="text-xs">
@@ -189,6 +234,9 @@ export function SuggestedActionsBuilder({
                   <SelectItem value="calendar">Add to Calendar</SelectItem>
                   <SelectItem value="viewLocation">View Location</SelectItem>
                   <SelectItem value="shareLocation">Share Location</SelectItem>
+                  <SelectItem value="openApp">Open App</SelectItem>
+                  <SelectItem value="wallet">Add to Wallet</SelectItem>
+                  <SelectItem value="maps">Open Maps</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -316,6 +364,96 @@ export function SuggestedActionsBuilder({
               <p className="text-sm text-blue-800">
                 This action allows users to share their current location with you.
               </p>
+            </div>
+          )}
+
+          {actionType === "openApp" && (
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="package-name">App Package Name</Label>
+                <Input
+                  id="package-name"
+                  value={packageName}
+                  onChange={(e) => setPackageName(e.target.value)}
+                  placeholder="com.example.app"
+                  data-testid="input-package-name"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Android package name (e.g., com.example.myapp)
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="app-data">App Data (Optional)</Label>
+                <Textarea
+                  id="app-data"
+                  value={appData}
+                  onChange={(e) => setAppData(e.target.value)}
+                  placeholder="Additional data to pass to the app"
+                  rows={2}
+                  data-testid="input-app-data"
+                />
+              </div>
+            </div>
+          )}
+
+          {actionType === "wallet" && (
+            <div>
+              <Label htmlFor="wallet-pass-url">Wallet Pass URL</Label>
+              <Input
+                id="wallet-pass-url"
+                type="url"
+                value={walletPassUrl}
+                onChange={(e) => setWalletPassUrl(e.target.value)}
+                placeholder="https://example.com/pass.pkpass"
+                data-testid="input-wallet-pass-url"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                URL to Google Wallet pass or Apple Wallet pass
+              </p>
+            </div>
+          )}
+
+          {actionType === "maps" && (
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="maps-query">Location or Query</Label>
+                <Input
+                  id="maps-query"
+                  value={mapsQuery}
+                  onChange={(e) => setMapsQuery(e.target.value)}
+                  placeholder="123 Main St, City or Business Name"
+                  data-testid="input-maps-query"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Address, business name, or search query
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="maps-latitude">Latitude (Optional)</Label>
+                  <Input
+                    id="maps-latitude"
+                    type="number"
+                    step="any"
+                    value={mapsLatitude}
+                    onChange={(e) => setMapsLatitude(e.target.value)}
+                    placeholder="37.7749"
+                    data-testid="input-maps-latitude"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="maps-longitude">Longitude (Optional)</Label>
+                  <Input
+                    id="maps-longitude"
+                    type="number"
+                    step="any"
+                    value={mapsLongitude}
+                    onChange={(e) => setMapsLongitude(e.target.value)}
+                    placeholder="-122.4194"
+                    data-testid="input-maps-longitude"
+                  />
+                </div>
+              </div>
             </div>
           )}
 

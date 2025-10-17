@@ -12,8 +12,8 @@ interface FormatOptionsProps {
   setDescription: (description: string) => void;
   messageText: string;
   setMessageText: (text: string) => void;
-  formatType: "message" | "richCard" | "carousel";
-  setFormatType: (formatType: "message" | "richCard" | "carousel") => void;
+  formatType: "message" | "richCard" | "carousel" | "chip";
+  setFormatType: (formatType: "message" | "richCard" | "carousel" | "chip") => void;
   cardOrientation: "vertical" | "horizontal";
   setCardOrientation: (orientation: "vertical" | "horizontal") => void;
   mediaHeight: "short" | "medium" | "tall";
@@ -69,7 +69,7 @@ export function FormatOptions({
         <Label htmlFor="format-type">RCS Format Type</Label>
         <Select 
           value={formatType}
-          onValueChange={(value) => setFormatType(value as "message" | "richCard" | "carousel")}
+          onValueChange={(value) => setFormatType(value as "message" | "richCard" | "carousel" | "chip")}
         >
           <SelectTrigger id="format-type" className="mt-1" data-testid="select-format-type">
             <SelectValue placeholder="Select format type" />
@@ -78,12 +78,24 @@ export function FormatOptions({
             <SelectItem value="message">Simple Message</SelectItem>
             <SelectItem value="richCard">Rich Card (Single Image)</SelectItem>
             <SelectItem value="carousel">Carousel (Multiple Images)</SelectItem>
+            <SelectItem value="chip">Chip List (Suggested Actions)</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Conditional rendering based on format type */}
       {formatType === "message" && (
+        <MessageOptions
+          messageText={messageText}
+          setMessageText={setMessageText}
+          replies={replies}
+          setReplies={setReplies}
+          actions={actions}
+          setActions={setActions}
+        />
+      )}
+
+      {formatType === "chip" && (
         <MessageOptions
           messageText={messageText}
           setMessageText={setMessageText}

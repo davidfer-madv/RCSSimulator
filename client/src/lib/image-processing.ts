@@ -5,7 +5,7 @@ interface FormatOptions {
   title: string;
   description: string;
   messageText?: string;
-  formatType: "message" | "richCard" | "carousel";
+  formatType: "message" | "richCard" | "carousel" | "chip";
   cardOrientation?: "vertical" | "horizontal";
   mediaHeight?: "short" | "medium" | "tall";
   lockAspectRatio?: boolean;
@@ -70,10 +70,10 @@ export async function processImages(
     let comprehensiveJson: RcsCardJson;
     
     // Generate the appropriate JSON format based on format type
-    if (options.formatType === "message") {
-      // Simple message format - no card fields
+    if (options.formatType === "message" || options.formatType === "chip") {
+      // Simple message or chip list format - no card fields
       comprehensiveJson = {
-        formatType: "message",
+        formatType: options.formatType,
         messageText: options.messageText || "",
         imagePaths: images.map(file => file.name),
         actions: options.actions,

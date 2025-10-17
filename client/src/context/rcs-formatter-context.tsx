@@ -7,7 +7,7 @@ type RcsFormatterState = {
   title: string;
   description: string;
   messageText: string;
-  formatType: "message" | "richCard" | "carousel";
+  formatType: "message" | "richCard" | "carousel" | "chip";
   cardOrientation: "vertical" | "horizontal";
   mediaHeight: "short" | "medium" | "tall";
   lockAspectRatio: boolean;

@@ -184,6 +184,30 @@ const actionShareLocationSchema = z.object({
   postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
 });
 
+const actionOpenAppSchema = z.object({
+  text: z.string().min(1, "Action text is required").max(25, "Action text cannot exceed 25 characters"),
+  type: z.literal("openApp"),
+  packageName: z.string().min(1, "Package name is required"),
+  appData: z.string().optional(),
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
+});
+
+const actionWalletSchema = z.object({
+  text: z.string().min(1, "Action text is required").max(25, "Action text cannot exceed 25 characters"),
+  type: z.literal("wallet"),
+  walletPassUrl: z.string().url("Must be a valid URL"),
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
+});
+
+const actionMapsSchema = z.object({
+  text: z.string().min(1, "Action text is required").max(25, "Action text cannot exceed 25 characters"),
+  type: z.literal("maps"),
+  query: z.string().min(1, "Map query or address is required"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  postbackData: z.string().max(2048, "Postback data cannot exceed 2048 characters").optional(),
+});
+
 // Schema for action items (Suggested Actions)
 export const actionSchema = z.discriminatedUnion("type", [
   actionUrlSchema,
@@ -191,6 +215,9 @@ export const actionSchema = z.discriminatedUnion("type", [
   actionCalendarSchema,
   actionViewLocationSchema,
   actionShareLocationSchema,
+  actionOpenAppSchema,
+  actionWalletSchema,
+  actionMapsSchema,
 ]);
 
 export type Action = z.infer<typeof actionSchema>;
@@ -200,8 +227,8 @@ export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
   title: z.string().max(200, "Title cannot exceed 200 characters").optional().nullable(),
   description: z.string().max(2000, "Description cannot exceed 2000 characters").optional().nullable(),
   messageText: z.string().max(2000, "Message text cannot exceed 2000 characters").optional().nullable(),
-  formatType: z.enum(["message", "richCard", "carousel"], {
-    errorMap: () => ({ message: "Format type must be Message, Rich Card, or Carousel" }),
+  formatType: z.enum(["message", "richCard", "carousel", "chip"], {
+    errorMap: () => ({ message: "Format type must be Message, Rich Card, Carousel, or Chip List" }),
   }),
   cardOrientation: z.enum(["vertical", "horizontal"], {
     errorMap: () => ({ message: "Card orientation must be either Vertical or Horizontal" }),
@@ -222,16 +249,16 @@ export const rcsFormatValidationSchema = insertRcsFormatSchema.extend({
   campaignName: z.string().optional().nullable(),
 }).refine((data) => {
   // Format-specific validation
-  if (data.formatType === "message") {
-    // Message format: messageText is required
+  if (data.formatType === "message" || data.formatType === "chip") {
+    // Message and Chip formats: messageText is required
     return data.messageText && data.messageText.trim().length > 0;
   } else {
     // Rich Card and Carousel formats: title is required
     return data.title && data.title.trim().length > 0;
   }
 }, (data) => ({
-  message: data.formatType === "message" 
-    ? "Message text is required for message format" 
+  message: data.formatType === "message" || data.formatType === "chip"
+    ? "Message text is required for message and chip list formats" 
     : "Title is required for richCard and carousel formats",
-  path: data.formatType === "message" ? ["messageText"] : ["title"],
+  path: data.formatType === "message" || data.formatType === "chip" ? ["messageText"] : ["title"],
 }));

@@ -15,7 +15,9 @@ import {
   AndroidRichCard,
   IOSRichCard,
   AndroidCarousel,
-  IOSCarousel
+  IOSCarousel,
+  AndroidChipList,
+  IOSChipList
 } from "./figma-message-ui";
 
 interface FigmaPreviewContainerProps {
@@ -25,9 +27,10 @@ interface FigmaPreviewContainerProps {
   messageText?: string;
   imageUrls: string[];
   actions: Action[];
+  replies?: { text: string; postbackData?: string }[];
   cardOrientation?: "vertical" | "horizontal";
   mediaHeight?: "short" | "medium" | "tall";
-  formatType?: "message" | "richCard" | "carousel";
+  formatType?: "message" | "richCard" | "carousel" | "chip";
   lockAspectRatio?: boolean;
   brandLogoUrl?: string;
   verificationSymbol?: boolean;
@@ -41,6 +44,7 @@ export function FigmaPreviewContainer({
   messageText = "",
   imageUrls,
   actions,
+  replies = [],
   cardOrientation = "vertical",
   mediaHeight = "medium",
   formatType = "richCard",
@@ -115,6 +119,22 @@ export function FigmaPreviewContainer({
                   <>{iOSMessageBubble({ message: messageText || "Your message will appear here..." })}</>
                 )}
               </div>
+            ) : formatType === "chip" ? (
+              <div className="mb-3 flex justify-start">
+                {platform === "android" ? (
+                  <AndroidChipList 
+                    messageText={messageText || "Your message will appear here..."}
+                    actions={actions}
+                    replies={replies}
+                  />
+                ) : (
+                  <IOSChipList 
+                    messageText={messageText || "Your message will appear here..."}
+                    actions={actions}
+                    replies={replies}
+                  />
+                )}
+              </div>
             ) : formatType === "richCard" && imageUrls.length > 0 ? (
               <div className="mb-3 flex justify-start">
                 {platform === "android" ? (
@@ -171,19 +191,48 @@ export function FigmaPreviewContainer({
         </div>
       </CardContent>
       
-      {/* Format Requirements Reference */}
-      <div className="mt-4 text-sm text-gray-500">
-        <p className="mb-2"><strong>RCS Format Requirements:</strong></p>
-        <ul className="list-disc pl-5 space-y-1 text-xs">
-          <li>Rich Cards: Single image with vertical or horizontal layout</li>
-          <li>Carousels: Up to 10 images with shared title and actions</li>
-          <li>Title: Maximum 200 characters</li>
-          <li>Description: Maximum 2000 characters (iOS may truncate to ~144 chars)</li>
-          <li>Media Height: Short (112 DP), Medium (168 DP), Tall (264 DP)</li>
-          <li>Image Requirements: Max 1500x1000 pixels, under 1.8MB, JPEG/PNG only</li>
-          <li>Actions: Maximum 4 actions (URL links, phone numbers, or calendar events)</li>
-          <li>iOS Compatibility: No GIF support, JPEG recommended</li>
-        </ul>
+      {/* Platform-Specific Behavior Guide */}
+      <div className="mt-4 space-y-3">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3">
+          <p className="font-semibold text-sm text-gray-900 mb-2">
+            {platform === "android" ? "📱 Android" : "🍎 iOS"} Platform Behaviors:
+          </p>
+          <ul className="list-disc pl-5 space-y-1 text-xs text-gray-700">
+            {platform === "android" ? (
+              <>
+                <li><strong>Actions:</strong> Displayed as Material Design 3 chips (inline, pill-shaped buttons)</li>
+                <li><strong>Line Breaks:</strong> Respects all line breaks in description text</li>
+                <li><strong>Title Length:</strong> Up to 200 characters displayed</li>
+                <li><strong>Description:</strong> Up to 2000 characters, scrollable if needed</li>
+                <li><strong>Image Format:</strong> JPEG, PNG, GIF (animated), WebP supported</li>
+                <li><strong>Media Cropping:</strong> object-cover by default, object-contain if locked</li>
+                <li><strong>Font Size:</strong> Title 16px, Description 14px</li>
+                <li><strong>Chips vs Replies:</strong> Chips shown as filled buttons, replies as outlined</li>
+              </>
+            ) : (
+              <>
+                <li><strong>Actions:</strong> Displayed as list items with chevrons (tap to expand)</li>
+                <li><strong>Line Breaks:</strong> May compress multiple line breaks to single space</li>
+                <li><strong>Title Length:</strong> Truncates after ~60 characters (2 lines max)</li>
+                <li><strong>Description:</strong> Truncates after ~144 characters (3 lines, line-clamp-3)</li>
+                <li><strong>Image Format:</strong> JPEG, PNG only - NO GIF support (static or animated)</li>
+                <li><strong>Media Cropping:</strong> object-contain preferred for best iOS display</li>
+                <li><strong>Font Size:</strong> Title 15px, Description 13px (iOS standard)</li>
+                <li><strong>Chips vs Replies:</strong> Both shown as white rounded buttons with borders</li>
+              </>
+            )}
+          </ul>
+        </div>
+        
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <p className="font-semibold text-sm text-gray-900 mb-2">⚠️ Key Differences:</p>
+          <ul className="list-disc pl-5 space-y-1 text-xs text-gray-700">
+            <li><strong>CTA Display:</strong> {platform === "android" ? "Android shows all actions inline as chips" : "iOS shows actions in a vertical list with chevrons"}</li>
+            <li><strong>Link Previews:</strong> {platform === "android" ? "Rich card format with image + text" : "Compact card with smaller thumbnail"}</li>
+            <li><strong>Image Scaling:</strong> {platform === "android" ? "Fills width, crops height to match mediaHeight DP" : "Contains image within bounds, may letterbox"}</li>
+            <li><strong>Max Actions:</strong> Both platforms support up to 4 suggested actions + 11 replies</li>
+          </ul>
+        </div>
       </div>
     </Card>
   );
