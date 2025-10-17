@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { UploadCloud, X } from "lucide-react";
+import { UploadCloud, X, AlertTriangle, CheckCircle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { validateImageFormat } from "@/lib/platform-validation";
 
 interface ImageUploaderProps {
   selectedImages: File[];
@@ -168,28 +169,57 @@ export function ImageUploader({
 
       {selectedImages.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-          {selectedImages.map((file, index) => (
-            <Card key={`${file.name}-${index}`} className="relative">
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-2 right-2 h-6 w-6 rounded-full z-10"
-                onClick={() => removeImage(index)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-              <CardContent className="p-2">
-                <div className="h-24 w-full overflow-hidden rounded-md">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`Preview ${index}`}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-gray-500 truncate">{file.name}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {selectedImages.map((file, index) => {
+            const formatWarning = validateImageFormat(file.name, file.type);
+            const isGif = file.type === 'image/gif';
+            const isWebP = file.type === 'image/webp';
+            
+            return (
+              <Card key={`${file.name}-${index}`} className={`relative ${formatWarning ? 'border-amber-300' : ''}`}>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6 rounded-full z-10"
+                  onClick={() => removeImage(index)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                {formatWarning && (
+                  <div className="absolute top-2 left-2 z-10">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 bg-white rounded-full p-0.5" />
+                  </div>
+                )}
+                <CardContent className="p-2">
+                  <div className="h-24 w-full overflow-hidden rounded-md">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Preview ${index}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500 truncate">{file.name}</p>
+                  {isGif && (
+                    <div className="mt-1 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3 text-amber-600" />
+                      <span className="text-[10px] text-amber-600 font-medium">iOS: Not supported</span>
+                    </div>
+                  )}
+                  {isWebP && (
+                    <div className="mt-1 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3 text-blue-500" />
+                      <span className="text-[10px] text-blue-600">iOS: Limited support</span>
+                    </div>
+                  )}
+                  {!isGif && !isWebP && (file.type === 'image/jpeg' || file.type === 'image/png') && (
+                    <div className="mt-1 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                      <span className="text-[10px] text-green-600 font-medium">Cross-platform ✓</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

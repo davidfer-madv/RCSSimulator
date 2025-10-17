@@ -8,6 +8,8 @@ import { SuggestedRepliesBuilder } from "./suggested-replies-builder";
 import { SuggestedActionsBuilder } from "./suggested-actions-builder";
 import { Info, Loader2 } from "lucide-react";
 import { convertDpToPx } from "@/lib/media-size-converter";
+import { validateIOSTitleLength, validateIOSDescriptionLength, getSafeZoneGuidance, isTextInSafeZone } from "@/lib/platform-validation";
+import { CharacterCounter, SafeZoneIndicator, InlineValidationFeedback } from "./inline-validation-feedback";
 import {
   Tooltip,
   TooltipContent,
@@ -66,6 +68,21 @@ export function RichCardOptions({
   const descriptionLimit = 2000;
   const titleExceeded = titleCharCount > titleLimit;
   const descriptionExceeded = descriptionCharCount > descriptionLimit;
+  
+  // iOS-specific validation
+  const iosTitleLimit = 102; // iOS rich card title limit before line break
+  const iosDescLimit = 144; // iOS description visible characters (~3 lines)
+  const titleExceedsIOS = titleCharCount > iosTitleLimit;
+  const descExceedsIOS = descriptionCharCount > iosDescLimit;
+  
+  // Get safe zone guidance
+  const safeZone = getSafeZoneGuidance(mediaHeight);
+  const titleInSafeZone = isTextInSafeZone(title, safeZone.titleChars, 'ios');
+  const descInSafeZone = isTextInSafeZone(description, safeZone.descriptionChars, 'ios');
+  
+  // Validate title and description
+  const titleValidation = validateIOSTitleLength(title);
+  const descValidation = validateIOSDescriptionLength(description);
 
   return (
     <div className="space-y-6">
@@ -220,45 +237,85 @@ export function RichCardOptions({
       <div>
         <div className="flex justify-between">
           <Label htmlFor="card-title">Card Title</Label>
-          <span className={`text-xs ${titleExceeded ? 'text-red-500' : 'text-gray-500'}`}>
-            {titleCharCount}/{titleLimit}
-          </span>
+          <div className="flex items-center gap-2">
+            {titleExceedsIOS && (
+              <span className="text-xs text-amber-600 font-medium">iOS: {titleCharCount}/102</span>
+            )}
+            <span className={`text-xs font-mono ${titleExceeded ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+              {titleCharCount}/{titleLimit}
+            </span>
+          </div>
         </div>
         <Input
           id="card-title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Product name or promotion"
-          className={`mt-1 ${titleExceeded ? 'border-red-500' : ''}`}
+          className={`mt-1 ${titleExceeded ? 'border-red-500' : titleExceedsIOS ? 'border-amber-400' : ''}`}
           maxLength={titleLimit}
           data-testid="input-card-title"
         />
         {titleExceeded && (
-          <p className="text-xs text-red-500 mt-1">Title exceeds the maximum of {titleLimit} characters</p>
+          <p className="text-xs text-red-500 mt-1 font-medium">
+            ⚠️ Title exceeds RCS maximum of {titleLimit} characters
+          </p>
         )}
+        {!titleExceeded && titleValidation && (
+          <div className="mt-2">
+            <InlineValidationFeedback
+              type={titleValidation.severity as any}
+              message={titleValidation.message}
+              recommendation={titleValidation.recommendation}
+              platform="ios"
+              compact
+            />
+          </div>
+        )}
+        <p className="text-xs text-gray-500 mt-1">
+          💡 iOS rich cards: Keep under 102 characters to prevent line breaks
+        </p>
       </div>
 
       <div>
         <div className="flex justify-between">
           <Label htmlFor="card-description">Card Description</Label>
-          <span className={`text-xs ${descriptionExceeded ? 'text-red-500' : 'text-gray-500'}`}>
-            {descriptionCharCount}/{descriptionLimit}
-          </span>
+          <div className="flex items-center gap-2">
+            {descExceedsIOS && (
+              <span className="text-xs text-amber-600 font-medium">iOS: {descriptionCharCount}/144</span>
+            )}
+            <span className={`text-xs font-mono ${descriptionExceeded ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+              {descriptionCharCount}/{descriptionLimit}
+            </span>
+          </div>
         </div>
         <Textarea
           id="card-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Brief description..."
-          className={`mt-1 ${descriptionExceeded ? 'border-red-500' : ''}`}
+          className={`mt-1 ${descriptionExceeded ? 'border-red-500' : descExceedsIOS ? 'border-amber-400' : ''}`}
           rows={3}
           data-testid="textarea-card-description"
         />
         {descriptionExceeded && (
-          <p className="text-xs text-red-500 mt-1">
-            Card description exceeds maximum of {descriptionLimit} characters
+          <p className="text-xs text-red-500 mt-1 font-medium">
+            ⚠️ Description exceeds RCS maximum of {descriptionLimit} characters
           </p>
         )}
+        {!descriptionExceeded && descValidation && (
+          <div className="mt-2">
+            <InlineValidationFeedback
+              type={descValidation.severity as any}
+              message={descValidation.message}
+              recommendation={descValidation.recommendation}
+              platform="ios"
+              compact
+            />
+          </div>
+        )}
+        <p className="text-xs text-gray-500 mt-1">
+          💡 iOS shows ~3 lines (144 chars) with "..." for longer text. Keep concise for iOS.
+        </p>
       </div>
 
       <SuggestedActionsBuilder 
@@ -266,6 +323,25 @@ export function RichCardOptions({
         setActions={setActions} 
         maxActions={4} 
       />
+      
+      {/* iOS CTA Display Warning */}
+      {actions.length > 1 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-blue-900">
+              <p className="font-semibold">🍎 iOS: {actions.length} actions will display as expandable list</p>
+              <p className="mt-1">
+                On iOS, multiple actions appear in a collapsible menu with chevrons (›). 
+                Users must tap to see all options. Place your primary CTA first for best engagement.
+              </p>
+              <p className="mt-1 font-medium">
+                💡 Best practice: Use 1 primary CTA to avoid dropdown friction on iOS
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <SuggestedRepliesBuilder 
         replies={replies} 

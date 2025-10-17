@@ -8,6 +8,8 @@ import { SuggestedRepliesBuilder } from "./suggested-replies-builder";
 import { SuggestedActionsBuilder } from "./suggested-actions-builder";
 import { Info, Loader2 } from "lucide-react";
 import { convertDpToPx } from "@/lib/media-size-converter";
+import { validateIOSTitleLength, validateIOSDescriptionLength } from "@/lib/platform-validation";
+import { InlineValidationFeedback } from "./inline-validation-feedback";
 import {
   Tooltip,
   TooltipContent,
@@ -62,6 +64,16 @@ export function CarouselOptions({
   const descriptionLimit = 2000;
   const titleExceeded = titleCharCount > titleLimit;
   const descriptionExceeded = descriptionCharCount > descriptionLimit;
+  
+  // iOS-specific limits
+  const iosTitleLimit = 102;
+  const iosDescLimit = 144;
+  const titleExceedsIOS = titleCharCount > iosTitleLimit;
+  const descExceedsIOS = descriptionCharCount > iosDescLimit;
+  
+  // Validate for carousel best practices
+  const titleValidation = validateIOSTitleLength(title);
+  const descValidation = validateIOSDescriptionLength(description);
 
   return (
     <div className="space-y-6">
@@ -69,6 +81,17 @@ export function CarouselOptions({
         <p className="text-sm text-blue-800">
           <strong>Carousel:</strong> A horizontal scrollable collection of 2-10 rich cards. Each card will use the same title, description, and actions.
         </p>
+      </div>
+      
+      {/* Carousel Best Practices */}
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+        <p className="text-xs font-semibold text-purple-900 mb-2">📋 Carousel Best Practices:</p>
+        <ul className="text-xs text-purple-800 space-y-1 list-disc pl-4">
+          <li><strong>Max 3 cards recommended</strong> for better engagement (users rarely scroll beyond 3rd card)</li>
+          <li><strong>Tall media (264 DP)</strong> provides best visibility across platforms</li>
+          <li><strong>Max 3 lines of description</strong> to prevent overflow on smaller screens</li>
+          <li><strong>Consistent image sizes</strong> for professional appearance</li>
+        </ul>
       </div>
 
       <div>
