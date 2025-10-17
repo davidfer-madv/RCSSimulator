@@ -7,6 +7,7 @@ import { SuggestedReply, Action, Customer } from "@shared/schema";
 import { SuggestedRepliesBuilder } from "./suggested-replies-builder";
 import { SuggestedActionsBuilder } from "./suggested-actions-builder";
 import { Info, Loader2 } from "lucide-react";
+import { convertDpToPx } from "@/lib/media-size-converter";
 import {
   Tooltip,
   TooltipContent,
@@ -113,11 +114,15 @@ export function RichCardOptions({
               </div>
             </TooltipTrigger>
             <TooltipContent className="w-80">
-              <p>Following Google RCS standards:</p>
-              <p>- Short: 112 DP</p>
-              <p>- Medium: 168 DP</p>
-              <p>- Tall: 264 DP</p>
-              <p className="text-xs mt-1">Recommended image size: Max 1500x1000 pixels, ~1.8MB in JPEG format</p>
+              <p className="font-semibold mb-2">Google RCS Media Heights:</p>
+              <div className="space-y-1 text-xs">
+                <p><strong>Short:</strong> 112 DP → {convertDpToPx(112, 320)}px @ xhdpi, {convertDpToPx(112, 326)}px @ iOS 2x</p>
+                <p><strong>Medium:</strong> 168 DP → {convertDpToPx(168, 320)}px @ xhdpi, {convertDpToPx(168, 326)}px @ iOS 2x</p>
+                <p><strong>Tall:</strong> 264 DP → {convertDpToPx(264, 320)}px @ xhdpi, {convertDpToPx(264, 326)}px @ iOS 2x</p>
+              </div>
+              <p className="text-xs mt-2 text-gray-600">
+                Recommended: Prepare images at ~340px height for Medium cards on most devices
+              </p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

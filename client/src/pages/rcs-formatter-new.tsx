@@ -11,6 +11,7 @@ import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
 import { EnhancedPreviewContainer } from "@/components/image-formatter/enhanced-preview-container";
 import { PlatformComparisonGuide } from "@/components/image-formatter/platform-comparison-guide";
+import { MediaSizeReference } from "@/components/image-formatter/media-size-reference";
 import { Action, SuggestedReply, Customer, Campaign, RcsFormat } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -835,6 +836,11 @@ export default function RcsFormatter() {
             {/* Platform Comparison Guide - Full Width */}
             <div className="mt-6">
               <PlatformComparisonGuide />
+            </div>
+            
+            {/* Media Size Reference - Full Width */}
+            <div className="mt-6">
+              <MediaSizeReference currentMediaHeight={mediaHeight} />
             </div>
           </div>
         </div>
