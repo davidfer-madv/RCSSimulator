@@ -10,8 +10,6 @@ import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/image-formatter/image-uploader";
 import { FormatOptions } from "@/components/image-formatter/format-options";
 import { EnhancedPreviewContainer } from "@/components/image-formatter/enhanced-preview-container";
-import { PlatformComparisonGuide } from "@/components/image-formatter/platform-comparison-guide";
-import { MediaSizeReference } from "@/components/image-formatter/media-size-reference";
 import { Action, SuggestedReply, Customer, Campaign, RcsFormat } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -465,6 +463,18 @@ export default function RcsFormatter() {
   // Only render content if user is authenticated
   if (!user) return null;
 
+  // Compute display image URLs - use blob URLs during editing, server URLs after save
+  const displayImageUrls = state.processedImageUrls && state.processedImageUrls.length > 0
+    ? state.processedImageUrls.map(url => {
+        // If it's a blob URL, use it as-is
+        if (url.startsWith('blob:')) return url;
+        // If it's a server URL (starts with /), convert to absolute
+        if (url.startsWith('/')) return `${window.location.origin}${url}`;
+        // Otherwise use as-is
+        return url;
+      })
+    : [];
+
   // Handle form submission
   const handleSaveRcsFormat = async () => {
     // Format-specific validation
@@ -812,7 +822,7 @@ export default function RcsFormatter() {
                           title={title}
                           description={description}
                           messageText={messageText}
-                          imageUrls={state.processedImageUrls || []}
+                          imageUrls={displayImageUrls}
                           brandLogoUrl={brandLogoUrl}
                           verificationSymbol={verificationSymbol}
                           brandName={customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name"}
@@ -830,7 +840,7 @@ export default function RcsFormatter() {
                           title={title}
                           description={description}
                           messageText={messageText}
-                          imageUrls={state.processedImageUrls || []}
+                          imageUrls={displayImageUrls}
                           brandLogoUrl={brandLogoUrl}
                           verificationSymbol={verificationSymbol}
                           brandName={customers?.find(c => c.id.toString() === selectedCustomerId)?.name || "Business Name"}
@@ -842,16 +852,6 @@ export default function RcsFormatter() {
                   </CardContent>
                 </Card>
               </div>
-            </div>
-            
-            {/* Platform Comparison Guide - Full Width */}
-            <div className="mt-6">
-              <PlatformComparisonGuide />
-            </div>
-            
-            {/* Media Size Reference - Full Width */}
-            <div className="mt-6">
-              <MediaSizeReference currentMediaHeight={mediaHeight} />
             </div>
           </div>
         </div>

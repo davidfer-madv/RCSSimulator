@@ -11,6 +11,7 @@ import Customers from "@/pages/customers";
 import SettingsPage from "@/pages/settings";
 import HeaderExamplesPage from "@/pages/header-examples";
 import WebhooksPage from "@/pages/webhooks";
+import PlatformComparison from "@/pages/platform-comparison";
 import { ProtectedRoute } from "./lib/protected-route";
 import { ThemeProvider } from "next-themes";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/rcs-formatter/campaign/:campaignId" component={RcsFormatter} />
       <Route path="/campaigns" component={Campaigns} />
       <Route path="/customers" component={Customers} />
+      <Route path="/platform-comparison" component={PlatformComparison} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/webhooks" component={WebhooksPage} />
       <Route path="/header-examples" component={HeaderExamplesPage} />

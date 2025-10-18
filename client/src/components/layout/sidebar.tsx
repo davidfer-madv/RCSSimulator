@@ -18,6 +18,7 @@ import {
   Settings,
   Users,
   X,
+  GitCompare,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -37,6 +38,7 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     { href: "/rcs-formatter", label: "RCS Formatter", icon: <FileImage className="mr-3 h-5 w-5" /> },
     { href: "/campaigns", label: "Campaigns", icon: <FolderOpen className="mr-3 h-5 w-5" /> },
     { href: "/customers", label: "Brands", icon: <Users className="mr-3 h-5 w-5" /> },
+    { href: "/platform-comparison", label: "Platform Guide", icon: <GitCompare className="mr-3 h-5 w-5" /> },
     { href: "/settings", label: "Settings", icon: <Settings className="mr-3 h-5 w-5" /> },
   ];
 
