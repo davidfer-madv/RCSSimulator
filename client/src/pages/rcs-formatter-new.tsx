@@ -474,6 +474,12 @@ export default function RcsFormatter() {
         return url;
       })
     : [];
+  
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🖼️ Display URLs:', displayImageUrls);
+    console.log('📦 State URLs:', state.processedImageUrls);
+  }
 
   // Handle form submission
   const handleSaveRcsFormat = async () => {
