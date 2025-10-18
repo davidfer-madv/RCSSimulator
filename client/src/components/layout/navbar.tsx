@@ -19,14 +19,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "wouter";
 
-interface NavbarProps {
-  toggleSidebar: () => void;
-}
-
 export function Navbar({ toggleSidebar }: NavbarProps) {
   const { user, logout } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Only show "New Format" dropdown on non-formatter pages
+  const isFormatterPage = location === '/rcs-formatter' || location.startsWith('/rcs-formatter/');
 
   const handleLogout = async () => {
     try {
@@ -81,41 +80,43 @@ export function Navbar({ toggleSidebar }: NavbarProps) {
             </div>
           </form>
         </div>
-        
-        <div className="ml-4 flex items-center md:ml-6">
-          <div className="hidden md:block mr-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  New Format
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-               <DropdownMenuContent align="end" className="w-56">
-                 <Link href="/rcs-formatter?type=message">
-                   <DropdownMenuItem asChild>
-                     <button className="w-full text-left">Message</button>
-                   </DropdownMenuItem>
-                 </Link>
-                 <Link href="/rcs-formatter?type=richCard">
-                   <DropdownMenuItem asChild>
-                     <button className="w-full text-left">Rich Card</button>
-                   </DropdownMenuItem>
-                 </Link>
-                 <Link href="/rcs-formatter?type=carousel">
-                   <DropdownMenuItem asChild>
-                     <button className="w-full text-left">Carousel</button>
-                   </DropdownMenuItem>
-                 </Link>
-                 <Link href="/rcs-formatter?type=chip">
-                   <DropdownMenuItem asChild>
-                     <button className="w-full text-left">Chip List</button>
-                   </DropdownMenuItem>
-                 </Link>
-               </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-500">
+          
+          <div className="ml-4 flex items-center md:ml-6">
+            {!isFormatterPage && (
+              <div className="hidden md:block mr-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      New Format
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <Link href="/rcs-formatter?type=message">
+                      <DropdownMenuItem asChild>
+                        <button className="w-full text-left">Message</button>
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/rcs-formatter?type=richCard">
+                      <DropdownMenuItem asChild>
+                        <button className="w-full text-left">Rich Card</button>
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/rcs-formatter?type=carousel">
+                      <DropdownMenuItem asChild>
+                        <button className="w-full text-left">Carousel</button>
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/rcs-formatter?type=chip">
+                      <DropdownMenuItem asChild>
+                        <button className="w-full text-left">Chip List</button>
+                      </DropdownMenuItem>
+                    </Link>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-500">
             <Bell className="h-5 w-5" />
             <span className="sr-only">Notifications</span>
           </Button>

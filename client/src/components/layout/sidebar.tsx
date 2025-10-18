@@ -28,6 +28,9 @@ interface SidebarProps {
 export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [location] = useLocation();
   const { user } = useAuth();
+  
+  // Only show "New Format" dropdown on non-formatter pages
+  const isFormatterPage = location === '/rcs-formatter' || location.startsWith('/rcs-formatter/');
 
   const navItems = [
     { href: "/home", label: "Dashboard", icon: <Home className="mr-3 h-5 w-5" /> },
@@ -48,38 +51,40 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         <Link href="/home">
           <button className="text-xl font-bold text-white">RCS Format</button>
         </Link>
-        <div className="hidden md:block">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="sm" className="text-white">
-                New Format
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-             <DropdownMenuContent align="end" className="w-56">
-               <Link href="/rcs-formatter?type=message">
-                 <DropdownMenuItem asChild>
-                   <button className="w-full text-left">Message</button>
-                 </DropdownMenuItem>
-               </Link>
-               <Link href="/rcs-formatter?type=richCard">
-                 <DropdownMenuItem asChild>
-                   <button className="w-full text-left">Rich Card</button>
-                 </DropdownMenuItem>
-               </Link>
-               <Link href="/rcs-formatter?type=carousel">
-                 <DropdownMenuItem asChild>
-                   <button className="w-full text-left">Carousel</button>
-                 </DropdownMenuItem>
-               </Link>
-               <Link href="/rcs-formatter?type=chip">
-                 <DropdownMenuItem asChild>
-                   <button className="w-full text-left">Chip List</button>
-                 </DropdownMenuItem>
-               </Link>
-             </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {!isFormatterPage && (
+          <div className="hidden md:block">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="sm" className="text-white">
+                  New Format
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+               <DropdownMenuContent align="end" className="w-56">
+                 <Link href="/rcs-formatter?type=message">
+                   <DropdownMenuItem asChild>
+                     <button className="w-full text-left">Message</button>
+                   </DropdownMenuItem>
+                 </Link>
+                 <Link href="/rcs-formatter?type=richCard">
+                   <DropdownMenuItem asChild>
+                     <button className="w-full text-left">Rich Card</button>
+                   </DropdownMenuItem>
+                 </Link>
+                 <Link href="/rcs-formatter?type=carousel">
+                   <DropdownMenuItem asChild>
+                     <button className="w-full text-left">Carousel</button>
+                   </DropdownMenuItem>
+                 </Link>
+                 <Link href="/rcs-formatter?type=chip">
+                   <DropdownMenuItem asChild>
+                     <button className="w-full text-left">Chip List</button>
+                   </DropdownMenuItem>
+                 </Link>
+               </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
         <Button
           variant="ghost"
           size="icon"
