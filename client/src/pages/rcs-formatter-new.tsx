@@ -216,13 +216,24 @@ export default function RcsFormatter() {
       
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: campaignId ? "Format updated successfully" : "Format saved successfully",
         description: campaignId 
           ? "Your RCS format has been updated."
           : "Your RCS format has been saved.",
       });
+      
+      // Update context with server image URLs (convert relative to absolute)
+      if (data && data.imageUrls && Array.isArray(data.imageUrls)) {
+        const absoluteImageUrls = data.imageUrls.map((url: string) => 
+          url.startsWith('/') ? `${window.location.origin}${url}` : url
+        );
+        
+        updateState({
+          processedImageUrls: absoluteImageUrls
+        });
+      }
       
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["/api/rcs-formats"] });

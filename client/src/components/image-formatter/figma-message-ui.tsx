@@ -125,33 +125,40 @@ export const iOSInputBar: React.FC = () => (
   </div>
 );
 
-// Android UI Components
-export const AndroidStatusBar: React.FC = () => (
-  <div className="bg-gray-800 p-2 flex items-center justify-between">
-    <div className="text-white text-xs">9:41</div>
-    <div className="flex space-x-1">
-      <div className="text-white">
-        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M1 6C1 3.79086 2.79086 2 5 2C7.20914 2 9 3.79086 9 6C9 8.20914 7.20914 10 5 10C2.79086 10 1 8.20914 1 6Z" stroke="white" strokeWidth="2"/>
-          <path d="M5 4V8" stroke="white" strokeWidth="2"/>
-          <path d="M3 6H7" stroke="white" strokeWidth="2"/>
+// Android UI Components (Google Messages)
+export const AndroidStatusBar: React.FC = () => {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false });
+  
+  return (
+    <div className="bg-black px-3 py-1 flex items-center justify-between text-white text-xs">
+      <div className="font-medium">{timeString}</div>
+      <div className="flex items-center space-x-1.5">
+        {/* Signal strength */}
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" className="opacity-90">
+          <rect x="0" y="8" width="2" height="4" fill="white"/>
+          <rect x="4" y="6" width="2" height="6" fill="white"/>
+          <rect x="8" y="4" width="2" height="8" fill="white"/>
+          <rect x="12" y="2" width="2" height="10" fill="white"/>
         </svg>
-      </div>
-      <div className="text-white">
-        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M1 3C1 1.89543 1.89543 1 3 1H13C14.1046 1 15 1.89543 15 3V9C15 10.1046 14.1046 11 13 11H3C1.89543 11 1 10.1046 1 9V3Z" stroke="white" strokeWidth="2"/>
-          <path d="M1 3L8 7L15 3" stroke="white" strokeWidth="2"/>
+        {/* WiFi */}
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" className="opacity-90">
+          <path d="M8 10C8.55228 10 9 9.55228 9 9C9 8.44772 8.55228 8 8 8C7.44772 8 7 8.44772 7 9C7 9.55228 7.44772 10 8 10Z" fill="white"/>
+          <path d="M4 6C5.5 4.5 6.5 4 8 4C9.5 4 10.5 4.5 12 6" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M2 4C4 2 6 1 8 1C10 1 12 2 14 4" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
-      </div>
-      <div className="text-white">
-        <svg width="24" height="12" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="1" width="20" height="10" rx="2" stroke="white" strokeWidth="2"/>
-          <rect x="4" y="3" width="14" height="6" rx="1" fill="white"/>
+        {/* Battery */}
+        <svg width="22" height="12" viewBox="0 0 22 12" fill="none">
+          <rect x="1" y="2" width="18" height="8" rx="1.5" stroke="white" strokeWidth="1" fill="none"/>
+          <rect x="2.5" y="3.5" width="13" height="5" rx="0.5" fill="white"/>
+          <rect x="19.5" y="4.5" width="1.5" height="3" rx="0.5" fill="white"/>
         </svg>
+        {/* 80% text */}
+        <span className="text-[10px] opacity-75">80%</span>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const AndroidHeader: React.FC<{ brandName: string; brandLogoUrl?: string; verificationBadgeUrl?: string; verificationSymbol?: boolean }> = ({ 
   brandName, 
@@ -159,45 +166,45 @@ export const AndroidHeader: React.FC<{ brandName: string; brandLogoUrl?: string;
   verificationBadgeUrl,
   verificationSymbol = true
 }) => (
-  <div className="bg-blue-600 p-2">
-    <div className="flex items-center">
-      <div className="text-white mr-2">
-        <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M8 14L2 8L8 2" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
-      <div className="flex-shrink-0 h-8 w-8">
-        {brandLogoUrl ? (
-          <div className="h-8 w-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-gray-200">
-            <img 
-              src={brandLogoUrl} 
-              alt="Brand logo" 
-              className="h-full w-full object-contain"
-              onError={(e) => {
-                console.log("Error loading brand logo:", brandLogoUrl);
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+  <div className="bg-white border-b border-gray-200 px-2 py-2.5">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center flex-1 min-w-0">
+        {/* Back arrow */}
+        <button className="p-1 mr-2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18L9 12L15 6" stroke="#5F6368" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        
+        {/* Brand info */}
+        <div className="flex items-center flex-1 min-w-0">
+          <div className="text-[16px] font-medium text-gray-900 truncate flex items-center">
+            {brandName}
+            {verificationSymbol && (
+              <svg className="ml-1.5 flex-shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" fill="#1A73E8"/>
+                <path d="M11 6L7 10L5 8" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
           </div>
-        ) : (
-          <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-            <span className="text-xs font-medium text-gray-700">B</span>
-          </div>
-        )}
-      </div>
-      <div className="ml-2 flex-grow">
-        <div className="text-sm font-medium text-white flex items-center">
-          <span>{brandName}</span>
-          {verificationSymbol && (
-            <span className="ml-1 inline-flex items-center">
-              <img 
-                src={verificationBadgeUrl || verificationBadgeImg} 
-                alt="Verified" 
-                className="h-5 w-5"
-              />
-            </span>
-          )}
         </div>
+      </div>
+      
+      {/* Right icons */}
+      <div className="flex items-center space-x-1">
+        <button className="p-2">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="7" stroke="#5F6368" strokeWidth="1.5"/>
+            <path d="M10 6V10L13 13" stroke="#5F6368" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        </button>
+        <button className="p-2">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="4" r="1.5" fill="#5F6368"/>
+            <circle cx="10" cy="10" r="1.5" fill="#5F6368"/>
+            <circle cx="10" cy="16" r="1.5" fill="#5F6368"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -268,7 +275,7 @@ export const AndroidRichCard: React.FC<{
   const hasActions = actions && actions.length > 0;
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden max-w-[85%] shadow-md">
+    <div className="bg-white rounded-xl overflow-hidden max-w-full shadow-md border border-gray-200">
       {cardOrientation === "horizontal" ? (
         // Horizontal Layout - Image on left, content on right
         <div className="flex">
@@ -281,37 +288,37 @@ export const AndroidRichCard: React.FC<{
               />
             </div>
           )}
-          <div className="p-4 flex-1 min-w-0">
-            <h4 className="font-medium text-[16px] text-gray-900 leading-tight line-clamp-2">{title || "Card Title"}</h4>
-            <p className="text-[14px] text-gray-700 mt-2 leading-snug line-clamp-2">{description || "Card description"}</p>
+          <div className="p-3 flex-1 min-w-0">
+            <h4 className="font-medium text-[15px] text-gray-900 leading-tight line-clamp-2">{title || "Card Title"}</h4>
+            <p className="text-[13px] text-gray-600 mt-1.5 leading-snug line-clamp-2">{description || "Card description"}</p>
           </div>
         </div>
       ) : (
-        // Vertical Layout - Image on top, content below (Standard Android RCS format)
+        // Vertical Layout - Full width card matching Google Messages
         <>
           {imageUrl && (
-            <div className={`w-full ${getImageHeight()} bg-gray-100`}>
+            <div className={`w-full ${getImageHeight()} bg-gray-100 overflow-hidden`}>
               <img 
                 src={imageUrl} 
                 alt="Content" 
-                className={`w-full h-full ${lockAspectRatio ? 'object-contain' : 'object-cover'}`}
+                className={`w-full h-full ${lockAspectRatio ? 'object-contain bg-gray-50' : 'object-cover'}`}
               />
             </div>
           )}
-          <div className="p-4">
-            <h4 className="font-medium text-[16px] text-gray-900 leading-tight">{title || "Card Title"}</h4>
-            <p className="text-[14px] text-gray-700 mt-2 leading-relaxed">{description || "Card description text would appear here with more details."}</p>
+          <div className="p-3">
+            <h4 className="font-medium text-[15px] text-gray-900 leading-tight mb-1">{title || "Card Title"}</h4>
+            <p className="text-[13px] text-gray-600 leading-[1.4]">{description || "Card description text would appear here with more details."}</p>
           </div>
         </>
       )}
       
-      {/* Action Buttons - Material Design 3 style chips */}
+      {/* Action Buttons - Outlined style matching Google Messages */}
       {hasActions && (
-        <div className="px-4 pb-4 flex flex-wrap gap-2">
+        <div className="px-3 pb-3 flex flex-col gap-2">
           {actions.slice(0, 4).map((action, index) => (
             <button
               key={`action-${index}`}
-              className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-[14px] font-medium hover:bg-blue-100 transition-colors border border-blue-200"
+              className="w-full py-3 px-4 bg-white text-blue-600 rounded-lg text-[14px] font-medium hover:bg-gray-50 transition-colors border border-gray-300 flex items-center justify-center"
             >
               {/* Action type icons */}
               {action.type === "url" && (
@@ -614,8 +621,9 @@ export const IOSCarousel: React.FC<{
   };
 
   return (
-    <div className="max-w-[85%] relative mb-2">
-      <div className="flex overflow-x-auto pb-2 scrollbar-hide gap-3 snap-x snap-mandatory">
+    <div className="max-w-full relative mb-2">
+      {/* Horizontal scrollable cards - iOS Business Chat style */}
+      <div className="flex overflow-x-auto pb-2 scrollbar-hide gap-2 snap-x snap-mandatory px-1">
         {items.map((item, index) => {
           // iOS action display rules (same as rich card)
           const textActions = item.actions.filter(a => a.type === "text");

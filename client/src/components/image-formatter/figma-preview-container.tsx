@@ -102,7 +102,7 @@ export function FigmaPreviewContainer({
           )}
           
           {/* Message Thread */}
-          <div className={`p-3 ${platform === "android" ? "bg-gray-100" : "bg-white"} h-[400px] overflow-y-auto`}>
+          <div className={`p-3 ${platform === "android" ? "bg-[#F5F5F5]" : "bg-white"} h-[500px] overflow-y-auto`}>
             {/* Welcome Message */}
             {platform === "android" ? (
               <AndroidMessageBubble message="Welcome to our business messaging!" />
